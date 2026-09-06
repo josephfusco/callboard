@@ -1,0 +1,50 @@
+/**
+ * Installable app: manifest, service worker, head tags, link previews.
+ */
+const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+
+test.describe( 'PWA and previews', () => {
+	test( 'manifest.json is written to the site root and names the site', async ( {
+		request,
+	} ) => {
+		const res = await request.get( '/manifest.json' );
+		expect( res.ok() ).toBeTruthy();
+		const manifest = await res.json();
+		expect( manifest.display ).toBe( 'standalone' );
+		expect( manifest.start_url ).toBe( '/' );
+		expect( manifest.icons.length ).toBeGreaterThanOrEqual( 2 );
+	} );
+
+	test( 'service worker is served from the root with push handlers', async ( {
+		request,
+	} ) => {
+		const res = await request.get( '/sw.js' );
+		expect( res.ok() ).toBeTruthy();
+		const body = await res.text();
+		expect( body ).toMatch( /addEventListener\(\s*'push'/ );
+		expect( body ).toMatch( /addEventListener\(\s*'fetch'/ );
+	} );
+
+	test( 'head carries app meta and Open Graph tags per view', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await expect( page.locator( 'link[rel=manifest]' ) ).toHaveAttribute(
+			'href',
+			/manifest\.json$/
+		);
+		await expect(
+			page.locator( 'link[rel=apple-touch-icon]' )
+		).toHaveCount( 1 );
+		await expect(
+			page.locator( 'meta[property="og:title"]' )
+		).toHaveAttribute( 'content', 'Demo Set' );
+		await expect(
+			page.locator( 'meta[property="og:image"]' )
+		).toHaveAttribute( 'content', /\.png/ );
+		await expect( page.locator( 'meta[name=viewport]' ) ).toHaveAttribute(
+			'content',
+			/viewport-fit=cover/
+		);
+	} );
+} );

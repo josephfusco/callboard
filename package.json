@@ -1,0 +1,35 @@
+{
+  "name": "callboard",
+  "version": "1.0.0",
+  "description": "Rehearsal tracks for a cast. A WordPress plugin.",
+  "license": "GPL-2.0-or-later",
+  "private": true,
+  "scripts": {
+    "env:start": "wp-env start",
+    "env:stop": "wp-env stop",
+    "env:clean": "wp-env clean all",
+    "lint": "npm run lint:php && npm run lint:js",
+    "lint:php": "composer lint",
+    "lint:js": "wp-scripts lint-js assets pwa tests",
+    "format:js": "wp-scripts format assets pwa tests",
+    "test:e2e": "WP_BASE_URL=http://localhost:8891 wp-scripts test-playwright",
+    "test:e2e:ui": "WP_BASE_URL=http://localhost:8891 wp-scripts test-playwright --ui",
+    "plugin-zip": "wp-scripts plugin-zip"
+  },
+  "files": [
+    "callboard.php",
+    "includes",
+    "templates",
+    "assets",
+    "pwa",
+    "vendor",
+    "readme.txt",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "@wordpress/e2e-test-utils-playwright": "^1.10.0",
+    "@wordpress/env": "^10.10.0",
+    "@wordpress/scripts": "^30.0.0"
+  }
+}

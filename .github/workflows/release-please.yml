@@ -51,6 +51,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
+      # Reading a commit's check runs needs checks: read; dispatching needs actions: write.
+      checks: read
       actions: write
     steps:
       - name: Find the open release pull request

@@ -59,6 +59,9 @@ final class Frontend {
 			'saved'          => __( 'Saved offline', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
 			'saving_set'     => __( 'Saving offline, %1$s of %2$s', 'callboard' ),
+			/* translators: 1: tracks saved so far, 2: total tracks. */
+			'save_rest'      => __( 'Save the rest, %1$s of %2$s saved', 'callboard' ),
+			'saved_hover'    => __( ' · hold to remove', 'callboard' ),
 			'saved_hint'     => __( 'Saved offline. Press and hold, or press Delete, to remove the copies.', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
 			'saving'         => __( 'Saving %1$s/%2$s · Cancel', 'callboard' ),
@@ -100,7 +103,12 @@ final class Frontend {
 			'notify_home'    => __( 'Add to Home Screen first, then turn on notifications from there.', 'callboard' ),
 			'notify_denied'  => __( 'Notifications are blocked in your browser settings.', 'callboard' ),
 		);
-		wp_localize_script( 'callboard', 'CALLBOARD', $data );
+		/**
+		 * Everything the front end knows: site, sets, settings, text. Add a field here and it is on window.CALLBOARD.
+		 *
+		 * @param array<string, mixed> $data App data.
+		 */
+		wp_localize_script( 'callboard', 'CALLBOARD', apply_filters( 'callboard_app_data', $data ) );
 	}
 
 	/**

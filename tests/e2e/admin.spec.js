@@ -42,10 +42,10 @@ test.describe( 'Admin', () => {
 			.locator( '.wp-list-table tbody tr', { hasText: 'Demo Set' } )
 			.first();
 		await expect( row ).toContainText( 'Demo Set' );
-		await expect( row.locator( 'td.tracks' ) ).toHaveText( '2' );
+		await expect( row.locator( 'td.tracks' ) ).toHaveText( '10' );
 		await row.locator( 'a.row-title' ).click();
 		const tracks = page.locator( '#callboard-tracks li' );
-		await expect( tracks ).toHaveCount( 2 );
+		await expect( tracks ).toHaveCount( 10 );
 		await tracks
 			.first()
 			.locator( 'input[type=text]' )
@@ -62,7 +62,7 @@ test.describe( 'Admin', () => {
 			.locator( '#callboard-tracks li' )
 			.first()
 			.locator( 'input[type=text]' )
-			.fill( 'Tone One' );
+			.fill( 'Sawtooth, steady' );
 		await page.click( '#publish' );
 		void requestUtils;
 	} );

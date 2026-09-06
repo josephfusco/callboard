@@ -1,0 +1,20 @@
+{
+	"name": "One Track",
+	"slug": "one-track",
+	"order": 0,
+	"playlist_url": "",
+	"curator": "",
+	"curator_url": "",
+	"tracks": [
+		{
+			"index": 1,
+			"id": "solo01",
+			"title": "1. Vibrato over tremolo, long form (Demo OBC)",
+			"file": "01 - Vibrato over tremolo, long form [solo01].mp3",
+			"duration": 24,
+			"url": "https://www.youtube.com/watch?v=solo01",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		}
+	]
+}

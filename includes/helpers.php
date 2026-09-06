@@ -50,6 +50,9 @@ function callboard_fmt( ?float $seconds ): string {
  * @param array<int, array<string, mixed>> $tracks Tracks.
  */
 function callboard_meta( array $tracks ): string {
+	if ( ! $tracks ) {
+		return __( 'No audio yet', 'callboard' );
+	}
 	$seconds = (int) round( array_sum( array_map( static fn( array $t ) => (float) ( $t['duration'] ?? 0 ), $tracks ) ) );
 	$hours   = intdiv( $seconds, 3600 );
 	$minutes = (int) round( ( $seconds % 3600 ) / 60 );

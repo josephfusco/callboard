@@ -8,21 +8,101 @@
 	"tracks": [
 		{
 			"index": 1,
-			"id": "tone01",
-			"title": "1. Tone One (Demo OBC)",
-			"file": "01 - Tone 1 [tone01].mp3",
-			"duration": 8.0,
-			"url": "https://www.youtube.com/watch?v=tone01",
+			"id": "saw01",
+			"title": "1. Sawtooth, steady (Demo OBC)",
+			"file": "01 - Sawtooth, steady [saw01].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw01",
 			"uploader": "Demo Uploader",
 			"uploader_url": "https://www.youtube.com/@uploader"
 		},
 		{
 			"index": 2,
-			"id": "tone02",
-			"title": "2. Tone Two (Demo OBC)",
-			"file": "02 - Tone 2 [tone02].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=tone02",
+			"id": "saw02",
+			"title": "2. Tremolo, 4 Hz (Demo OBC)",
+			"file": "02 - Tremolo, 4 Hz [saw02].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw02",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		},
+		{
+			"index": 3,
+			"id": "saw03",
+			"title": "3. Vibrato, 6 Hz (Demo OBC)",
+			"file": "03 - Vibrato, 6 Hz [saw03].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw03",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		},
+		{
+			"index": 4,
+			"id": "saw04",
+			"title": "4. Ring modulation, 30 Hz (Demo OBC)",
+			"file": "04 - Ring modulation, 30 Hz [saw04].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw04",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		},
+		{
+			"index": 5,
+			"id": "saw05",
+			"title": "5. Low-pass sweep (Demo OBC)",
+			"file": "05 - Low-pass sweep [saw05].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw05",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		},
+		{
+			"index": 6,
+			"id": "saw06",
+			"title": "6. Pulse width modulation (Demo OBC)",
+			"file": "06 - Pulse width modulation [saw06].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw06",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		},
+		{
+			"index": 7,
+			"id": "saw07",
+			"title": "7. FM, two to one (Demo OBC)",
+			"file": "07 - FM, two to one [saw07].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw07",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		},
+		{
+			"index": 8,
+			"id": "saw08",
+			"title": "8. Arpeggio, eight steps (Demo OBC)",
+			"file": "08 - Arpeggio, eight steps [saw08].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw08",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		},
+		{
+			"index": 9,
+			"id": "saw09",
+			"title": "9. Plucked, decay envelope (Demo OBC)",
+			"file": "09 - Plucked, decay envelope [saw09].mp3",
+			"duration": 8,
+			"url": "https://www.youtube.com/watch?v=saw09",
+			"uploader": "Demo Uploader",
+			"uploader_url": "https://www.youtube.com/@uploader"
+		},
+		{
+			"index": 10,
+			"id": "saw10",
+			"title": "10. Bitcrush, four bits (Demo OBC)",
+			"file": "10 - Bitcrush, four bits [saw10].mp3",
+			"duration": 6,
+			"url": "https://www.youtube.com/watch?v=saw10",
 			"uploader": "Demo Uploader",
 			"uploader_url": "https://www.youtube.com/@uploader"
 		}

@@ -162,15 +162,19 @@ ${ footer( null ) }
 <a class="back" href="${ esc( G.home ) }">${ esc( T.all_sets ) }</a>
 <h1 style="view-transition-name:set-${ esc( s.slug ) }">${ esc( s.name ) }</h1>
 <p class="label">${ esc( s.meta ) }</p>
-<div class="actions"><button type="button" class="btn" id="play-all">${ esc(
-		T.play_all
-	) }</button>${
-		S.offline
-			? `<button type="button" class="btn btn-quiet" id="offline" hidden>${ esc(
-					T.save
-			  ) }</button>`
-			: ''
-	}</div>
+${
+	s.tracks.length
+		? `<div class="actions"><button type="button" class="btn" id="play-all">${ esc(
+				T.play_all
+		  ) }</button>${
+				S.offline
+					? `<button type="button" class="btn btn-quiet" id="offline" hidden>${ esc(
+							T.save
+					  ) }</button>`
+					: ''
+		  }</div>`
+		: ''
+}
 </header>
 ${
 	s.tracks.length
@@ -339,7 +343,11 @@ ${ footer( s ) }
 		glowAnim?.cancel();
 		glowAnim = null;
 		if ( glow ) {
-			glow.style.opacity = '';
+			[ glow, glowHot, glowHalo ].forEach( ( el ) => {
+				if ( el ) {
+					el.style.opacity = '';
+				}
+			} );
 		}
 	};
 	// ---- Meter: the light strip on the deck and the bars on the playing row. Sources, in order:
@@ -356,12 +364,23 @@ ${ footer( s ) }
 			b = +e[ Math.min( e.length - 1, k + 1 ) ] / 9;
 		return a + ( b - a ) * ( x - k );
 	};
+	const glowHot = $( 'deck-glow-hot' ),
+		glowHalo = $( 'deck-glow-halo' );
+	const paintGlow = ( b ) => {
+		glow.style.opacity = ( 0.25 + 0.75 * b ).toFixed( 3 );
+		if ( glowHot ) {
+			glowHot.style.opacity = ( b * b ).toFixed( 3 ); // the hot centre only shows near full brightness
+		}
+		if ( glowHalo ) {
+			glowHalo.style.opacity = ( 0.15 + 0.85 * b * b ).toFixed( 3 );
+		}
+	};
 	let glowAnim = null;
 	const eqStart = ( row ) => {
 		eqStop();
 		if ( reduce() ) {
 			if ( glow ) {
-				glow.style.opacity = 0.5;
+				paintGlow( 0.5 );
 			}
 			return; // the static bars still mark the playing row
 		}
@@ -405,7 +424,11 @@ ${ footer( s ) }
 			}
 			return;
 		}
-		const tick = () => {
+		let bright = 0,
+			last = 0;
+		const tick = ( now = 0 ) => {
+			const dt = last ? Math.min( 0.1, ( now - last ) / 1000 ) : 0.016;
+			last = now;
 			let levels;
 			if ( analyser ) {
 				analyser.getByteFrequencyData( data );
@@ -431,13 +454,12 @@ ${ footer( s ) }
 				).toFixed( 2 ) })`;
 			} );
 			if ( glow ) {
-				glow.style.opacity = (
-					0.2 +
-					0.8 *
-						( levels[ 0 ] * 0.5 +
-							levels[ 1 ] * 0.3 +
-							levels[ 2 ] * 0.2 )
-				).toFixed( 2 );
+				// a filament: it lights in ~40 ms and cools over ~350 ms, so peaks flare and settle
+				const target =
+					levels[ 0 ] * 0.5 + levels[ 1 ] * 0.3 + levels[ 2 ] * 0.2;
+				const tau = target > bright ? 0.04 : 0.35;
+				bright += ( target - bright ) * ( 1 - Math.exp( -dt / tau ) );
+				paintGlow( bright );
 			}
 			eqRaf = requestAnimationFrame( tick );
 		};
@@ -499,7 +521,7 @@ ${ footer( s ) }
 		}
 	} );
 	const remember = () => {
-		if ( queue ) {
+		if ( queue && i >= 0 ) {
 			ls.set( key(), { i, t: Math.floor( audio.currentTime || 0 ) } );
 		}
 	};
@@ -521,10 +543,19 @@ ${ footer( s ) }
 			).toFixed( 1 ) }px)`;
 		}
 	};
+	// The seek line follows the audio every frame while it plays (compositor transforms only); nothing trails.
+	let progressRaf = 0;
+	const follow = () => {
+		const d = audio.duration || queue?.tracks[ i ]?.duration;
+		if ( ! seeking && d ) {
+			setProgress( Math.min( audio.currentTime / d, 1 ) );
+		}
+		progressRaf = audio.paused ? 0 : requestAnimationFrame( follow );
+	};
 	function paint( force = false ) {
 		const d = audio.duration || queue?.tracks[ i ]?.duration,
 			sec = Math.floor( audio.currentTime );
-		if ( ! seeking && d ) {
+		if ( ! seeking && d && ! progressRaf ) {
 			setProgress( Math.min( audio.currentTime / d, 1 ) );
 		}
 		if ( sec === lastSec && ! force ) {
@@ -557,10 +588,10 @@ ${ footer( s ) }
 					day: 'numeric',
 			  } )
 			: '';
-	function syncNotes( t ) {
+	function syncNotes( t, force = false ) {
 		const notes = queue?.tracks[ i ]?.notes || [];
 		const n = notes.find( ( x ) => t >= x.t && t < x.t + 6 ) || null;
-		if ( n === noteShown ) {
+		if ( n === noteShown && ! force ) {
 			return;
 		}
 		noteShown = n;
@@ -614,8 +645,14 @@ ${ footer( s ) }
 		renderSheet( t.id );
 		paintMarks( t );
 		syncRows();
+		document.dispatchEvent(
+			new CustomEvent( 'callboard:track', {
+				detail: { set: queue.slug, track: t, index: i },
+			} )
+		);
 		if ( play ) {
 			ensureAnalyser();
+			morph( t.bpm && ! at ? 'play' : 'pause' );
 			if ( ! at && t.bpm ) {
 				countIn( t.bpm ).then(
 					( ok ) => ok && audio.play().catch( () => {} )
@@ -667,6 +704,80 @@ ${ footer( s ) }
 		}
 		remember();
 	}
+	function dismissDeck() {
+		if ( i < 0 ) {
+			return;
+		}
+		countStop();
+		remember();
+		audio.pause();
+		audio.removeAttribute( 'src' );
+		audio.load();
+		i = -1;
+		queue = null;
+		clearLoop();
+		eqStop();
+		deck.classList.remove( 'playing' );
+		deck.hidden = true;
+		document.body.classList.remove( 'has-deck' );
+		if ( ! lyricsSheet.hidden ) {
+			hideLyrics();
+		}
+		syncRows();
+		paintTip();
+	}
+	const deckRow = deck.querySelector( '.deck-row' );
+	let swipe = null;
+	deckRow?.addEventListener( 'pointerdown', ( e ) => {
+		if ( e.pointerType === 'mouse' || e.target.closest( 'button' ) ) {
+			return;
+		}
+		swipe = { x: e.clientX, y: e.clientY, id: e.pointerId };
+	} );
+	deckRow?.addEventListener( 'pointermove', ( e ) => {
+		if ( ! swipe || e.pointerId !== swipe.id ) {
+			return;
+		}
+		const dy = e.clientY - swipe.y;
+		if ( dy > 0 && Math.abs( e.clientX - swipe.x ) < 40 ) {
+			deck.style.transform = `translateY(${ Math.min( dy, 120 ).toFixed(
+				0
+			) }px)`;
+		}
+	} );
+	const swipeEnd = ( e ) => {
+		if ( ! swipe || e.pointerId !== swipe.id ) {
+			return;
+		}
+		const dy = e.clientY - swipe.y;
+		swipe = null;
+		if ( dy > 70 && Math.abs( e.clientX - swipe?.x || 0 ) < 40 ) {
+			const slide = deck.animate(
+				[
+					{ transform: deck.style.transform },
+					{ transform: 'translateY(100%)' },
+				],
+				{ duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' }
+			);
+			slide.onfinish = () => {
+				deck.style.transform = '';
+				dismissDeck();
+			};
+			return;
+		}
+		deck.animate(
+			[ { transform: deck.style.transform }, { transform: 'none' } ],
+			{
+				duration: 200,
+				easing: 'cubic-bezier(.34,1.4,.64,1)',
+			}
+		).onfinish = () => {
+			deck.style.transform = '';
+		};
+	};
+	deckRow?.addEventListener( 'pointerup', swipeEnd );
+	deckRow?.addEventListener( 'pointercancel', swipeEnd );
+
 	function prev() {
 		if ( i < 0 ) {
 			return load( 0 );
@@ -694,7 +805,11 @@ ${ footer( s ) }
 	} );
 	toggle.addEventListener( 'click', () => {
 		if ( countStop() ) {
+			morph( 'pause' );
 			return audio.play().catch( () => {} );
+		}
+		if ( i >= 0 ) {
+			morph( audio.paused ? 'pause' : 'play' ); // answer the tap now; the audio events reconcile
 		}
 		return i < 0 ? load( 0 ) : audio.paused ? audio.play() : audio.pause();
 	} );
@@ -786,6 +901,8 @@ ${ footer( s ) }
 	};
 	audio.addEventListener( 'play', () => {
 		played = true;
+		cancelAnimationFrame( progressRaf );
+		follow();
 		morph( 'pause' );
 		deck.classList.add( 'playing' );
 		syncRows();
@@ -906,6 +1023,7 @@ ${ footer( s ) }
 		) }%) scaleX(${ ( ( b - a ) / d ).toFixed( 4 ) })`;
 		loopBand.classList.add( 'on' );
 		loopChip.dataset.state = 'on';
+		requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
 		loopChip.textContent = `${ T.loop } ${ fmt( a ) }–${ fmt( b ) }`;
 		loopChip.setAttribute(
 			'aria-label',
@@ -925,6 +1043,7 @@ ${ footer( s ) }
 			loopChip.dataset.state = '';
 			loopChip.textContent = T.loop;
 			loopChip.setAttribute( 'aria-label', T.loop_set );
+			requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
 		}
 	}
 	// One control, three taps: mark the start, mark the end, clear. Two fingers on the line or [ ] do the same.
@@ -1045,6 +1164,8 @@ ${ footer( s ) }
 			clearLoop();
 		} else if ( e.key === 'Escape' && ! lyricsSheet.hidden ) {
 			hideLyrics();
+		} else if ( e.key === 'Escape' && audio.paused && i >= 0 ) {
+			dismissDeck();
 		}
 	} );
 
@@ -1056,7 +1177,6 @@ ${ footer( s ) }
 		cueIdx = -1;
 		lyricsList.innerHTML = '';
 		sheetKind = cues.length ? 'lyrics' : notes.length ? 'notes' : '';
-		openLyrics.classList.toggle( 'has-lyrics', !! sheetKind );
 		if ( sheetKind ) {
 			openLyrics.dataset.sheet =
 				sheetKind === 'lyrics' ? T.lyrics_label : T.notes;
@@ -1399,10 +1519,12 @@ ${ footer( s ) }
 				: '';
 			el.dataset.state = state;
 			el.hidden = ! state;
-			el.style.setProperty(
-				'--p',
-				( have / s.tracks.length ).toFixed( 3 )
-			);
+			if ( state ) {
+				el.style.setProperty(
+					'--p',
+					( have / s.tracks.length ).toFixed( 3 )
+				);
+			}
 			el.setAttribute(
 				'aria-label',
 				state === 'saved'
@@ -1443,6 +1565,11 @@ ${ footer( s ) }
 		}
 		paintTip();
 		syncRows();
+		document.dispatchEvent(
+			new CustomEvent( 'callboard:view', {
+				detail: { set: set?.slug || '' },
+			} )
+		);
 	}
 	// ---- Offline, per track. Each row has its own control; the set button drives them all.
 	const CACHE = 'callboard-audio-v1';
@@ -1486,7 +1613,7 @@ ${ footer( s ) }
 				.map( ( t ) => t.url )
 		);
 	}
-	async function saveTrack( t ) {
+	async function saveTrack( t, retry = true ) {
 		if ( dlAborts.has( t.url ) ) {
 			return;
 		}
@@ -1537,8 +1664,13 @@ ${ footer( s ) }
 				} )
 			);
 			paintDl( t, 'saved', 1 );
-		} catch {
+		} catch ( err ) {
 			paintDl( t, '', 0 );
+			dlAborts.delete( t.url );
+			if ( retry && err?.name !== 'AbortError' && navigator.onLine ) {
+				await new Promise( ( r ) => setTimeout( r, 1500 ) );
+				return saveTrack( t, false ); // one more try; a dropped connection should not leave a hole
+			}
 		} finally {
 			dlAborts.delete( t.url );
 		}
@@ -1581,15 +1713,28 @@ ${ footer( s ) }
 				'is-done',
 				! busy && have.size === tracks.length
 			);
+			const rest = sizeLabel(
+				tracks
+					.filter( ( t ) => ! have.has( t.url ) )
+					.reduce( ( a, t ) => a + ( t.bytes || 0 ), 0 )
+			);
+			offBtn.dataset.some = have.size ? '1' : '';
 			offBtn.textContent = busy
 				? tpl( T.saving, have.size, tracks.length )
 				: have.size === tracks.length
 				? T.saved
+				: have.size
+				? `${ tpl(
+						T.save_rest,
+						have.size,
+						tracks.length
+				  ) } · ${ rest }`
 				: `${ T.save } · ${ total }`;
 			offBtn.setAttribute(
 				'aria-label',
 				have.size === tracks.length && ! busy ? T.saved_hint : ''
 			);
+			offBtn.dataset.hint = have.size ? T.saved_hover : '';
 			if ( ! offBtn.getAttribute( 'aria-label' ) ) {
 				offBtn.removeAttribute( 'aria-label' );
 			}
@@ -1600,10 +1745,7 @@ ${ footer( s ) }
 		// Once everything is saved the label is information. Removing is for freeing space, so it takes a
 		// press-and-hold (or Delete on the keyboard) to ask, then a tap to confirm; it forgets after a moment.
 		const arm = async () => {
-			if (
-				! offBtn.classList.contains( 'is-done' ) ||
-				offBtn.dataset.confirm
-			) {
+			if ( ! offBtn.dataset.some || offBtn.dataset.confirm ) {
 				return;
 			}
 			offBtn.dataset.confirm = '1';
@@ -1615,10 +1757,15 @@ ${ footer( s ) }
 				}
 			}, 4000 );
 		};
-		let hold = 0;
+		let hold = 0,
+			held = false; // the release after a hold is not the confirming tap
 		offBtn.onpointerdown = () => {
 			clearTimeout( hold );
-			hold = setTimeout( arm, 650 );
+			held = false;
+			hold = setTimeout( () => {
+				held = true;
+				arm();
+			}, 650 );
 		};
 		offBtn.onpointerup =
 			offBtn.onpointercancel =
@@ -1635,14 +1782,18 @@ ${ footer( s ) }
 				dlAborts.forEach( ( ctl ) => ctl.abort() );
 				return;
 			}
+			if ( held ) {
+				held = false;
+				return;
+			}
 			const have = await savedSet( tracks );
-			if ( have.size === tracks.length ) {
-				if ( ! offBtn.dataset.confirm ) {
-					return; // a plain tap on "Saved offline" does nothing
-				}
+			if ( offBtn.dataset.confirm ) {
 				delete offBtn.dataset.confirm;
 				await Promise.all( tracks.map( removeTrack ) );
 				return paintAll();
+			}
+			if ( have.size === tracks.length ) {
+				return; // a plain tap on "Saved offline" does nothing
 			}
 			const todo = tracks.filter( ( t ) => ! have.has( t.url ) );
 			const worker = async () => {

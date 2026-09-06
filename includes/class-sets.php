@@ -178,7 +178,7 @@ final class Sets {
 			}
 		}
 
-		return array(
+		$set = array(
 			'id'      => $post->ID,
 			'slug'    => $post->post_name,
 			'name'    => $post->post_title,
@@ -195,6 +195,13 @@ final class Sets {
 				'curator_url'  => $credits['curator_url'] ?? null,
 			),
 		);
+		/**
+		 * One set as the app sees it. Filter to add fields per set or per track.
+		 *
+		 * @param array<string, mixed> $set  Set data.
+		 * @param WP_Post              $post Set post.
+		 */
+		return apply_filters( 'callboard_set_data', $set, $post );
 	}
 
 	/**

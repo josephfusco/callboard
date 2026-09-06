@@ -89,8 +89,8 @@ final class Importer {
 	public static function import_folder( string $dir ): string {
 		$slug = sanitize_title( basename( $dir ) );
 		$data = json_decode( (string) file_get_contents( $dir . '/manifest.json' ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		if ( ! is_array( $data ) || empty( $data['tracks'] ) ) {
-			return __( 'No manifest or no tracks.', 'callboard' );
+		if ( ! is_array( $data ) || empty( $data['name'] ) ) {
+			return __( 'No manifest.', 'callboard' );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -140,7 +140,7 @@ final class Importer {
 		}
 
 		$added = 0;
-		foreach ( $data['tracks'] as $t ) {
+		foreach ( (array) ( $data['tracks'] ?? array() ) as $t ) {
 			$file = isset( $t['file'] ) ? $dir . '/' . $t['file'] : null;
 			if ( ! $file || ! file_exists( $file ) ) {
 				continue;

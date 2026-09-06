@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CALLBOARD_VERSION', '1.2.1' );
+define( 'CALLBOARD_VERSION', '1.3.0' );
 define( 'CALLBOARD_FILE', __FILE__ );
 define( 'CALLBOARD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CALLBOARD_URL', plugin_dir_url( __FILE__ ) );

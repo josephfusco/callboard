@@ -9,11 +9,13 @@ test.describe( 'Front end', () => {
 	} ) => {
 		await page.goto( '/' );
 		await expect( page ).toHaveTitle( /./ );
-		await expect( page.locator( 'a.set' ) ).toHaveCount( 2 );
+		await expect( page.locator( 'a.set' ) ).toHaveCount( 4 );
 		const card = page.locator( 'a.set' ).first();
 		await expect( card ).toBeVisible();
 		await expect( card.locator( '.set-name' ) ).toHaveText( 'Demo Set' );
-		await expect( card.locator( '.set-meta' ) ).toContainText( '2 tracks' );
+		await expect( card.locator( '.set-meta' ) ).toContainText(
+			'10 tracks'
+		);
 		await expect( page.locator( 'footer.colophon' ) ).toContainText(
 			'For rehearsal use only.'
 		);
@@ -68,9 +70,14 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#offline' ) ).toHaveText(
 			'Saved offline'
 		);
-		await page.locator( '#offline' ).focus();
-		await page.keyboard.press( 'Delete' ); // asks first (a press-and-hold does the same)
+		await page.locator( '#offline' ).hover(); // press and hold asks; releasing is not the answer
+		await page.mouse.down();
+		await page.waitForTimeout( 900 );
+		await page.mouse.up();
 		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			24
+		);
 		await page.locator( '#offline' ).click();
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			0
@@ -82,10 +89,10 @@ test.describe( 'Front end', () => {
 	} ) => {
 		await page.goto( '/demo-set/' );
 		await expect( page.locator( 'h1' ) ).toHaveText( 'Demo Set' );
-		await expect( page.locator( '.track' ) ).toHaveCount( 2 );
+		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await expect(
 			page.locator( '.track' ).first().locator( '.title' )
-		).toHaveText( 'Tone One' ); // "1. … (Demo OBC)" cleaned on import
+		).toHaveText( 'Sawtooth, steady' ); // "1. … (Demo OBC)" cleaned on import
 		await expect( page.locator( 'footer.colophon' ) ).toContainText(
 			'Audio by Demo Uploader'
 		);
@@ -101,7 +108,7 @@ test.describe( 'Front end', () => {
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).nth( 1 ).click();
 		const audio = page.locator( '#audio' );
-		await expect( audio ).toHaveAttribute( 'src', /Tone%202/ );
+		await expect( audio ).toHaveAttribute( 'src', /Tremolo/ );
 		await expect( page.locator( '.track' ).nth( 1 ) ).toHaveClass(
 			/active/
 		);
@@ -110,7 +117,7 @@ test.describe( 'Front end', () => {
 			'true'
 		);
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tone Two'
+			'Tremolo, 4 Hz'
 		);
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 	} );
@@ -195,6 +202,62 @@ test.describe( 'Front end', () => {
 		);
 	} );
 
+	test( 'an empty set says so on home and on its page', async ( {
+		page,
+	} ) => {
+		await page.goto( '/' );
+		await expect(
+			page
+				.locator( 'a.set', { hasText: 'Empty Set' } )
+				.locator( '.set-meta' )
+		).toHaveText( 'No audio yet' );
+		await page.goto( '/empty-set/' );
+		await expect( page.locator( '.note' ) ).toContainText(
+			'No audio in this set yet'
+		);
+		await expect( page.locator( '#play-all' ) ).toHaveCount( 0 );
+	} );
+
+	test( 'the server and client renderers produce the same markup', async ( {
+		page,
+	} ) => {
+		// state the player paints after load is not part of the comparison
+		const tidy = ( html ) =>
+			html
+				.replace( />\s+</g, '><' )
+				.replace( /\s+/g, ' ' )
+				.replace(
+					/ (hidden|disabled|aria-current|aria-label|aria-pressed|data-state|style)(="[^"]*")?/g,
+					''
+				)
+				.replace(
+					/ class="([^"]*)"/g,
+					( m, c ) =>
+						` class="${ c
+							.replace(
+								/\b(active|playing|is-done|is-busy|is-playing)\b/g,
+								''
+							)
+							.trim() }"`
+				)
+				.trim();
+		for ( const path of [ '/long-set/', '/', '/empty-set/' ] ) {
+			await page.goto( path );
+			await page.waitForTimeout( 900 );
+			const server = tidy(
+				await page.locator( '#main' ).evaluate( ( el ) => el.outerHTML )
+			);
+			await page.locator( '.back, a.set' ).first().click(); // leave, then come back through the client renderer
+			await page.goBack();
+			await expect( page ).toHaveURL( new RegExp( `${ path }$` ) );
+			await page.waitForTimeout( 900 );
+			const client = tidy(
+				await page.locator( '#main' ).evaluate( ( el ) => el.outerHTML )
+			);
+			expect( client ).toBe( server );
+		}
+	} );
+
 	test( 'All sets swaps views in place and keeps the player', async ( {
 		page,
 	} ) => {
@@ -205,12 +268,12 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( 'a.set' ).first() ).toBeVisible();
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tone One'
+			'Sawtooth, steady'
 		);
 		await page.goBack();
 		await expect( page.locator( 'h1' ) ).toHaveText( 'Demo Set' );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tone One'
+			'Sawtooth, steady'
 		); // no reload
 	} );
 

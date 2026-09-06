@@ -97,7 +97,6 @@ final class Pwa {
 				$tw  = $box ? $box[2] - $box[0] : 0;
 				imagettftext( $im, $pt, 0, (int) ( ( $w - $tw ) / 2 ), (int) ( $cy + $r + $pt * 2.2 ), $ink, $font, $name );
 				imagepng( $im, sprintf( '%s/%s-%dx%d.png', $loc['dir'], $scheme, $w, $h ), 6 );
-				imagedestroy( $im );
 			}
 		}
 		update_option( 'callboard_splash_key', $key, false );

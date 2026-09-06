@@ -23,7 +23,7 @@
     return `<footer class="colophon">${names.length ? `<p>${esc(T.audio_by)} ${names.map((n) => link(n, c.uploaders[n])).join(', ')}${c.playlist_url ? ` · ${link(T.playlist, c.playlist_url)}${c.curator ? ` ${esc(T.by)} ${link(c.curator, c.curator_url)}` : ''}` : ''}</p>` : ''}</footer>`;
   };
   const renderHome = () => `<main class="app" id="main">
-<header class="masthead"><p class="label">${esc(T.tagline)}</p><h1>${esc(G.site)}</h1></header>
+<header class="masthead"><p class="label">${esc(T.tagline)}</p><h1>${esc(G.site)}</h1>${G.push ? `<div class="actions"><button type="button" class="btn btn-quiet" id="notify" hidden>${esc(T.notify)}</button><p class="note small" id="notify-note" hidden></p></div>` : ''}</header>
 ${G.sets.length ? `<ul class="sets">${G.sets.map((s) => `<li><a class="set" href="${esc(G.home)}${esc(s.slug)}/"><span class="set-mark" aria-hidden="true">${esc(s.name.slice(0, 1).toUpperCase())}</span><span class="set-text"><span class="set-name" style="view-transition-name:set-${esc(s.slug)}">${esc(s.name)}</span><span class="set-meta">${esc(s.meta)}</span></span><span class="set-go" aria-hidden="true"></span></a></li>`).join('')}</ul>` : `<p class="note">${esc(T.nothing)}</p>`}
 ${footer(null)}
 </main>`;
@@ -223,10 +223,41 @@ ${footer(s)}
   let tipWanted = S.hint && /iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone && !ls.get('callboard:a2hs');
   $('a2hs-close')?.addEventListener('click', () => { tipWanted = false; tip.hidden = true; ls.set('callboard:a2hs', 1); });
 
+  // ---- Notifications (Web Push) and the app badge
+  if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
+  const urlBase64ToUint8Array = (b64) => { const s = (b64 + '='.repeat((4 - (b64.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/'); const raw = atob(s); return Uint8Array.from([...raw].map((c) => c.charCodeAt(0))); };
+  async function bindNotify() {
+    const btn = $('notify'), note = $('notify-note');
+    if (!btn || !G.push || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS && !standalone) { note.textContent = T.notify_home; note.hidden = false; return; }
+    if (Notification.permission === 'denied') { note.textContent = T.notify_denied; note.hidden = false; return; }
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    const paintBtn = () => { btn.hidden = false; btn.textContent = sub ? T.notify_on : T.notify; btn.classList.toggle('is-done', !!sub); btn.setAttribute('aria-pressed', sub ? 'true' : 'false'); };
+    paintBtn();
+    btn.onclick = async () => {
+      btn.disabled = true;
+      try {
+        if (sub) {
+          await fetch(`${G.push.api}unsubscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+          await sub.unsubscribe(); sub = null;
+        } else {
+          if ((await Notification.requestPermission()) !== 'granted') { note.textContent = T.notify_denied; note.hidden = false; return; }
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(G.push.key) });
+          const r = await fetch(`${G.push.api}subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub.toJSON()) });
+          if (!r.ok) { await sub.unsubscribe(); sub = null; }
+        }
+      } catch {}
+      btn.disabled = false; paintBtn();
+    };
+  }
+
   // ---- Per-view bindings (first load and after every render)
   function bindView() {
     const set = setBy(view());
     $('topbar-title').textContent = set ? set.name : G.site;
+    if (!set) bindNotify().catch(() => {});
     if (set?.tracks.length) {
       if (!queue) {
         queue = set;
@@ -260,12 +291,22 @@ ${footer(s)}
       busy = true; abort = new AbortController(); offBtn.classList.add('is-busy');
       let n = await saved();
       try {
-        for (const t of tracks) {
-          if (await c.match(t.url)) continue;
-          offBtn.textContent = tpl(T.saving, n + 1, tracks.length);
-          const r = await fetch(t.url, { cache: 'no-store', signal: abort.signal });
-          if (r.ok && r.status === 200) { await c.put(t.url, r); n++; }
+        if (navigator.storage?.estimate) { // don't start what can't finish
+          const { quota = 0, usage = 0 } = await navigator.storage.estimate();
+          const need = tracks.reduce((a, t) => a + (t.bytes || 0), 0);
+          if (quota && quota - usage < need * 1.1) throw new Error('quota');
         }
+        const todo = [];
+        for (const t of tracks) if (!(await c.match(t.url))) todo.push(t);
+        const worker = async () => {
+          while (todo.length) {
+            const t = todo.shift();
+            offBtn.textContent = tpl(T.saving, n + 1, tracks.length);
+            const r = await fetch(t.url, { cache: 'no-store', signal: abort.signal });
+            if (r.ok && r.status === 200) { await c.put(t.url, r); n++; }
+          }
+        };
+        await Promise.all([worker(), worker()]); // two at a time: faster on good networks, gentle on weak ones
       } catch {}
       if (abort.signal.aborted || n < tracks.length) await Promise.all(tracks.map((t) => c.delete(t.url)));
       paintBtn();

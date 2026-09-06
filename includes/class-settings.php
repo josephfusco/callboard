@@ -23,13 +23,15 @@ final class Settings {
 	 */
 	public static function defaults(): array {
 		return array(
-			'tagline'     => __( 'Rehearsal tracks', 'callboard' ),
-			'footer_note' => __( 'For rehearsal use only.', 'callboard' ),
-			'badge'       => '',
-			'confetti'    => '',
-			'hearts'      => false,
-			'show_hint'   => true,
-			'offline'     => true,
+			'tagline'         => __( 'Rehearsal tracks', 'callboard' ),
+			'footer_note'     => __( 'For rehearsal use only.', 'callboard' ),
+			'badge'           => '',
+			'confetti'        => '',
+			'hearts'          => false,
+			'show_hint'       => true,
+			'offline'         => true,
+			'push'            => true,
+			'notify_new_sets' => true,
 		);
 	}
 
@@ -60,13 +62,15 @@ final class Settings {
 	public static function sanitize( mixed $input ): array {
 		$input = is_array( $input ) ? $input : array();
 		return array(
-			'tagline'     => sanitize_text_field( $input['tagline'] ?? '' ),
-			'footer_note' => sanitize_text_field( $input['footer_note'] ?? '' ),
-			'badge'       => mb_substr( sanitize_text_field( $input['badge'] ?? '' ), 0, 4 ),
-			'confetti'    => mb_substr( sanitize_text_field( $input['confetti'] ?? '' ), 0, 12 ),
-			'hearts'      => ! empty( $input['hearts'] ),
-			'show_hint'   => ! empty( $input['show_hint'] ),
-			'offline'     => ! empty( $input['offline'] ),
+			'tagline'         => sanitize_text_field( $input['tagline'] ?? '' ),
+			'footer_note'     => sanitize_text_field( $input['footer_note'] ?? '' ),
+			'badge'           => mb_substr( sanitize_text_field( $input['badge'] ?? '' ), 0, 4 ),
+			'confetti'        => mb_substr( sanitize_text_field( $input['confetti'] ?? '' ), 0, 12 ),
+			'hearts'          => ! empty( $input['hearts'] ),
+			'show_hint'       => ! empty( $input['show_hint'] ),
+			'offline'         => ! empty( $input['offline'] ),
+			'push'            => ! empty( $input['push'] ),
+			'notify_new_sets' => ! empty( $input['notify_new_sets'] ),
 		);
 	}
 
@@ -83,6 +87,7 @@ final class Settings {
 			'hearts'   => (bool) $s['hearts'],
 			'hint'     => (bool) $s['show_hint'],
 			'offline'  => (bool) $s['offline'],
+			'push'     => (bool) $s['push'] && Push::available(),
 		);
 	}
 }

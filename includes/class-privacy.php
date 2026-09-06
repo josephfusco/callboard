@@ -91,6 +91,10 @@ final class Privacy {
 		if ( ! empty( $result ) || is_user_logged_in() ) {
 			return $result;
 		}
+		$route = isset( $GLOBALS['wp']->query_vars['rest_route'] ) ? (string) $GLOBALS['wp']->query_vars['rest_route'] : '';
+		if ( str_starts_with( $route, '/callboard/v1/push/' ) ) {
+			return $result;
+		}
 		return new WP_Error( 'rest_disabled', __( 'Not available.', 'callboard' ), array( 'status' => 401 ) );
 	}
 

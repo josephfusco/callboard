@@ -231,3 +231,8 @@ html[data-nav="back"]::view-transition-old(root){animation-name:pop-out}
 @starting-style{.a2hs{opacity:0;transform:translateY(6px)}}
 /* respect reduced transparency: solid surfaces */
 @media (prefers-reduced-transparency:reduce){.deck,.topbar{background:var(--deck);-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* notifications */
+.note.small{font-size:.875rem;color:var(--ink-3);margin:0}
+.actions .note.small{flex-basis:100%}
+#notify.is-done{color:var(--ink-2)}

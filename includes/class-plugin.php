@@ -22,6 +22,7 @@ final class Plugin {
 		Sets::register_hooks();
 		Importer::register_hooks();
 		Requests::register_hooks();
+		Push::register_hooks();
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			Cli::register();
 		}

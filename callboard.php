@@ -18,6 +18,9 @@ define( 'CALLBOARD_FILE', __FILE__ );
 define( 'CALLBOARD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CALLBOARD_URL', plugin_dir_url( __FILE__ ) );
 
+if ( is_readable( CALLBOARD_DIR . 'vendor/autoload.php' ) ) {
+	require_once CALLBOARD_DIR . 'vendor/autoload.php';
+}
 require_once CALLBOARD_DIR . 'includes/helpers.php';
 
 spl_autoload_register(

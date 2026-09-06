@@ -37,28 +37,36 @@ final class Frontend {
 		$data             = Sets::app_data( Router::view() );
 		$data['settings'] = Settings::for_client();
 		$data['icon']     = callboard_asset( 'assets/icon-512.png' );
+		$data['push']     = Settings::get( 'push' ) && Push::available() ? array(
+			'key' => Push::keys()['publicKey'] ?? '',
+			'api' => esc_url_raw( rest_url( 'callboard/v1/push/' ) ),
+		) : null;
 		$data['text']     = array(
-			'tagline'     => Settings::get( 'tagline' ),
-			'footer_note' => Settings::get( 'footer_note' ),
-			'all_sets'    => __( 'All sets', 'callboard' ),
-			'play_all'    => __( 'Play all', 'callboard' ),
-			'save'        => __( 'Save offline', 'callboard' ),
-			'saved'       => __( 'Saved offline · Remove', 'callboard' ),
+			'tagline'       => Settings::get( 'tagline' ),
+			'footer_note'   => Settings::get( 'footer_note' ),
+			'all_sets'      => __( 'All sets', 'callboard' ),
+			'play_all'      => __( 'Play all', 'callboard' ),
+			'save'          => __( 'Save offline', 'callboard' ),
+			'saved'         => __( 'Saved offline · Remove', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
-			'saving'      => __( 'Saving %1$s/%2$s · Cancel', 'callboard' ),
-			'not_here'    => __( "That page isn't here. Everything we have is below.", 'callboard' ),
-			'nothing'     => __( 'Nothing here yet.', 'callboard' ),
-			'no_audio'    => __( 'No audio in this set yet.', 'callboard' ),
-			'audio_by'    => __( 'Audio by', 'callboard' ),
-			'playlist'    => __( 'Playlist', 'callboard' ),
-			'by'          => __( 'by', 'callboard' ),
-			'lyrics'      => __( 'lyrics', 'callboard' ),
+			'saving'        => __( 'Saving %1$s/%2$s · Cancel', 'callboard' ),
+			'not_here'      => __( "That page isn't here. Everything we have is below.", 'callboard' ),
+			'nothing'       => __( 'Nothing here yet.', 'callboard' ),
+			'no_audio'      => __( 'No audio in this set yet.', 'callboard' ),
+			'audio_by'      => __( 'Audio by', 'callboard' ),
+			'playlist'      => __( 'Playlist', 'callboard' ),
+			'by'            => __( 'by', 'callboard' ),
+			'lyrics'        => __( 'lyrics', 'callboard' ),
 			/* translators: %s: track title. */
-			'play'        => __( 'Play %s', 'callboard' ),
-			'tracks'      => __( 'Tracks', 'callboard' ),
-			'show_lyrics' => __( 'Show lyrics', 'callboard' ),
-			'hide_lyrics' => __( 'Hide lyrics', 'callboard' ),
-			'show_track'  => __( 'Show current track', 'callboard' ),
+			'play'          => __( 'Play %s', 'callboard' ),
+			'tracks'        => __( 'Tracks', 'callboard' ),
+			'show_lyrics'   => __( 'Show lyrics', 'callboard' ),
+			'hide_lyrics'   => __( 'Hide lyrics', 'callboard' ),
+			'show_track'    => __( 'Show current track', 'callboard' ),
+			'notify'        => __( 'Notify me about new sets', 'callboard' ),
+			'notify_on'     => __( 'Notifications on', 'callboard' ),
+			'notify_home'   => __( 'Add to Home Screen first, then turn on notifications from there.', 'callboard' ),
+			'notify_denied' => __( 'Notifications are blocked in your browser settings.', 'callboard' ),
 		);
 		wp_localize_script( 'callboard', 'CALLBOARD', $data );
 	}

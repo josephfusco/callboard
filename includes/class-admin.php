@@ -151,6 +151,7 @@ final class Admin {
 	public static function menu(): void {
 		$parent = 'edit.php?post_type=' . Post_Types::SET;
 		add_submenu_page( $parent, __( 'Import', 'callboard' ), __( 'Import', 'callboard' ), 'manage_options', 'callboard-import', array( self::class, 'page_import' ) );
+		add_submenu_page( $parent, __( 'Notices', 'callboard' ), __( 'Notices', 'callboard' ), 'manage_options', 'callboard-notices', array( self::class, 'page_notices' ) );
 		add_submenu_page( $parent, __( 'Callboard Settings', 'callboard' ), __( 'Settings', 'callboard' ), 'manage_options', 'callboard-settings', array( self::class, 'page_settings' ) );
 	}
 
@@ -169,13 +170,15 @@ final class Admin {
 		);
 		add_settings_section( 'callboard_main', '', '__return_false', 'callboard' );
 		$fields = array(
-			'tagline'     => array( __( 'Tagline', 'callboard' ), 'text', __( 'Shown under the title and in link previews.', 'callboard' ) ),
-			'footer_note' => array( __( 'Home page footer', 'callboard' ), 'text', __( 'A short disclosure, e.g. "For rehearsal use only."', 'callboard' ) ),
-			'badge'       => array( __( 'Badge on the playing track', 'callboard' ), 'text', __( 'An emoji, or leave empty.', 'callboard' ) ),
-			'confetti'    => array( __( 'Confetti text', 'callboard' ), 'text', __( 'Triple-tap the big title to release it. A lucky number, a name. Empty turns it off.', 'callboard' ) ),
-			'hearts'      => array( __( 'Mix hearts into the confetti', 'callboard' ), 'checkbox', '' ),
-			'show_hint'   => array( __( 'Show the "Add to Home Screen" hint on iPhone', 'callboard' ), 'checkbox', '' ),
-			'offline'     => array( __( 'Offer "Save offline"', 'callboard' ), 'checkbox', '' ),
+			'tagline'         => array( __( 'Tagline', 'callboard' ), 'text', __( 'Shown under the title and in link previews.', 'callboard' ) ),
+			'footer_note'     => array( __( 'Home page footer', 'callboard' ), 'text', __( 'A short disclosure, e.g. "For rehearsal use only."', 'callboard' ) ),
+			'badge'           => array( __( 'Badge on the playing track', 'callboard' ), 'text', __( 'An emoji, or leave empty.', 'callboard' ) ),
+			'confetti'        => array( __( 'Confetti text', 'callboard' ), 'text', __( 'Triple-tap the big title to release it. A lucky number, a name. Empty turns it off.', 'callboard' ) ),
+			'hearts'          => array( __( 'Mix hearts into the confetti', 'callboard' ), 'checkbox', '' ),
+			'show_hint'       => array( __( 'Show the "Add to Home Screen" hint on iPhone', 'callboard' ), 'checkbox', '' ),
+			'offline'         => array( __( 'Offer "Save offline"', 'callboard' ), 'checkbox', '' ),
+			'push'            => array( __( 'Offer notifications', 'callboard' ), 'checkbox', __( 'A bell on the home page lets the cast opt in. On iPhone this needs the app added to the Home Screen.', 'callboard' ) ),
+			'notify_new_sets' => array( __( 'Notify when a set is published', 'callboard' ), 'checkbox', '' ),
 		);
 		foreach ( $fields as $key => list( $label, $type, $help ) ) {
 			add_settings_field(
@@ -225,6 +228,37 @@ final class Admin {
 				<?php do_settings_sections( 'callboard' ); ?>
 				<?php submit_button(); ?>
 			</form>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Notices: push a message to everyone who opted in.
+	 */
+	public static function page_notices(): void {
+		$count = Push::count();
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Notices', 'callboard' ); ?></h1>
+			<?php if ( ! Push::available() ) : ?>
+				<p><?php esc_html_e( 'Push is not available on this server (needs OpenSSL and GMP or BCMath).', 'callboard' ); ?></p>
+			<?php else : ?>
+				<p>
+					<?php
+					/* translators: %d: subscriber count. */
+					echo esc_html( sprintf( _n( '%d device is subscribed.', '%d devices are subscribed.', $count, 'callboard' ), $count ) );
+					?>
+					<?php esc_html_e( 'A notice goes to all of them and opens the link when tapped.', 'callboard' ); ?>
+				</p>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="max-width:640px">
+					<input type="hidden" name="action" value="callboard_notify">
+					<?php wp_nonce_field( 'callboard_notify' ); ?>
+					<p><label for="callboard-ntitle"><?php esc_html_e( 'Title', 'callboard' ); ?></label><br><input type="text" class="large-text" id="callboard-ntitle" name="callboard_title" placeholder="<?php echo esc_attr( callboard_site_name() ); ?>"></p>
+					<p><label for="callboard-nbody"><?php esc_html_e( 'Message', 'callboard' ); ?></label><br><textarea class="large-text" rows="3" id="callboard-nbody" name="callboard_body" required></textarea></p>
+					<p><label for="callboard-nlink"><?php esc_html_e( 'Link (optional)', 'callboard' ); ?></label><br><input type="url" class="large-text" id="callboard-nlink" name="callboard_link" placeholder="<?php echo esc_attr( home_url( '/' ) ); ?>"></p>
+					<?php submit_button( __( 'Send to the cast', 'callboard' ), 'primary', 'submit', false, $count ? array() : array( 'disabled' => 'disabled' ) ); ?>
+				</form>
+			<?php endif; ?>
 		</div>
 		<?php
 	}

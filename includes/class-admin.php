@@ -254,7 +254,7 @@ final class Admin {
 			</form>
 			<hr>
 			<h2><?php esc_html_e( 'From YouTube', 'callboard' ); ?></h2>
-			<p><?php esc_html_e( 'Paste a video or playlist URL. A runner with yt-dlp picks it up, fetches audio only, and the set appears here when it finishes.', 'callboard' ); ?></p>
+			<p><?php esc_html_e( 'Paste a video or playlist URL. The next `wp callboard run` fetches audio only, draws the artwork, and the set appears here.', 'callboard' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="callboard-request">
 				<input type="hidden" name="action" value="callboard_request">
 				<?php wp_nonce_field( 'callboard_request' ); ?>
@@ -263,12 +263,17 @@ final class Admin {
 				<?php submit_button( __( 'Queue it', 'callboard' ), 'secondary', 'submit', false ); ?>
 			</form>
 			<?php self::requests_table(); ?>
-			<details>
-				<summary><?php esc_html_e( 'Running the fetcher', 'callboard' ); ?></summary>
-				<p><?php esc_html_e( 'Managed hosts cannot run yt-dlp, so a small runner does the fetching from any Mac, Linux box, or CI job and pushes the result here. Create an application password for your user (Users → Profile), then:', 'callboard' ); ?></p>
-				<pre><code>python3 runner/runner.py --site <?php echo esc_html( home_url( '/' ) ); ?> --user <?php echo esc_html( wp_get_current_user()->user_login ); ?> --watch</code></pre>
-				<p><?php esc_html_e( 'The runner folder ships with the plugin; see runner/README.md for requirements.', 'callboard' ); ?></p>
-				<p><?php esc_html_e( 'The runner asks for the application password once and keeps polling for queued requests.', 'callboard' ); ?></p>
+			<details <?php echo Fetcher::available() ? '' : 'open'; ?>>
+				<summary><?php esc_html_e( 'How fetching works', 'callboard' ); ?></summary>
+				<?php if ( Fetcher::available() ) : ?>
+					<p><?php esc_html_e( 'This server has yt-dlp. Drain the queue with WP-CLI:', 'callboard' ); ?></p>
+					<pre><code>wp callboard run</code></pre>
+				<?php else : ?>
+					<p><?php esc_html_e( 'This host cannot run yt-dlp, which is normal for managed hosting. Fetch on a machine that has it, with the same plugin installed (wp-env works well), then deploy the finished set folder here and import.', 'callboard' ); ?></p>
+					<pre><code>wp callboard fetch '&lt;youtube url&gt;' --name="Spring Show"
+wp callboard run   <?php esc_html_e( '# or drain everything queued above', 'callboard' ); ?></code></pre>
+				<?php endif; ?>
+				<p><?php esc_html_e( 'wp callboard doctor reports what the current environment can do.', 'callboard' ); ?></p>
 			</details>
 			<?php do_action( 'callboard_import_page' ); ?>
 		</div>

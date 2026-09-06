@@ -25,6 +25,28 @@ final class Sets {
 		foreach ( array( 'save_post', 'deleted_post', 'add_attachment', 'edit_attachment', 'delete_attachment', 'callboard_imported' ) as $hook ) {
 			add_action( $hook, array( self::class, 'flush' ) );
 		}
+		add_action( 'before_delete_post', array( self::class, 'delete_children' ) );
+	}
+
+	/**
+	 * A set's tracks and artwork go with it when it is permanently deleted.
+	 *
+	 * @param int $post_id Post being deleted.
+	 */
+	public static function delete_children( int $post_id ): void {
+		if ( get_post_type( $post_id ) !== Post_Types::SET ) {
+			return;
+		}
+		$children = get_children(
+			array(
+				'post_parent'    => $post_id,
+				'post_type'      => 'attachment',
+				'posts_per_page' => -1,
+			)
+		);
+		foreach ( $children as $child ) {
+			wp_delete_attachment( $child->ID, true );
+		}
 	}
 
 	/**

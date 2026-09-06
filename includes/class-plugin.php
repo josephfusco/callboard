@@ -22,7 +22,9 @@ final class Plugin {
 		Sets::register_hooks();
 		Importer::register_hooks();
 		Requests::register_hooks();
-		Rest::register_hooks();
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			Cli::register();
+		}
 		Router::register_hooks();
 		Frontend::register_hooks();
 		Privacy::register_hooks();

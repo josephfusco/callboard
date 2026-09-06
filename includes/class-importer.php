@@ -207,7 +207,10 @@ final class Importer {
 		if ( is_wp_error( $id ) ) {
 			return 0;
 		}
+		$only_ours = static fn( array $sizes ) => array_intersect_key( $sizes, array( 'callboard-cover-512' => 1 ) );
+		add_filter( 'intermediate_image_sizes_advanced', $only_ours ); // covers need one extra size, not the whole ladder.
 		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $file ) );
+		remove_filter( 'intermediate_image_sizes_advanced', $only_ours );
 		return (int) $id;
 	}
 

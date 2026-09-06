@@ -28,3 +28,4 @@ vendor/phpcsstandards
 vendor/dealerdirect
 vendor/phpcompatibility
 .wordpress-org
+site

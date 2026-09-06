@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Callboard</title>
+<meta name="description" content="Rehearsal tracks, in the cast's pocket. A WordPress plugin: sets of audio, a player that keeps playing, offline, notices, installable from Safari.">
+<meta property="og:title" content="Callboard">
+<meta property="og:description" content="Rehearsal tracks, in the cast's pocket. A WordPress plugin.">
+<meta property="og:image" content="https://josephfusco.github.io/callboard/og.png">
+<meta name="theme-color" content="#eceae5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161616" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<style>
+:root{--bg:#eceae5;--surface:#f6f5f2;--line:#d3d1cb;--ink:#1c1c1c;--ink-2:#55544f;--ink-3:#6f6e69;--accent:#e8541e;--accent-text:#c2401a;--warmth:rgba(214,184,150,.18);--ease:cubic-bezier(.2,.7,.2,1)}
+@media (prefers-color-scheme:dark){:root{--bg:#161616;--surface:#1f1f1f;--line:#2e2e2e;--ink:#f2f1ee;--ink-2:#b3b2ae;--ink-3:#95948f;--accent:#ff6a2e;--accent-text:#ff7d47;--warmth:rgba(120,92,68,.1)}}
+*{box-sizing:border-box}
+html{font:-apple-system-body;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Inter,Arial,sans-serif}
+body{margin:0;background-color:var(--bg);background-image:radial-gradient(120% 70% at 50% -10%,var(--warmth),transparent 60%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .14 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");background-size:auto,200px 200px;background-repeat:no-repeat,repeat;background-blend-mode:normal,overlay;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+header{padding:28px 0}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.mark{display:inline-flex;align-items:center;gap:10px;font-weight:600;text-decoration:none;letter-spacing:-.01em}
+.mark i{width:28px;height:28px;border-radius:50%;background:var(--ink);position:relative}
+.mark i::before{content:"";position:absolute;left:11px;top:8px;border-left:9px solid var(--bg);border-top:6px solid transparent;border-bottom:6px solid transparent}
+.mark i::after{content:"";position:absolute;right:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+nav a{color:var(--ink-2);text-decoration:none;margin-left:22px;font-size:.9375rem}
+nav a:hover{color:var(--ink)}
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;padding:56px 0 40px}
+h1{font-size:clamp(2.5rem,6vw,4.25rem);line-height:1.02;letter-spacing:-.025em;margin:0 0 20px;font-weight:700;text-wrap:balance}
+.lede{font-size:1.25rem;color:var(--ink-2);margin:0 0 28px;max-width:34rem;text-wrap:pretty}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 20px;height:48px;display:inline-flex;align-items:center;font-weight:600;text-decoration:none;font-size:.9375rem}
+.btn.quiet{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn:active{transform:scale(.98)}
+.phones{position:relative;height:640px}
+.phones img{position:absolute;width:300px;border-radius:34px;box-shadow:0 30px 60px rgba(0,0,0,.28)}
+.phones .a{left:0;top:0}
+.phones .b{left:210px;top:40px;z-index:1}
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px 0;color:var(--ink-3);font-size:.9375rem}
+.strip .wrap{display:flex;flex-wrap:wrap;gap:8px 28px}
+section{padding:72px 0}
+h2{font-size:clamp(1.75rem,3.2vw,2.5rem);letter-spacing:-.02em;margin:0 0 12px;line-height:1.1}
+.sub{color:var(--ink-2);font-size:1.125rem;margin:0 0 40px;max-width:40rem}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px 32px}
+.f h3{margin:0 0 6px;font-size:1.0625rem}
+.f p{margin:0;color:var(--ink-2);font-size:.9375rem}
+.f i{display:block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-bottom:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.two img{width:100%;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+ol.steps li{position:relative;padding:14px 0 14px 44px;border-top:1px solid var(--line);counter-increment:s;color:var(--ink-2)}
+ol.steps li strong{color:var(--ink);display:block}
+ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:16px;color:var(--ink-3);font-size:.875rem}
+code{font:.875rem/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 8px}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;margin:0}
+pre code{background:none;border:0;padding:0}
+.desk img{width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.25);display:block}
+footer{border-top:1px solid var(--line);padding:32px 0 56px;color:var(--ink-3);font-size:.875rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+@media (max-width:860px){.hero{grid-template-columns:1fr;padding-top:24px}.phones{height:560px;margin:0 auto;width:510px;max-width:100%}.grid{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}.phones{width:100%;height:520px}.phones img{width:56%}.phones .b{left:44%}nav{display:none}}
+@media (prefers-reduced-motion:no-preference){.hero>*{animation:arrive .5s var(--ease) both}.hero>:nth-child(2){animation-delay:.08s}@keyframes arrive{from{opacity:0;transform:translateY(8px)}}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><a class="mark" href="#"><i aria-hidden="true"></i>Callboard</a><nav><a href="#how">How it works</a><a href="#install">Install</a><a href="https://github.com/josephfusco/callboard">GitHub</a></nav></div></header>
+
+<main>
+<div class="wrap hero">
+	<div>
+		<h1>Rehearsal tracks, in the cast's pocket.</h1>
+		<p class="lede">A WordPress plugin that turns a site into a small, private music app. Sets of audio, a player that keeps playing while you move around, offline saving, lock-screen controls, notices, and an "Add to Home Screen" flow on iPhone. No accounts. No ads. No algorithm.</p>
+		<div class="cta"><a class="btn" href="#install">Install</a><a class="btn quiet" href="https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/josephfusco/callboard/main/blueprint.json">Try it in Playground</a></div>
+	</div>
+	<div class="phones" aria-hidden="true"><img class="a" src="home-light.png" alt=""><img class="b" src="set-dark.png" alt=""></div>
+</div>
+
+<div class="strip"><div class="wrap"><span>GPL, open source</span><span>Works with any theme</span><span>Accessibility audited</span><span>No build step</span><span>One stylesheet, one script</span></div></div>
+
+<section><div class="wrap">
+	<h2>Made for the way a cast actually practices.</h2>
+	<p class="sub">Tap a link, tap a song, learn your part. Everything else stays out of the way.</p>
+	<div class="grid">
+		<div class="f"><i></i><h3>Keeps playing</h3><p>Move between sets, lock the phone, switch apps. The player persists, with lock-screen controls and artwork.</p></div>
+		<div class="f"><i></i><h3>Save offline</h3><p>Per track or a whole set, with progress on each row. Plays on the bus, in the basement, backstage.</p></div>
+		<div class="f"><i></i><h3>Notices</h3><p>The cast opts in on their phones. You post "call time moved to 4," they get a notification. New sets announce themselves.</p></div>
+		<div class="f"><i></i><h3>Installable</h3><p>Add to Home Screen and it opens full screen with its own icon and launch screen, on iPhone and Android.</p></div>
+		<div class="f"><i></i><h3>Private by default</h3><p>Unindexed, no discoverable people, no referrers, no open APIs. Link previews still work.</p></div>
+		<div class="f"><i></i><h3>Quiet design</h3><p>One accent. Tabular numerals. Motion only where it carries information, and none of it when you ask for less.</p></div>
+	</div>
+</div></section>
+
+<section id="how"><div class="wrap two">
+	<div>
+		<h2>How it works</h2>
+		<p class="sub">Sets are posts. Tracks are audio files in the Media Library. The rest is the plugin.</p>
+		<ol class="steps">
+			<li><strong>Add a set.</strong> Upload audio to a set in the admin, drop a folder into uploads, or fetch a YouTube playlist with WP-CLI where yt-dlp exists.</li>
+			<li><strong>Share one link.</strong> The home page lists every set. No accounts, nothing to sign up for.</li>
+			<li><strong>They add it to their Home Screen.</strong> The app hints once, then gets out of the way.</li>
+			<li><strong>Post a notice when something changes.</strong> Sets → Notices, and everyone who opted in hears about it.</li>
+		</ol>
+	</div>
+	<img src="set-light.png" alt="A set page in the light scheme: a track list with the persistent player at the bottom">
+</div></section>
+
+<section id="install"><div class="wrap">
+	<h2>Install</h2>
+	<p class="sub">Requires WordPress 6.5 and PHP 8.1. Fetching from YouTube additionally needs <code>yt-dlp</code> and <code>ffmpeg</code> wherever WP-CLI runs.</p>
+	<pre><code>wp plugin install https://github.com/josephfusco/callboard/releases/latest/download/callboard.zip --activate
+wp callboard fetch 'https://www.youtube.com/playlist?list=…' --name="Spring Show"</code></pre>
+	<p class="sub" style="margin-top:16px">Or upload the zip under Plugins → Add New. Then Sets → Import to bring in a folder, or Sets → Settings for the tagline, badge, and confetti.</p>
+</div></section>
+
+<section class="desk"><div class="wrap"><img src="desktop-dark.png" alt="Callboard on a wide screen: the set list with a row highlighted and the player pinned to the bottom"></div></section>
+</main>
+
+<footer><div class="wrap"><span>Callboard is free software under the GPL.</span><span><a href="https://github.com/josephfusco/callboard">Source and issues on GitHub</a></span></div></footer>
+</body>
+</html>

@@ -12,3 +12,4 @@
 *.mp3 binary
 *.png binary
 *.ttf binary
+/site export-ignore

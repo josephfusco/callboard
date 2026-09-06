@@ -12,111 +12,154 @@
 <meta name="theme-color" content="#161616" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <style>
-:root{--bg:#eceae5;--surface:#f6f5f2;--line:#d3d1cb;--ink:#1c1c1c;--ink-2:#55544f;--ink-3:#6f6e69;--accent:#e8541e;--accent-text:#c2401a;--warmth:rgba(214,184,150,.18);--ease:cubic-bezier(.2,.7,.2,1)}
-@media (prefers-color-scheme:dark){:root{--bg:#161616;--surface:#1f1f1f;--line:#2e2e2e;--ink:#f2f1ee;--ink-2:#b3b2ae;--ink-3:#95948f;--accent:#ff6a2e;--accent-text:#ff7d47;--warmth:rgba(120,92,68,.1)}}
+:root{--bg:#eceae5;--surface:#f6f5f2;--line:#d3d1cb;--line-2:#e2e0da;--ink:#1c1c1c;--ink-2:#55544f;--ink-3:#6f6e69;--accent:#e8541e;--warmth:rgba(214,184,150,.18);--glass:rgba(236,234,229,.72);--ease:cubic-bezier(.2,.7,.2,1);--t:.2s;--t-slow:.6s}
+@media (prefers-color-scheme:dark){:root{--bg:#161616;--surface:#1f1f1f;--line:#2e2e2e;--line-2:#262626;--ink:#f2f1ee;--ink-2:#b3b2ae;--ink-3:#95948f;--accent:#ff6a2e;--warmth:rgba(120,92,68,.1);--glass:rgba(22,22,22,.72)}}
 *{box-sizing:border-box}
-html{font:-apple-system-body;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Inter,Arial,sans-serif}
-body{margin:0;background-color:var(--bg);background-image:radial-gradient(120% 70% at 50% -10%,var(--warmth),transparent 60%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .14 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");background-size:auto,200px 200px;background-repeat:no-repeat,repeat;background-blend-mode:normal,overlay;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+html{font:-apple-system-body;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Inter,Arial,sans-serif;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background-color:var(--bg);background-image:radial-gradient(120% 70% at 50% -10%,var(--warmth),transparent 60%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .12 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");background-size:auto,200px 200px;background-repeat:no-repeat,repeat;background-blend-mode:normal,overlay;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 a{color:inherit}
-.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
-header{padding:28px 0}
-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.mark{display:inline-flex;align-items:center;gap:10px;font-weight:600;text-decoration:none;letter-spacing:-.01em}
-.mark i{width:28px;height:28px;border-radius:50%;background:var(--ink);position:relative}
-.mark i::before{content:"";position:absolute;left:11px;top:8px;border-left:9px solid var(--bg);border-top:6px solid transparent;border-bottom:6px solid transparent}
-.mark i::after{content:"";position:absolute;right:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
-nav a{color:var(--ink-2);text-decoration:none;margin-left:22px;font-size:.9375rem}
-nav a:hover{color:var(--ink)}
-.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;padding:56px 0 40px}
-h1{font-size:clamp(2.5rem,6vw,4.25rem);line-height:1.02;letter-spacing:-.025em;margin:0 0 20px;font-weight:700;text-wrap:balance}
-.lede{font-size:1.25rem;color:var(--ink-2);margin:0 0 28px;max-width:34rem;text-wrap:pretty}
-.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 20px;height:48px;display:inline-flex;align-items:center;font-weight:600;text-decoration:none;font-size:.9375rem}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+/* nav: a glass hairline */
+.nav{position:sticky;top:0;z-index:10;background:var(--glass);-webkit-backdrop-filter:saturate(160%) blur(16px);backdrop-filter:saturate(160%) blur(16px);border-bottom:1px solid var(--line-2)}
+.nav .wrap{height:56px;display:flex;align-items:center;justify-content:space-between}
+.mark{display:inline-flex;align-items:center;gap:10px;font-weight:600;text-decoration:none;letter-spacing:-.01em;font-size:.9375rem}
+.mark i{width:24px;height:24px;border-radius:50%;background:var(--ink);position:relative;flex:none}
+.mark i::before{content:"";position:absolute;left:9.5px;top:7px;border-left:8px solid var(--bg);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.mark i::after{content:"";position:absolute;right:-3px;top:-3px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.nav nav a{color:var(--ink-2);text-decoration:none;margin-left:24px;font-size:.875rem;transition:color var(--t)}
+.nav nav a:hover{color:var(--ink)}
+/* type */
+h1,h2{letter-spacing:-.03em;line-height:1.02;font-weight:700;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.75rem,7vw,5.5rem)}
+h2{font-size:clamp(2rem,4.2vw,3.25rem)}
+.lede{font-size:clamp(1.125rem,1.6vw,1.375rem);color:var(--ink-2);max-width:36rem;text-wrap:pretty;line-height:1.4}
+.k{color:var(--ink-3);font-size:.8125rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+/* buttons: machined, no chrome beyond the hairline */
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 22px;height:50px;display:inline-flex;align-items:center;gap:10px;font-weight:600;text-decoration:none;font-size:.9375rem;transition:transform var(--t) var(--ease),background var(--t)}
 .btn.quiet{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn:hover{transform:translateY(-1px)}
 .btn:active{transform:scale(.98)}
-.phones{position:relative;height:640px}
-.phones img{position:absolute;width:300px;border-radius:34px;box-shadow:0 30px 60px rgba(0,0,0,.28)}
-.phones .a{left:0;top:0}
-.phones .b{left:210px;top:40px;z-index:1}
-.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px 0;color:var(--ink-3);font-size:.9375rem}
-.strip .wrap{display:flex;flex-wrap:wrap;gap:8px 28px}
-section{padding:72px 0}
-h2{font-size:clamp(1.75rem,3.2vw,2.5rem);letter-spacing:-.02em;margin:0 0 12px;line-height:1.1}
-.sub{color:var(--ink-2);font-size:1.125rem;margin:0 0 40px;max-width:40rem}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px 32px}
-.f h3{margin:0 0 6px;font-size:1.0625rem}
-.f p{margin:0;color:var(--ink-2);font-size:.9375rem}
-.f i{display:block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-bottom:14px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-.two img{width:100%;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
-ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
-ol.steps li{position:relative;padding:14px 0 14px 44px;border-top:1px solid var(--line);counter-increment:s;color:var(--ink-2)}
-ol.steps li strong{color:var(--ink);display:block}
-ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:16px;color:var(--ink-3);font-size:.875rem}
-code{font:.875rem/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 8px}
-pre{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;margin:0}
-pre code{background:none;border:0;padding:0}
-.desk img{width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.25);display:block}
-footer{border-top:1px solid var(--line);padding:32px 0 56px;color:var(--ink-3);font-size:.875rem}
+/* device frame: a thin machined bezel, nothing more */
+.device{display:inline-block;padding:10px;border-radius:46px;background:#0d0d0d;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 40px 90px -20px rgba(0,0,0,.45)}
+.device img{display:block;width:100%;border-radius:36px}
+/* hero */
+.hero{padding:96px 0 72px}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+.hero .lede{margin:24px 0 32px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.stage{position:relative;height:720px}
+.stage .device{position:absolute;width:320px}
+.stage .back{left:0;top:0;transform:rotate(-2deg)}
+.stage .front{left:220px;top:56px;z-index:1;transform:rotate(1.5deg)}
+/* proof strip */
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.strip .wrap{display:flex;flex-wrap:wrap;gap:10px 36px;padding:18px 28px;color:var(--ink-3);font-size:.875rem}
+/* statements: one idea, one image, alternating */
+.stmt{padding:120px 0}
+.stmt .wrap{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.stmt.flip .wrap>:first-child{order:2}
+.stmt .k{margin-bottom:18px;display:block}
+.stmt p{font-size:1.125rem;color:var(--ink-2);max-width:32rem;margin:20px 0 0;text-wrap:pretty}
+.crop{overflow:hidden;border-radius:28px;border:1px solid var(--line);background:var(--surface);aspect-ratio:4/3;position:relative}
+.crop img{position:absolute;left:50%;transform:translateX(-50%);width:min(100%,420px);border-radius:24px 24px 0 0;box-shadow:0 30px 70px -20px rgba(0,0,0,.35)}
+.crop.top img{top:8%}
+.crop.bottom img{bottom:-12%;top:auto;border-radius:24px}
+/* the dark room: the player, at scale */
+.dark{background:#111;color:#f2f1ee;padding:140px 0;position:relative}
+.dark .k{color:#8a8985}
+.dark .lede{color:#b3b2ae}
+.dark .wrap{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.dark .device{width:360px;justify-self:center}
+.dark h2{color:#f2f1ee}
+/* how */
+.how{padding:120px 0}
+.how .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);margin-top:48px}
+.how .grid div{padding:28px 28px 28px 0;border-bottom:1px solid var(--line)}
+.how .grid div+div{border-left:1px solid var(--line);padding-left:28px}
+.how .n{color:var(--ink-3);font-size:.8125rem;display:block;margin-bottom:12px}
+.how h3{margin:0 0 8px;font-size:1.0625rem}
+.how p{margin:0;color:var(--ink-2);font-size:.9375rem}
+/* install */
+.install{padding:0 0 120px}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;overflow:auto;margin:32px 0 16px;font:.9375rem/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
+.install .lede{font-size:1rem}
+code.i{font:.875rem ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+/* desktop */
+.desk{padding:0 0 120px}
+.desk img{width:100%;display:block;border-radius:18px;border:1px solid var(--line);box-shadow:0 40px 90px -30px rgba(0,0,0,.4)}
+footer{border-top:1px solid var(--line);padding:32px 0 64px;color:var(--ink-3);font-size:.875rem}
 footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
-@media (max-width:860px){.hero{grid-template-columns:1fr;padding-top:24px}.phones{height:560px;margin:0 auto;width:510px;max-width:100%}.grid{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
-@media (max-width:560px){.grid{grid-template-columns:1fr}.phones{width:100%;height:520px}.phones img{width:56%}.phones .b{left:44%}nav{display:none}}
-@media (prefers-reduced-motion:no-preference){.hero>*{animation:arrive .5s var(--ease) both}.hero>:nth-child(2){animation-delay:.08s}@keyframes arrive{from{opacity:0;transform:translateY(8px)}}}
+footer a{text-decoration:none;color:var(--ink-2)}
+/* reveals: confirm arrival, nothing more */
+html.js .r{opacity:0;transform:translateY(14px);transition:opacity var(--t-slow) var(--ease),transform var(--t-slow) var(--ease)}
+html.js .r.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.r{opacity:1;transform:none;transition:none}.btn:hover{transform:none}}
+@media (max-width:900px){.hero{padding:56px 0 40px}.hero .wrap,.stmt .wrap,.dark .wrap{grid-template-columns:1fr;gap:40px}.stmt.flip .wrap>:first-child{order:0}.stage{height:600px;max-width:540px;margin:0 auto}.stage .device{width:280px}.stage .front{left:200px}.how .grid{grid-template-columns:1fr 1fr}.how .grid div+div{border-left:0;padding-left:0}.how .grid div:nth-child(even){border-left:1px solid var(--line);padding-left:28px}.dark .device{width:300px}.stmt,.dark,.how{padding:80px 0}}
+@media (max-width:560px){.stage{height:520px}.stage .device{width:58%}.stage .front{left:42%}.nav nav{display:none}.how .grid{grid-template-columns:1fr}.how .grid div:nth-child(even){border-left:0;padding-left:0}}
 </style>
 </head>
 <body>
-<header><div class="wrap"><a class="mark" href="#"><i aria-hidden="true"></i>Callboard</a><nav><a href="#how">How it works</a><a href="#install">Install</a><a href="https://github.com/josephfusco/callboard">GitHub</a></nav></div></header>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Callboard</a><nav><a href="#player">Player</a><a href="#how">How it works</a><a href="#install">Install</a><a href="https://github.com/josephfusco/callboard">GitHub</a></nav></div></div>
 
-<main>
-<div class="wrap hero">
-	<div>
-		<h1>Rehearsal tracks, in the cast's pocket.</h1>
-		<p class="lede">A WordPress plugin that turns a site into a small, private music app. Sets of audio, a player that keeps playing while you move around, offline saving, lock-screen controls, notices, and an "Add to Home Screen" flow on iPhone. No accounts. No ads. No algorithm.</p>
+<main id="top">
+<section class="hero"><div class="wrap">
+	<div class="r">
+		<span class="k">WordPress plugin</span>
+		<h1 style="margin-top:18px">Rehearsal tracks for a cast, on their phones.</h1>
+		<p class="lede">Sets of audio served from your own WordPress site. A persistent player, offline saving, lock-screen controls, push notices, and Add to Home Screen on iPhone. No accounts.</p>
 		<div class="cta"><a class="btn" href="#install">Install</a><a class="btn quiet" href="https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/josephfusco/callboard/main/blueprint.json">Try it in Playground</a></div>
 	</div>
-	<div class="phones" aria-hidden="true"><img class="a" src="home-light.png" alt=""><img class="b" src="set-dark.png" alt=""></div>
-</div>
+	<div class="stage r" aria-hidden="true"><span class="device back"><img src="home-light.png" alt=""></span><span class="device front"><img src="set-dark.png" alt=""></span></div>
+</div></section>
 
-<div class="strip"><div class="wrap"><span>GPL, open source</span><span>Works with any theme</span><span>Accessibility audited</span><span>No build step</span><span>One stylesheet, one script</span></div></div>
+<div class="strip"><div class="wrap"><span>GPL</span><span>Works with any theme</span><span>WCAG 2.2 AA audited</span><span>No build step</span><span>One stylesheet, one script</span></div></div>
 
-<section><div class="wrap">
-	<h2>Made for the way a cast actually practices.</h2>
-	<p class="sub">Tap a link, tap a song, learn your part. Everything else stays out of the way.</p>
-	<div class="grid">
-		<div class="f"><i></i><h3>Keeps playing</h3><p>Move between sets, lock the phone, switch apps. The player persists, with lock-screen controls and artwork.</p></div>
-		<div class="f"><i></i><h3>Save offline</h3><p>Per track or a whole set, with progress on each row. Plays on the bus, in the basement, backstage.</p></div>
-		<div class="f"><i></i><h3>Notices</h3><p>The cast opts in on their phones. You post "call time moved to 4," they get a notification. New sets announce themselves.</p></div>
-		<div class="f"><i></i><h3>Installable</h3><p>Add to Home Screen and it opens full screen with its own icon and launch screen, on iPhone and Android.</p></div>
-		<div class="f"><i></i><h3>Private by default</h3><p>Unindexed, no discoverable people, no referrers, no open APIs. Link previews still work.</p></div>
-		<div class="f"><i></i><h3>Quiet design</h3><p>One accent. Tabular numerals. Motion only where it carries information, and none of it when you ask for less.</p></div>
+<section class="stmt"><div class="wrap">
+	<div class="r"><span class="k">Keeps playing</span><h2>Playback continues across pages.</h2><p>Moving between sets, locking the phone, or switching apps does not stop the player. Artwork and controls appear on the lock screen and in Control Center.</p></div>
+	<div class="crop bottom r"><img src="set-dark.png" alt=""></div>
+</div></section>
+
+<section class="stmt flip"><div class="wrap">
+	<div class="r"><span class="k">Offline</span><h2>Tracks save for offline, per track or per set.</h2><p>Each row shows its own progress and a mark when saved. Saved tracks play without a connection. Removing offline copies requires a second tap.</p></div>
+	<div class="crop top r"><img src="set-light.png" alt=""></div>
+</div></section>
+
+<section class="dark" id="player"><div class="wrap">
+	<span class="device r"><img src="set-dark.png" alt="The set page with the player pinned to the bottom"></span>
+	<div class="r"><span class="k">The player</span><h2>The player.</h2><p class="lede" style="margin-top:20px">Play and pause morph between shapes. The level bars follow the audio where the platform allows it. The scrubber knob moves with the fill. All motion stops under Reduce Motion.</p></div>
+</div></section>
+
+<section class="stmt"><div class="wrap">
+	<div class="r"><span class="k">Notices</span><h2>Notices reach the cast's phones.</h2><p>Opt-in Web Push. Publishing a set sends a notification. Sets → Notices sends a message with an optional link.</p></div>
+	<div class="crop top r"><img src="home-light.png" alt=""></div>
+</div></section>
+
+<section class="how" id="how"><div class="wrap">
+	<div class="r"><span class="k">How it works</span><h2 style="margin-top:18px">Sets are posts. Tracks are attachments.</h2></div>
+	<div class="grid r">
+		<div><span class="n">01</span><h3>Add a set</h3><p>Upload audio to a set in the admin, drop a folder into uploads, or fetch a playlist with WP-CLI where yt-dlp exists.</p></div>
+		<div><span class="n">02</span><h3>Share one link</h3><p>The home page lists every set. Nothing to sign up for.</p></div>
+		<div><span class="n">03</span><h3>Add to Home Screen</h3><p>A one-time hint on iPhone. Installed, it opens full screen with its own icon and launch image.</p></div>
+		<div><span class="n">04</span><h3>Post notices</h3><p>Sets → Notices. Everyone who opted in hears about it.</p></div>
 	</div>
 </div></section>
 
-<section id="how"><div class="wrap two">
-	<div>
-		<h2>How it works</h2>
-		<p class="sub">Sets are posts. Tracks are audio files in the Media Library. The rest is the plugin.</p>
-		<ol class="steps">
-			<li><strong>Add a set.</strong> Upload audio to a set in the admin, drop a folder into uploads, or fetch a YouTube playlist with WP-CLI where yt-dlp exists.</li>
-			<li><strong>Share one link.</strong> The home page lists every set. No accounts, nothing to sign up for.</li>
-			<li><strong>They add it to their Home Screen.</strong> The app hints once, then gets out of the way.</li>
-			<li><strong>Post a notice when something changes.</strong> Sets → Notices, and everyone who opted in hears about it.</li>
-		</ol>
-	</div>
-	<img src="set-light.png" alt="A set page in the light scheme: a track list with the persistent player at the bottom">
-</div></section>
-
-<section id="install"><div class="wrap">
-	<h2>Install</h2>
-	<p class="sub">Requires WordPress 6.5 and PHP 8.1. Fetching from YouTube additionally needs <code>yt-dlp</code> and <code>ffmpeg</code> wherever WP-CLI runs.</p>
+<section class="install" id="install"><div class="wrap r">
+	<span class="k">Install</span><h2 style="margin-top:18px">Install</h2>
 	<pre><code>wp plugin install https://github.com/josephfusco/callboard/releases/latest/download/callboard.zip --activate
 wp callboard fetch 'https://www.youtube.com/playlist?list=…' --name="Spring Show"</code></pre>
-	<p class="sub" style="margin-top:16px">Or upload the zip under Plugins → Add New. Then Sets → Import to bring in a folder, or Sets → Settings for the tagline, badge, and confetti.</p>
+	<p class="lede">Or upload the zip under Plugins → Add New. Requires WordPress 6.5 and PHP 8.1. Fetching from YouTube needs <code class="i">yt-dlp</code> and <code class="i">ffmpeg</code> wherever WP-CLI runs.</p>
 </div></section>
 
-<section class="desk"><div class="wrap"><img src="desktop-dark.png" alt="Callboard on a wide screen: the set list with a row highlighted and the player pinned to the bottom"></div></section>
+<section class="desk"><div class="wrap r"><img src="desktop-dark.png" alt="Callboard on a wide screen"></div></section>
 </main>
 
-<footer><div class="wrap"><span>Callboard is free software under the GPL.</span><span><a href="https://github.com/josephfusco/callboard">Source and issues on GitHub</a></span></div></footer>
+<footer><div class="wrap"><span>Callboard is free software under the GPL.</span><a href="https://github.com/josephfusco/callboard">Source and issues on GitHub</a></div></footer>
+<script>
+	if ( 'IntersectionObserver' in window && ! matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) document.documentElement.classList.add( 'js' );
+	const io = new IntersectionObserver( ( es ) => es.forEach( ( e ) => { if ( e.isIntersecting ) { e.target.classList.add( 'in' ); io.unobserve( e.target ); } } ), { rootMargin: '0px 0px -5% 0px', threshold: 0.01 } );
+	document.querySelectorAll( '.r' ).forEach( ( el ) => io.observe( el ) );
+</script>
 </body>
 </html>

@@ -23,6 +23,8 @@ final class Frontend {
 		add_action( 'wp_head', array( self::class, 'link_previews' ), 2 );
 		add_action( 'wp_head', array( self::class, 'inline_css' ), 3 );
 		add_action( 'wp_head', array( self::class, 'app_meta' ), 4 );
+		// Block themes register a second viewport tag while locating templates (after init), so remove it just before wp_head runs.
+		add_action( 'wp_head', static fn() => remove_action( 'wp_head', '_block_template_viewport_meta_tag', 0 ), -1 );
 		add_action( 'init', array( self::class, 'trim_core_output' ) );
 		add_filter( 'should_load_separate_core_block_assets', '__return_false' );
 		add_filter( 'wp_img_tag_add_auto_sizes', '__return_false' );
@@ -154,8 +156,12 @@ final class Frontend {
 	 * Remove core head/footer output we never want.
 	 */
 	public static function trim_core_output(): void {
-		foreach ( array( 'wp_generator', 'wp_shortlink_wp_head', 'rsd_link', 'wlwmanifest_link', 'rest_output_link_wp_head', 'wp_oembed_add_discovery_links', 'wp_resource_hints', 'wp_print_auto_sizes_contain_css_fix' ) as $hook ) {
+		foreach ( array( 'wp_generator', 'wp_shortlink_wp_head', 'rsd_link', 'wlwmanifest_link', 'wp_oembed_add_discovery_links', 'wp_resource_hints', 'wp_print_auto_sizes_contain_css_fix' ) as $hook ) {
 			remove_action( 'wp_head', $hook );
+		}
+		if ( 'production' === wp_get_environment_type() ) { // REST discovery stays available to local tooling and tests.
+			remove_action( 'wp_head', 'rest_output_link_wp_head' );
+			remove_action( 'template_redirect', 'rest_output_link_header', 11 );
 		}
 		remove_action( 'wp_head', 'feed_links', 2 );
 		remove_action( 'wp_head', 'feed_links_extra', 3 );
@@ -167,6 +173,5 @@ final class Frontend {
 		remove_action( 'wp_enqueue_scripts', 'wp_common_block_scripts_and_styles' );
 		remove_action( 'wp_body_open', 'wp_global_styles_render_svg_filters' );
 		remove_action( 'wp_footer', 'the_block_template_skip_link' );
-		remove_action( 'template_redirect', 'rest_output_link_header', 11 );
 	}
 }

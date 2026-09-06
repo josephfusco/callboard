@@ -40,6 +40,9 @@ final class Plugin {
 	 */
 	public static function activate(): void {
 		Post_Types::register();
+		if ( ! get_option( 'permalink_structure' ) ) { // /<set>/ routes need pretty permalinks.
+			update_option( 'permalink_structure', '/%postname%/' );
+		}
 		Pwa::write_files();
 		Importer::import_all();
 		flush_rewrite_rules();

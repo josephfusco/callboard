@@ -119,7 +119,7 @@ final class Admin {
 		$order  = array_map( 'intval', (array) ( $_POST['callboard_order'] ?? array() ) );
 		$titles = isset( $_POST['callboard_title'] ) ? array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['callboard_title'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per element.
 		foreach ( $order as $i => $track_id ) {
-			if ( get_post_field( 'post_parent', $track_id ) !== (string) $post_id ) {
+			if ( (int) get_post_field( 'post_parent', $track_id ) !== $post_id ) {
 				continue;
 			}
 			$update = array(
@@ -223,6 +223,7 @@ final class Admin {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Callboard', 'callboard' ); ?></h1>
 			<p><?php esc_html_e( 'The site title (Settings → General) is the app name and the home page heading.', 'callboard' ); ?></p>
+			<?php settings_errors(); ?>
 			<form method="post" action="options.php">
 				<?php settings_fields( 'callboard' ); ?>
 				<?php do_settings_sections( 'callboard' ); ?>

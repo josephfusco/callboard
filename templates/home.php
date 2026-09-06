@@ -20,7 +20,7 @@ $callboard_sets = Callboard\Sets::all();
 	</header>
 
 	<?php if ( ! empty( $args['not_found'] ) ) : ?>
-		<p class="note"><?php esc_html_e( "That page isn't here. Everything we have is below.", 'callboard' ); ?></p>
+		<p class="note note-404"><?php esc_html_e( "That page isn't here. Everything we have is below.", 'callboard' ); ?></p>
 	<?php endif; ?>
 
 	<?php if ( ! $callboard_sets ) : ?>

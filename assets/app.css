@@ -274,6 +274,7 @@ body:not(.has-deck) .a2hs{bottom:calc(var(--safe-b) + 12px)}
 .dl:focus-visible{outline:3px solid var(--accent);outline-offset:-4px;border-radius:8px}
 /* the set-level control is secondary: quiet text, no chrome */
 #offline,#notify{border-color:transparent;color:var(--ink-3);padding-left:8px;padding-right:8px}
+#notify,.actions>#offline:first-child{margin-left:-8px} /* quiet text sits on the title's left edge when it leads the row */
 #notify.is-done{color:var(--ink-2);pointer-events:auto}
 body.view-home .actions{margin-top:6px}
 #offline:hover,#offline:focus-visible,#notify:hover,#notify:focus-visible{color:var(--ink)}

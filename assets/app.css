@@ -47,7 +47,9 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px}
 .btn-quiet.is-done{color:var(--ink-2)}
 .btn-quiet.is-busy{color:var(--ink-2);border-color:var(--line)}
-.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 18px;font-weight:600;font-size:.9375rem;cursor:pointer;height:46px;line-height:1;display:inline-flex;align-items:center}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 18px;font-weight:600;font-size:.9375rem;cursor:pointer;height:46px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+#play-all{min-width:104px} /* the label changes with the set's state; the button never resizes */
+.btn-small{height:34px;padding:0 14px;font-size:.8125rem}
 .btn:active{transform:scale(.98)}
 .btn-quiet{background:transparent;color:var(--ink);border-color:var(--line-strong)}
 .note{color:var(--ink-2);padding:20px 0}
@@ -81,7 +83,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .track.active .digits{visibility:hidden}
 .track.active:not(.playing) .eq i{background:var(--ink-3)}
 .track .title{font-size:1.0625rem;font-weight:500;letter-spacing:-.01em;line-height:1.3;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.track .has-lyrics{font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--line-strong);border-radius:4px;padding:1px 5px;line-height:1.4}
+.track .has-lyrics{font-size:.75rem;font-weight:500;color:var(--ink-3);border:1px solid var(--line-strong);border-radius:4px;padding:0 5px;line-height:1.5}
 .track .len{color:var(--ink-3);font-size:.875rem;display:inline-flex;align-items:center;gap:8px}
 .track .hh{font-size:1.05rem;line-height:1;opacity:0;transition:opacity var(--t-fast)}
 .track.active .hh{opacity:1}
@@ -114,7 +116,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-top:2px}
 .deck-text{appearance:none;background:transparent;border:0;padding:6px 0;text-align:left;min-width:0;display:flex;flex-direction:column;gap:3px;cursor:pointer;color:inherit;border-radius:8px}
 .deck-text:active .deck-title{opacity:.6}
-.deck-text.has-lyrics::after{content:"Lyrics";color:var(--ink-3);font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.deck-text.has-lyrics::after{content:"Lyrics";color:var(--ink-3);font-size:.8125rem}
 .deck-text.has-lyrics[aria-expanded="true"]::after{content:"Hide lyrics"}
 .deck-title{font-size:1rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;max-width:100%;display:block}
 .deck-title .mq{display:inline-flex;gap:2.5em}
@@ -168,7 +170,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .lyrics-lines li.now::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 10px 3px -18px;vertical-align:middle}
 
 /* add-to-home-screen hint: one card, floats above the deck */
-.a2hs{position:fixed;left:12px;right:12px;bottom:calc(var(--deck-h) + var(--safe-b) + 12px);z-index:19;display:grid;grid-template-columns:20px 1fr 36px;align-items:center;gap:12px;padding:12px 8px 12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);font-size:.875rem;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:616px;margin:0 auto}
+.a2hs{position:fixed;left:12px;right:12px;bottom:calc(var(--deck-h) + var(--safe-b) + 12px);z-index:19;display:grid;grid-template-columns:20px 1fr auto 36px;align-items:center;gap:12px;padding:12px 8px 12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);font-size:.875rem;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:616px;margin:0 auto}
 .a2hs svg{width:20px;height:20px;color:var(--accent-text)}
 .a2hs p{margin:0}
 .a2hs strong{color:var(--ink);font-weight:600}
@@ -245,6 +247,9 @@ html[data-nav="back"]::view-transition-old(root){animation-name:pop-out}
 /* offline */
 body.is-offline .deck-time::after{content:" · " attr(data-offline);color:var(--accent-text)}
 body.is-offline #offline:not(.is-done){opacity:.5}
+/* offline: only saved tracks will play, so the others step back */
+body.is-offline .tracks li:not(:has(.dl[data-state="saved"])) .track{opacity:.4}
+body:not(.has-deck) .a2hs{bottom:calc(var(--safe-b) + 12px)}
 
 /* skip link: visible only when focused */
 .skip-link{position:absolute;left:12px;top:-100px;z-index:100;padding:10px 14px;border-radius:8px;background:var(--ink);color:var(--bg);font-weight:600;text-decoration:none}

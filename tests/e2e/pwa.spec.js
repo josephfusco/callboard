@@ -15,6 +15,10 @@ test.describe( 'PWA and previews', () => {
 		expect( manifest.icons.length ).toBeGreaterThanOrEqual( 2 );
 		expect( manifest.id ).toBe( '/' );
 		expect( manifest.shortcuts[ 0 ].name ).toBe( 'Demo Set' );
+		expect( manifest.launch_handler.client_mode ).toBe(
+			'navigate-existing'
+		);
+		expect( manifest.short_name.length ).toBeLessThanOrEqual( 12 );
 	} );
 
 	test( 'service worker is served from the root with push handlers', async ( {
@@ -26,6 +30,8 @@ test.describe( 'PWA and previews', () => {
 		expect( body ).toMatch( /addEventListener\(\s*'push'/ );
 		expect( body ).toMatch( /addEventListener\(\s*'fetch'/ );
 		expect( body ).toContain( 'navigationPreload' );
+		expect( body ).toMatch( /const ASSETS = \[.*\/manifest\.json.*\]/ ); // shell precache, versioned
+		expect( body ).toContain( 'd.notification' ); // declarative Web Push payloads
 	} );
 
 	test( 'head carries app meta and Open Graph tags per view', async ( {

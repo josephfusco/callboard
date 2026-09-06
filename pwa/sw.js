@@ -1,6 +1,7 @@
 /* Callboard service worker: app shell cache + optional user-saved audio (served with Range support). */
 const VERSION = '__VERSION__';
 const PLUGIN = '__PLUGIN_PATH__';
+const ASSETS = __ASSETS__; // eslint-disable-line no-undef -- written by PHP: shell files, versioned the way the page requests them
 const SHELL = `callboard-shell-${ VERSION }`;
 const AUDIO = 'callboard-audio-v1';
 
@@ -8,7 +9,7 @@ self.addEventListener( 'install', ( e ) => {
 	e.waitUntil(
 		caches
 			.open( SHELL )
-			.then( ( c ) => c.add( '/' ) )
+			.then( ( c ) => c.addAll( ASSETS ) )
 			.catch( () => {} )
 	);
 	self.skipWaiting();
@@ -29,6 +30,7 @@ self.addEventListener( 'activate', ( e ) =>
 	)
 );
 
+/* Payloads are declarative Web Push (Safari shows them without waking this worker); everywhere else this handler shows the same notification. */
 self.addEventListener( 'push', ( e ) => {
 	let d = {};
 	try {
@@ -36,17 +38,20 @@ self.addEventListener( 'push', ( e ) => {
 	} catch {
 		d = { body: e.data && e.data.text() };
 	}
+	const n = d.notification || d;
 	e.waitUntil(
 		Promise.all( [
-			self.registration.showNotification( d.title || 'Callboard', {
-				body: d.body || '',
-				icon: d.icon,
-				badge: d.badge,
-				tag: d.tag,
-				data: { url: d.url || '/' },
+			self.registration.showNotification( n.title || 'Callboard', {
+				body: n.body || '',
+				icon: n.icon,
+				badge: d.badge || n.icon,
+				tag: n.tag,
+				data: { url: n.navigate || d.url || '/' },
 			} ),
 			'setAppBadge' in self.navigator
-				? self.navigator.setAppBadge( 1 ).catch( () => {} )
+				? self.navigator
+						.setAppBadge( d.app_badge || 1 )
+						.catch( () => {} )
 				: Promise.resolve(),
 		] )
 	);

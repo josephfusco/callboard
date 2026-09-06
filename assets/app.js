@@ -60,6 +60,28 @@
 			navigator.audioSession.type = 'playback';
 		}
 	} catch {}
+	const isIOS = /iphone|ipad|ipod/i.test( navigator.userAgent );
+	const standalone =
+		window.matchMedia( '(display-mode: standalone)' ).matches ||
+		navigator.standalone === true;
+	document.documentElement.classList.toggle( 'is-standalone', standalone );
+	// In-app browsers (Instagram, Facebook, TikTok, Snapchat, Messenger) hide Add to Home Screen; Safari has it.
+	const inApp =
+		/FBAN|FBAV|Instagram|Snapchat|TikTok|musical_ly|Messenger/i.test(
+			navigator.userAgent
+		) ||
+		( isIOS && ! /Safari\//.test( navigator.userAgent ) );
+	let installPrompt = null; // Chromium fires this; one tap then installs
+	window.addEventListener( 'beforeinstallprompt', ( e ) => {
+		e.preventDefault();
+		installPrompt = e;
+		paintTip();
+	} );
+	window.addEventListener( 'appinstalled', () => {
+		installPrompt = null;
+		ls.set( 'callboard:a2hs', 1 );
+		paintTip();
+	} );
 
 	// ---- Views, rendered from data (same markup the server renders on first load)
 	const link = ( text, url ) =>
@@ -263,6 +285,7 @@ ${ footer( s ) }
 		return;
 	}
 
+	let played = false; // true once this session has played anything; before that the set button reads "Play all"
 	let queue = null,
 		i = -1,
 		seeking = false,
@@ -275,7 +298,6 @@ ${ footer( s ) }
 	const onQueuePage = () => !! queue && view() === queue.slug;
 	const key = () => `callboard:${ queue.slug }`;
 
-	const isIOS = /iphone|ipad|ipod/i.test( navigator.userAgent );
 	let analyser = null,
 		eqRaf = 0;
 	const ensureAnalyser = () => {
@@ -372,6 +394,17 @@ ${ footer( s ) }
 			eqStart( rows[ i ] );
 		} else {
 			eqStop();
+		}
+		const pa = $( 'play-all' );
+		if ( pa ) {
+			// the set's transport: starts the set, then mirrors the deck for this set
+			const loaded = played && same && i >= 0;
+			pa.textContent = ! loaded
+				? T.play_all
+				: audio.paused
+				? T.resume
+				: T.pause;
+			pa.classList.toggle( 'is-playing', loaded && ! audio.paused );
 		}
 	}
 	function setTitle( text ) {
@@ -579,6 +612,7 @@ ${ footer( s ) }
 		}
 	};
 	audio.addEventListener( 'play', () => {
+		played = true;
 		morph( 'pause' );
 		deck.classList.add( 'playing' );
 		syncRows();
@@ -770,7 +804,13 @@ ${ footer( s ) }
 		.querySelector( '.skip-link' )
 		?.addEventListener( 'click', ( e ) => {
 			e.preventDefault();
-			$( 'main' ).focus();
+			const m = $( 'main' );
+			m.focus();
+			requestAnimationFrame( () => {
+				if ( document.activeElement !== m ) {
+					m.focus(); // a late layout pass can drop the first attempt
+				}
+			} );
 		} );
 
 	// ---- Delegated clicks: track rows and in-app links
@@ -800,6 +840,9 @@ ${ footer( s ) }
 		) {
 			return;
 		}
+		if ( a.hash && a.pathname === location.pathname ) {
+			return; // a fragment on this page (the skip link): the browser handles it
+		}
 		if ( routeOf( a.href ) === null ) {
 			return;
 		}
@@ -807,20 +850,52 @@ ${ footer( s ) }
 		go( a.href );
 	} );
 
-	// ---- Home Screen hint: one element, shown on set pages in iOS Safari until dismissed
-	const tip = $( 'a2hs' );
-	const standalone =
-		window.matchMedia( '(display-mode: standalone)' ).matches ||
-		navigator.standalone === true;
-	let tipWanted =
-		S.hint &&
-		/iphone|ipad|ipod/i.test( navigator.userAgent ) &&
-		! standalone &&
-		! ls.get( 'callboard:a2hs' );
+	// ---- Install card: one element. iOS gets the two Safari steps, Chromium gets a one-tap prompt,
+	// in-app browsers get a way out to Safari. Never shown once installed or dismissed.
+	const tip = $( 'a2hs' ),
+		tipText = $( 'a2hs-text' ),
+		tipGo = $( 'a2hs-go' );
+	const tipDefault = tipText ? tipText.innerHTML : '';
+	function paintTip() {
+		if ( ! tip ) {
+			return;
+		}
+		const wanted =
+			S.hint &&
+			! standalone &&
+			! ls.get( 'callboard:a2hs' ) &&
+			( isIOS || installPrompt );
+		tip.hidden = ! wanted;
+		if ( ! wanted ) {
+			return;
+		}
+		if ( inApp ) {
+			tipText.textContent = T.open_safari;
+			tipGo.textContent = T.open_safari_go;
+			tipGo.hidden = false;
+			tipGo.onclick = () => {
+				location.href = `x-safari-${ location.href }`;
+			};
+		} else if ( installPrompt ) {
+			tipText.textContent = T.install;
+			tipGo.textContent = T.install_go;
+			tipGo.hidden = false;
+			tipGo.onclick = async () => {
+				const p = installPrompt;
+				installPrompt = null;
+				try {
+					await p.prompt();
+				} catch {}
+				paintTip();
+			};
+		} else {
+			tipText.innerHTML = tipDefault;
+			tipGo.hidden = true;
+		}
+	}
 	$( 'a2hs-close' )?.addEventListener( 'click', () => {
-		tipWanted = false;
-		tip.hidden = true;
 		ls.set( 'callboard:a2hs', 1 );
+		paintTip();
 	} );
 
 	// ---- Online / offline
@@ -935,14 +1010,16 @@ ${ footer( s ) }
 					at: saved?.t || 0,
 				} );
 			}
-			$( 'play-all' )?.addEventListener( 'click', () =>
-				startSet( set, 0 )
-			);
+			$( 'play-all' )?.addEventListener( 'click', () => {
+				if ( played && onQueuePage() && i >= 0 ) {
+					audio.paused ? audio.play() : audio.pause();
+				} else {
+					startSet( set, 0 );
+				}
+			} );
 			setTimeout( () => bindOffline( set ), 700 );
 		}
-		if ( tip ) {
-			tip.hidden = ! ( set && tipWanted );
-		}
+		paintTip();
 		syncRows();
 	}
 	// ---- Offline, per track. Each row has its own control; the set button drives them all.
@@ -994,6 +1071,10 @@ ${ footer( s ) }
 		const ctl = new AbortController();
 		dlAborts.set( t.url, ctl );
 		paintDl( t, 'saving', 0 );
+		if ( ! ls.get( 'callboard:persist' ) ) {
+			ls.set( 'callboard:persist', 1 );
+			navigator.storage?.persist?.().catch( () => {} ); // keeps saved audio out of eviction where the browser honors it
+		}
 		try {
 			const r = await fetch( t.url, {
 				cache: 'no-store',
@@ -1083,10 +1164,50 @@ ${ footer( s ) }
 				: have.size === tracks.length
 				? T.saved
 				: `${ T.save } · ${ total }`;
+			offBtn.setAttribute(
+				'aria-label',
+				have.size === tracks.length && ! busy ? T.saved_hint : ''
+			);
+			if ( ! offBtn.getAttribute( 'aria-label' ) ) {
+				offBtn.removeAttribute( 'aria-label' );
+			}
 			offBtn.disabled =
 				! navigator.onLine && ! busy && have.size !== tracks.length;
 		};
 		paintAll().catch( () => {} );
+		// Once everything is saved the label is information. Removing is for freeing space, so it takes a
+		// press-and-hold (or Delete on the keyboard) to ask, then a tap to confirm; it forgets after a moment.
+		const arm = async () => {
+			if (
+				! offBtn.classList.contains( 'is-done' ) ||
+				offBtn.dataset.confirm
+			) {
+				return;
+			}
+			offBtn.dataset.confirm = '1';
+			offBtn.textContent = T.remove_confirm;
+			setTimeout( () => {
+				if ( offBtn.dataset.confirm ) {
+					delete offBtn.dataset.confirm;
+					paintAll();
+				}
+			}, 4000 );
+		};
+		let hold = 0;
+		offBtn.onpointerdown = () => {
+			clearTimeout( hold );
+			hold = setTimeout( arm, 650 );
+		};
+		offBtn.onpointerup =
+			offBtn.onpointercancel =
+			offBtn.onpointerleave =
+				() => clearTimeout( hold );
+		offBtn.onkeydown = ( e ) => {
+			if ( e.key === 'Delete' || e.key === 'Backspace' ) {
+				e.preventDefault();
+				arm();
+			}
+		};
 		offBtn.onclick = async () => {
 			if ( tracks.some( ( t ) => dlAborts.has( t.url ) ) ) {
 				dlAborts.forEach( ( ctl ) => ctl.abort() );
@@ -1095,16 +1216,7 @@ ${ footer( s ) }
 			const have = await savedSet( tracks );
 			if ( have.size === tracks.length ) {
 				if ( ! offBtn.dataset.confirm ) {
-					// first tap asks; it forgets after a moment
-					offBtn.dataset.confirm = '1';
-					offBtn.textContent = T.remove_confirm;
-					setTimeout( () => {
-						if ( offBtn.dataset.confirm ) {
-							delete offBtn.dataset.confirm;
-							paintAll();
-						}
-					}, 4000 );
-					return;
+					return; // a plain tap on "Saved offline" does nothing
 				}
 				delete offBtn.dataset.confirm;
 				await Promise.all( tracks.map( removeTrack ) );

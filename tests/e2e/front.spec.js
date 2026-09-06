@@ -47,7 +47,9 @@ test.describe( 'Front end', () => {
 		await page.locator( '#offline' ).click();
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			24,
-			{ timeout: 30000 }
+			{
+				timeout: 30000,
+			}
 		);
 		await expect( page.locator( '#offline' ) ).toContainText(
 			/Saved offline/
@@ -57,7 +59,12 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			24
 		);
-		await page.locator( '#offline' ).click(); // asks first
+		await page.locator( '#offline' ).click(); // a plain tap does nothing
+		await expect( page.locator( '#offline' ) ).toHaveText(
+			'Saved offline'
+		);
+		await page.locator( '#offline' ).focus();
+		await page.keyboard.press( 'Delete' ); // asks first (a press-and-hold does the same)
 		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
 		await page.locator( '#offline' ).click();
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
@@ -101,6 +108,21 @@ test.describe( 'Front end', () => {
 			'Tone Two'
 		);
 		await expect( page.locator( '#deck' ) ).toBeVisible();
+	} );
+
+	test( "Play all becomes the set's transport once it is playing", async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		const btn = page.locator( '#play-all' );
+		await expect( btn ).toHaveText( 'Play all' );
+		await btn.click();
+		await expect( btn ).not.toHaveText( 'Play all' );
+		await page.evaluate( () => document.getElementById( 'audio' ).pause() );
+		await expect( btn ).toHaveText( 'Play' );
+		await expect( page.locator( '.track' ).first() ).toHaveClass(
+			/active/
+		);
 	} );
 
 	test( 'All sets swaps views in place and keeps the player', async ( {

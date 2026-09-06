@@ -117,7 +117,12 @@ final class Pwa {
 		$root     = wp_make_link_relative( home_url( '/' ) );
 		$root     = '' !== $root ? $root : '/';
 		$name     = callboard_site_name();
-		$short    = mb_strlen( $name ) > 12 ? rtrim( mb_substr( $name, 0, 12 ) ) : $name;
+		$short    = $name;
+		if ( mb_strlen( $name ) > 12 ) { // the Home Screen label: cut at a word, never mid-word.
+			$cut   = mb_substr( $name, 0, 13 );
+			$space = mb_strrpos( $cut, ' ' );
+			$short = $space ? mb_substr( $cut, 0, $space ) : mb_substr( $name, 0, 12 );
+		}
 		$manifest = array(
 			'name'             => $name,
 			'short_name'       => $short,
@@ -125,8 +130,12 @@ final class Pwa {
 			'start_url'        => $root,
 			'scope'            => $root,
 			'id'               => $root,
+			'lang'             => str_replace( '_', '-', get_locale() ),
 			'display'          => 'standalone',
 			'display_override' => array( 'standalone', 'minimal-ui' ),
+			'launch_handler'   => array( 'client_mode' => 'navigate-existing' ), // a link opens in the running app, never a second window
+			'handle_links'     => 'preferred',
+			'prefer_related_applications' => false,
 			'categories'       => array( 'music', 'education' ),
 			'shortcuts'        => array_map(
 				static fn( array $set ) => array(
@@ -163,9 +172,20 @@ final class Pwa {
 				),
 			),
 		);
+		$assets   = array_map(
+			'wp_make_link_relative',
+			array(
+				home_url( '/' ),
+				home_url( '/manifest.json' ),
+				callboard_asset( 'assets/app.js' ),
+				callboard_asset( 'assets/icon-192.png' ),
+				callboard_asset( 'assets/icon-512.png' ),
+				callboard_asset( 'assets/icon-180.png' ),
+			)
+		);
 		$sw       = str_replace(
-			array( '__VERSION__', '__PLUGIN_PATH__' ),
-			array( (string) time(), wp_make_link_relative( CALLBOARD_URL ) ),
+			array( '__VERSION__', '__PLUGIN_PATH__', '__ASSETS__' ),
+			array( (string) time(), wp_make_link_relative( CALLBOARD_URL ), wp_json_encode( $assets, JSON_UNESCAPED_SLASHES ) ),
 			(string) $wp_filesystem->get_contents( CALLBOARD_DIR . 'pwa/sw.js' )
 		);
 		self::write_splash_screens();

@@ -222,14 +222,26 @@ final class Push {
 				'pruned' => 0,
 			);
 		}
+		$url     = $url ? $url : home_url( '/' );
+		$icon    = callboard_asset( 'assets/icon-192.png' );
+		$tag     = 'callboard-' . substr( md5( $title . $body ), 0, 8 );
 		$payload = wp_json_encode(
 			array(
-				'title' => $title,
-				'body'  => $body,
-				'url'   => $url ? $url : home_url( '/' ),
-				'icon'  => callboard_asset( 'assets/icon-192.png' ),
-				'badge' => callboard_asset( 'assets/icon-192.png' ),
-				'tag'   => 'callboard-' . substr( md5( $title . $body ), 0, 8 ),
+				'web_push'     => 8030, // declarative Web Push: Safari shows this without waking the worker.
+				'notification' => array(
+					'title'    => $title,
+					'body'     => $body,
+					'navigate' => $url,
+					'icon'     => $icon,
+					'tag'      => $tag,
+				),
+				'app_badge'    => 1,
+				'title'        => $title,
+				'body'         => $body,
+				'url'          => $url,
+				'icon'         => $icon,
+				'badge'        => $icon,
+				'tag'          => $tag,
 			)
 		);
 		try {

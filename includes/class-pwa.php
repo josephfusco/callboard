@@ -184,8 +184,8 @@ final class Pwa {
 			)
 		);
 		$sw       = str_replace(
-			array( '__VERSION__', '__PLUGIN_PATH__', '__ASSETS__' ),
-			array( (string) time(), wp_make_link_relative( CALLBOARD_URL ), wp_json_encode( $assets, JSON_UNESCAPED_SLASHES ) ),
+			array( '__VERSION__', '__PLUGIN_PATH__', '__ASSETS__', '__APP_VERSION__' ),
+			array( (string) time(), wp_make_link_relative( CALLBOARD_URL ), wp_json_encode( $assets, JSON_UNESCAPED_SLASHES ), CALLBOARD_VERSION ),
 			(string) $wp_filesystem->get_contents( CALLBOARD_DIR . 'pwa/sw.js' )
 		);
 		self::write_splash_screens();

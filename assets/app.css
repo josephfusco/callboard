@@ -97,7 +97,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .colophon a{color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line-strong)}
 
 /* deck (bottom player) */
-.deck,.topbar{background:var(--deck-bg);-webkit-backdrop-filter:saturate(160%) blur(16px);backdrop-filter:saturate(160%) blur(16px);contain:layout paint}
+.deck,.topbar{background:var(--deck-bg);-webkit-backdrop-filter:saturate(150%) blur(10px);backdrop-filter:saturate(150%) blur(10px);contain:layout paint}
 @supports not (backdrop-filter:blur(1px)){.deck,.topbar{background:var(--deck)}}
 .deck{will-change:transform;position:fixed;left:0;right:0;bottom:-120px;z-index:20;border-top:1px solid var(--line);padding-bottom:calc(var(--safe-b) + 120px)} /* runs past the viewport edge so the browser's bottom bar sits on deck color, not page color */
 .deck-inner{max-width:640px;margin:0 auto;padding:10px 20px 12px}
@@ -195,7 +195,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 @starting-style{.lyrics{transform:translateY(100%)}}
 .lyrics.closing{transform:translateY(100%)}
 #main{transition:transform var(--t-slow) var(--ease),opacity var(--t-slow) var(--ease);transform-origin:50% 0}
-body.sheet-open #main{transform:scale(.96) translateY(6px);opacity:.6} /* the page settles back while the sheet is up */
+body.sheet-open #main{transform:scale(.96) translateY(6px);opacity:.6}
+body.sheet-open #main,body.sheet-closing #main{will-change:transform,opacity} /* the page settles back while the sheet is up */
 .lyrics-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 20px 8px;border-bottom:1px solid var(--line);max-width:640px;margin:0 auto;width:100%}
 .lyrics-lines{list-style:none;margin:0 auto;padding:24px 20px 40vh;width:100%;max-width:640px;overflow-y:auto;flex:1;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .lyrics-lines li{font-size:1.5rem;line-height:1.3;font-weight:600;letter-spacing:-.015em;color:var(--ink-3);padding:8px 0;cursor:pointer;transition:color var(--t)}
@@ -204,6 +205,12 @@ body.sheet-open #main{transform:scale(.96) translateY(6px);opacity:.6} /* the pa
 .lyrics-lines li:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
 .lyrics-lines li.now::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 10px 3px -18px;vertical-align:middle}
 
+/* a new version is waiting: one quiet line above the deck */
+.update{position:fixed;left:50%;bottom:calc(var(--deck-h) + var(--safe-b) + 12px);transform:translateX(-50%);z-index:19;appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;height:38px;padding:0 6px 0 14px;font-size:.875rem;display:inline-flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.12);transition:opacity var(--t-slow),transform var(--t-slow) var(--ease)}
+.update-go{background:var(--ink);color:var(--bg);border-radius:999px;height:28px;padding:0 12px;display:inline-flex;align-items:center;font-weight:600}
+@starting-style{.update{opacity:0;transform:translateX(-50%) translateY(6px)}}
+body:not(.has-deck) .update{bottom:calc(var(--safe-b) + 12px)}
+.colophon .version{color:var(--ink-3);opacity:.7;font-size:.75rem;margin-top:14px}
 /* add-to-home-screen hint: one card, floats above the deck */
 .a2hs{position:fixed;left:12px;right:12px;bottom:calc(var(--deck-h) + var(--safe-b) + 12px);z-index:19;display:grid;grid-template-columns:20px 1fr auto 36px;align-items:center;gap:12px;padding:12px 8px 12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);font-size:.875rem;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:616px;margin:0 auto}
 .a2hs svg{width:20px;height:20px;color:var(--accent-text)}

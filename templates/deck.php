@@ -31,6 +31,7 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 </section>
 
+<button type="button" class="update" id="update" hidden><span><?php esc_html_e( 'Updated', 'callboard' ); ?></span><span class="update-go"><?php esc_html_e( 'Reload', 'callboard' ); ?></span></button>
 <div class="a2hs" id="a2hs" hidden role="status">
 	<?php echo callboard_icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?>
 	<p id="a2hs-text"><?php echo wp_kses( __( 'Keep this on your phone: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.', 'callboard' ), array( 'strong' => array() ) ); ?></p>

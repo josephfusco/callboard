@@ -55,6 +55,24 @@
 			}
 		}
 	);
+	// A new version took over underneath this page: say so, quietly, and let a tap bring it in.
+	navigator.serviceWorker?.addEventListener( 'message', ( e ) => {
+		if (
+			e.data?.type !== 'callboard:updated' ||
+			e.data.version === G.version
+		) {
+			return;
+		}
+		const bar = $( 'update' );
+		if ( bar ) {
+			bar.hidden = false;
+		}
+	} );
+	document.addEventListener( 'click', ( e ) => {
+		if ( e.target.closest( '#update' ) ) {
+			location.reload();
+		}
+	} );
 	try {
 		if ( navigator.audioSession ) {
 			navigator.audioSession.type = 'playback';
@@ -118,7 +136,7 @@
 		if ( ! set ) {
 			return `<footer class="colophon">${
 				T.footer_note ? `<p>${ esc( T.footer_note ) }</p>` : ''
-			}</footer>`;
+			}<p class="version">Callboard ${ esc( G.version ) }</p></footer>`;
 		}
 		const c = set.credits || {},
 			names = Object.keys( c.uploaders || {} );
@@ -554,11 +572,16 @@ ${ footer( s ) }
 		seekWidth = seek.clientWidth - ( seekKnob ? seekKnob.offsetWidth : 0 );
 	};
 	window.addEventListener( 'resize', measureSeek );
+	let lastStep = -1;
 	const setProgress = ( ratio ) => {
 		if ( ! seekWidth ) {
 			measureSeek();
 		}
-		seek.value = Math.round( ratio * 1000 );
+		const step = Math.round( ratio * 1000 );
+		if ( step !== lastStep ) {
+			lastStep = step;
+			seek.value = step; // the control repaints on a value change, so only when the value changes
+		}
 		seekFill.style.transform = `scaleX(${ ratio })`;
 		if ( seekKnob ) {
 			seekKnob.style.transform = `translateX(${ (

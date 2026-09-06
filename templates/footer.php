@@ -16,6 +16,7 @@ $callboard_set = $args['set'] ?? null;
 		if ( Callboard\Settings::get( 'footer_note' ) ) :
 			?>
 			<p><?php echo esc_html( Callboard\Settings::get( 'footer_note' ) ); ?></p><?php endif; ?>
+		<p class="version">Callboard <?php echo esc_html( CALLBOARD_VERSION ); ?></p>
 	<?php else : ?>
 		<?php
 		$callboard_c     = $callboard_set['credits'];

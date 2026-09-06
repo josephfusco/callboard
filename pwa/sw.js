@@ -1,5 +1,6 @@
 /* Callboard service worker: app shell cache + optional user-saved audio (served with Range support). */
 const VERSION = '__VERSION__';
+const APP = '__APP_VERSION__'; // the plugin version the pages compare against
 const PLUGIN = '__PLUGIN_PATH__';
 const ASSETS = __ASSETS__; // eslint-disable-line no-undef -- written by PHP: shell files, versioned the way the page requests them
 const SHELL = `callboard-shell-${ VERSION }`;
@@ -26,6 +27,11 @@ self.addEventListener( 'activate', ( e ) =>
 				await self.registration.navigationPreload.enable(); // the page request races the worker boot
 			}
 			await self.clients.claim();
+			for ( const c of await self.clients.matchAll( {
+				type: 'window',
+			} ) ) {
+				c.postMessage( { type: 'callboard:updated', version: APP } );
+			}
 		} )()
 	)
 );

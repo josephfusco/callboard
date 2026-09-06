@@ -40,6 +40,7 @@ final class Frontend {
 		$data             = Sets::app_data( Router::view() );
 		$data['settings'] = Settings::for_client();
 		$data['icon']     = callboard_asset( 'assets/icon-512.png' );
+		$data['version']  = CALLBOARD_VERSION;
 		$data['push']     = Settings::get( 'push' ) && Push::available() ? array(
 			'key' => Push::keys()['publicKey'] ?? '',
 			'api' => esc_url_raw( rest_url( 'callboard/v1/push/' ) ),
@@ -61,6 +62,8 @@ final class Frontend {
 			'saving_set'     => __( 'Saving offline, %1$s of %2$s', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
 			'save_rest'      => __( 'Save the rest, %1$s of %2$s saved', 'callboard' ),
+			'updated'        => __( 'Updated', 'callboard' ),
+			'reload'         => __( 'Reload', 'callboard' ),
 			'saved_hover'    => __( ' · hold to remove', 'callboard' ),
 			'saved_hint'     => __( 'Saved offline. Press and hold, or press Delete, to remove the copies.', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */

@@ -33,7 +33,7 @@ The repository is meant to be left alone for long stretches, so the routine work
 
 - **Dependencies.** Dependabot opens one grouped pull request per ecosystem each month for minor and patch bumps, and `dependabot-auto-merge.yml` merges it once every required check is green. Major bumps open on their own and wait for a person. Security updates arrive as soon as an advisory does.
 - **Required checks.** `main` is protected: PHPCS, ESLint, Playwright, Plugin Check, the spell check and the pull request title lint all have to pass before anything merges, by hand or by bot.
-- **Weekly run.** CI runs the full suite every Monday against current WordPress core, so a core release that breaks something shows up as a failed run in your inbox rather than in production.
+- **Weekly run.** CI runs the full suite every Monday against current WordPress core, so a core release that breaks something shows up as a failed run in your inbox rather than in production. The release and Playground workflows run weekly too, because a commit produced by a self-merging Dependabot pull request does not start push workflows on its own.
 - **Version strings.** `scripts/sync-versions.sh` writes the version everywhere WordPress reads it and sets `Tested up to` from the core version the suite just ran against, so neither goes stale.
 
 ## Releases

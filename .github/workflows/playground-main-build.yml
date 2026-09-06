@@ -8,6 +8,10 @@ on:
   push:
     branches: [main]
     paths-ignore: [ '**.md', '.github/**', 'tests/**' ]
+  # Auto-merged Dependabot commits do not start push workflows, so the demo
+  # zip is rebuilt weekly as well.
+  schedule:
+    - cron: '32 6 * * 1'
   workflow_dispatch:
 
 # Queued, not cancelled: the last push to finish is the one that wins.

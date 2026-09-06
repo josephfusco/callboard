@@ -1,0 +1,54 @@
+name: Playground Preview
+
+# Builds callboard.zip from the PR commit and uploads it as an artifact. The
+# "Playground Preview Publish" workflow hosts it and comments on the PR, so every
+# PR gets a one-click Playground of its own build. PR code is untrusted here:
+# read-only token, no composer scripts.
+
+on:
+  pull_request:
+    paths-ignore: [ '**.md', '.github/**', 'tests/**' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', tools: composer }
+      - run: composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
+      - name: Build callboard.zip
+        run: |
+          set -euo pipefail
+          mkdir -p build/callboard
+          rsync -a --exclude-from='.distignore' --exclude='build' ./ build/callboard/
+          (cd build && zip -qr callboard.zip callboard/)
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/callboard/callboard.php
+          find build/callboard -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      - name: Schema-validate the blueprint
+        run: |
+          jq -e '(.steps | length > 0) and (.steps | map(select(.step == "installPlugin" and (.pluginData.resource // "") == "url")) | length == 1)' blueprint.json > /dev/null
+      - name: Save PR metadata
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          jq -n --argjson pr "$PR_NUMBER" --arg sha "$HEAD_SHA" '{pr_number: $pr, head_sha: $sha}' > pr-meta.json
+      - uses: actions/upload-artifact@v4
+        with: { name: release-assets, path: build/callboard.zip, retention-days: 14, if-no-files-found: error }
+      - uses: actions/upload-artifact@v4
+        with: { name: pr-meta, path: pr-meta.json, retention-days: 14, if-no-files-found: error }

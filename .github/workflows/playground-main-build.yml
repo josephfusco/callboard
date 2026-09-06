@@ -1,0 +1,52 @@
+name: Playground Main Build
+
+# Builds callboard.zip from main and force-pushes it to the preview-main branch,
+# which is what blueprint.json installs, so the README badge always boots current code.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: [ '**.md', '.github/**', 'tests/**' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', tools: composer }
+      - run: composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
+      - name: Build callboard.zip
+        run: |
+          set -euo pipefail
+          mkdir -p build/callboard
+          rsync -a --exclude-from='.distignore' --exclude='build' ./ build/callboard/
+          (cd build && zip -qr callboard.zip callboard/)
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/callboard/callboard.php
+          test -f build/callboard/vendor/autoload.php
+          find build/callboard -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      - name: Publish to the preview-main branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p preview && cp build/callboard.zip preview/
+          cd preview
+          git init -q -b preview-main
+          git add -A
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -qm "Playground build of ${SHA}"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" preview-main

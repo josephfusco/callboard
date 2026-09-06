@@ -8,6 +8,14 @@ Rehearsal tracks for a cast. A WordPress plugin that turns a site into a small, 
 - **Notices.** The cast opts in from the home page; you send messages from Sets → Notices, and new sets announce themselves.
 - **Settings** for the tagline, footer note, an emoji badge on the playing track, and the confetti text behind a triple tap on the title.
 
+## WordPress Playground
+
+No install needed. Launch a scratch site from `main` with a demo set already imported.
+
+[![Launch in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/josephfusco/callboard/main/blueprint.json)
+
+Every pull request gets its own Playground link in a sticky comment, built from that PR's commit.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) to run it locally with wp-env and the Playwright suite.
 
 GPL-2.0-or-later.

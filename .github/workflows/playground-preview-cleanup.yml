@@ -1,0 +1,21 @@
+name: Playground Preview Cleanup
+
+# Deletes the per-PR preview branch when the PR closes. pull_request_target so it
+# also runs for fork PRs; it never checks out PR code.
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh api --method DELETE "repos/${GH_REPO}/git/refs/heads/preview-pr-${PR_NUMBER}" --silent 2>/dev/null || true

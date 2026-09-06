@@ -1,0 +1,22 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"preferredVersions": { "php": "8.3", "wp": "latest" },
+	"landingPage": "/",
+	"login": true,
+	"steps": [
+		{ "step": "setSiteOptions", "options": { "blogname": "Callboard Demo", "permalink_structure": "/%postname%/" } },
+		{
+			"step": "installPlugin",
+			"pluginData": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/preview-main/callboard.zip" }
+		},
+		{ "step": "mkdir", "path": "/wordpress/wp-content/uploads/callboard/demo-set" },
+		{ "step": "writeFile", "path": "/wordpress/wp-content/uploads/callboard/demo-set/manifest.json", "data": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/manifest.json" } },
+		{ "step": "writeFile", "path": "/wordpress/wp-content/uploads/callboard/demo-set/cover.png", "data": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/cover.png" } },
+		{ "step": "writeFile", "path": "/wordpress/wp-content/uploads/callboard/demo-set/01 - Tone 1 [tone01].mp3", "data": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/01%20-%20Tone%201%20%5Btone01%5D.mp3" } },
+		{ "step": "writeFile", "path": "/wordpress/wp-content/uploads/callboard/demo-set/02 - Tone 2 [tone02].mp3", "data": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/02%20-%20Tone%202%20%5Btone02%5D.mp3" } },
+		{
+			"step": "runPHP",
+			"code": "<?php require '/wordpress/wp-load.php'; update_option( 'callboard_settings', array( 'tagline' => 'Rehearsal tracks', 'footer_note' => 'For rehearsal use only.', 'badge' => '★', 'confetti' => '22', 'hearts' => true, 'show_hint' => false, 'offline' => true, 'push' => false, 'notify_new_sets' => false ) ); Callboard\\Importer::import_all(); flush_rewrite_rules(); ?>"
+		}
+	]
+}

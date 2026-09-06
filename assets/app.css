@@ -4,7 +4,7 @@
   --bg:#eceae5; --surface:#f6f5f2; --surface-2:#e2e0da; --line:#d3d1cb; --line-strong:#b8b6b0;
   --ink:#1c1c1c; --ink-2:#55544f; --ink-3:#6f6e69; --accent:#e8541e; --accent-text:#c2401a; --accent-ink:#fff;
   --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06);
-  --ease:var(--ease); --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:128px; --deck-bg:rgba(246,245,242,.94);
+  --ease:cubic-bezier(.2,.8,.2,1); --ease-spring:cubic-bezier(.34,1.4,.64,1); --t-fast:.12s; --t:.2s; --t-slow:.36s; --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:128px; --deck-bg:rgba(246,245,242,.94);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#161616; --surface:#1f1f1f; --surface-2:#292929; --line:#2e2e2e; --line-strong:#444;
@@ -113,11 +113,34 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 input[type=range]:active~.seek-line .seek-knob,.seeking .seek-knob{transform-origin:center}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:transparent;border:0}
-.deck-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-top:2px}
+.deck-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;margin-top:2px}
+/* light strip: the deck's top edge carries the level (opacity only) */
+.deck-glow{position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent);opacity:0;will-change:opacity;pointer-events:none;box-shadow:0 1px 10px var(--accent)}
+.deck.playing .deck-glow{transition:opacity var(--t-fast) linear}
+/* marks on the seek line: ticks above it where singing resumes, pins for notes */
+.seek-marks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
+.seek-marks .tick{position:absolute;top:calc(50% - 10px);width:1px;height:5px;margin-left:-.5px;background:var(--ink-3);opacity:.7}
+.seek-marks .pin{position:absolute;top:calc(50% - 15px);width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--deck);pointer-events:auto;cursor:pointer;transition:transform var(--t) var(--ease-spring)}
+.seek-marks .pin::before{content:"";position:absolute;inset:-12px}
+.seek-marks .pin:active{transform:scale(1.3)}
+/* A-B loop: a band on the line, a quiet chip that clears it */
+.loop-band{position:absolute;inset:0;background:var(--ink);opacity:0;transform-origin:0 50%;transform:scaleX(0);transition:opacity var(--t)}
+.loop-band.on{opacity:.4}
+.loop-chip{appearance:none;border:1px solid var(--line-strong);background:transparent;color:var(--ink-2);border-radius:999px;height:30px;padding:0 10px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.loop-chip::after{content:"×";font-size:.9rem;color:var(--ink-3)}
+.loop-chip:active{background:var(--surface-2)}
+/* notes and the count-in on the title line */
+.deck-title small{font-size:.8125rem;color:var(--ink-3);margin-left:8px}
+.deck-title.is-note>.mq>span{color:var(--accent-text)}
+.deck-title.is-count>.mq>span{color:var(--accent-text);font-variant-numeric:tabular-nums}
+.ctl.play.beat{animation:beat .22s var(--ease)}
+@keyframes beat{35%{transform:scale(1.09)}100%{transform:none}}
+.lyrics-lines li time{color:var(--ink-3);font-size:1rem;font-weight:500;margin-right:12px;font-variant-numeric:tabular-nums}
+.lyrics-lines li small{display:block;font-size:.8125rem;font-weight:500;color:var(--ink-3);margin-top:2px}
 .deck-text{appearance:none;background:transparent;border:0;padding:6px 0;text-align:left;min-width:0;display:flex;flex-direction:column;gap:3px;cursor:pointer;color:inherit;border-radius:8px}
 .deck-text:active .deck-title{opacity:.6}
-.deck-text.has-lyrics::after{content:"Lyrics";color:var(--ink-3);font-size:.8125rem}
-.deck-text.has-lyrics[aria-expanded="true"]::after{content:"Hide lyrics"}
+.deck-text[data-sheet]::after{content:attr(data-sheet);color:var(--ink-3);font-size:.8125rem}
+.deck-text[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
 .deck-title{font-size:1rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;max-width:100%;display:block}
 .deck-title .mq{display:inline-flex;gap:2.5em}
 .deck-title:not(.marquee) .mq{display:block;overflow:hidden;text-overflow:ellipsis}

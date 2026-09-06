@@ -125,6 +125,35 @@ final class Cli {
 	}
 
 	/**
+	 * Measure loudness envelopes for a set folder that was fetched before levels existed, then re-import it.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The set folder name under the import directory.
+	 *
+	 * @param string[]              $args       Positional args.
+	 * @param array<string, string> $assoc_args Named args.
+	 */
+	public function levels( array $args, array $assoc_args ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- WP-CLI signature.
+		$dir    = Importer::source_dir() . '/' . sanitize_title( (string) $args[0] );
+		$ffmpeg = Fetcher::tools()['ffmpeg'];
+		if ( ! is_dir( $dir ) ) {
+			WP_CLI::error( 'No folder at ' . $dir );
+		}
+		if ( ! $ffmpeg ) {
+			WP_CLI::error( 'ffmpeg is not on PATH.' );
+		}
+		$levels = Fetcher::levels_for_dir( $dir, $ffmpeg, static fn( string $line ) => WP_CLI::log( '  ' . $line ) );
+		if ( ! $levels ) {
+			WP_CLI::error( 'No audio files with [id] names in ' . $dir );
+		}
+		file_put_contents( $dir . '/levels.json', wp_json_encode( $levels ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		WP_CLI::log( Importer::import_folder( $dir ) );
+		WP_CLI::success( 'Levels written for ' . count( $levels ) . ' tracks.' );
+	}
+
+	/**
 	 * Send a notice to everyone subscribed to notifications.
 	 *
 	 * ## OPTIONS

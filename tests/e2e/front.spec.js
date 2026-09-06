@@ -125,6 +125,60 @@ test.describe( 'Front end', () => {
 		);
 	} );
 
+	test( 'ticks and note pins mark the seek line; a pin jumps there', async ( {
+		page,
+	} ) => {
+		await page.goto( '/long-set/' );
+		await page.locator( '.track' ).first().click();
+		await expect( page.locator( '#seek-marks .tick' ) ).toHaveCount( 3 ); // one rest in the lyrics, two notes
+		await expect( page.locator( '#seek-marks .pin' ) ).toHaveCount( 2 );
+		await page.locator( '#seek-marks .pin' ).first().click();
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'Softer here'
+		);
+		await expect( page.locator( '#now-title' ) ).toContainText( 'Sep 1' );
+		await page.locator( '#open-lyrics' ).click();
+		await expect(
+			page.locator( '#lyrics-lines li' ).first()
+		).toContainText( 'Curtain up' );
+	} );
+
+	test( 'an A-B loop from the keyboard shows a chip and clears', async ( {
+		page,
+	} ) => {
+		await page.goto( '/long-set/' );
+		await page.locator( '.track' ).first().click();
+		await page.evaluate( () => {
+			document.getElementById( 'audio' ).currentTime = 2;
+		} );
+		await page.keyboard.press( '[' );
+		await page.evaluate( () => {
+			document.getElementById( 'audio' ).currentTime = 6;
+		} );
+		await page.keyboard.press( ']' );
+		await expect( page.locator( '#loop' ) ).toHaveText( /Loop 0:02–0:06/ );
+		await expect( page.locator( '#loop-band' ) ).toHaveClass( /on/ );
+		await page.locator( '#loop' ).click();
+		await expect( page.locator( '#loop' ) ).toBeHidden();
+	} );
+
+	test( 'a track with a tempo counts in before it plays', async ( {
+		page,
+	} ) => {
+		await page.goto( '/long-set/' );
+		await page.locator( '.track' ).nth( 2 ).click(); // The Wish, 120 BPM
+		await expect( page.locator( '#deck' ) ).toHaveClass( /counting/ );
+		await expect( page.locator( '#now-title' ) ).toHaveText(
+			/^1(\s+[2-4])*$/
+		);
+		await expect( page.locator( '#deck' ) ).not.toHaveClass( /counting/, {
+			timeout: 4000,
+		} );
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'The Wish'
+		);
+	} );
+
 	test( 'All sets swaps views in place and keeps the player', async ( {
 		page,
 	} ) => {

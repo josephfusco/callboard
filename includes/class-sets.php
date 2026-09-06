@@ -153,6 +153,9 @@ final class Sets {
 			}
 			$meta     = (array) wp_get_attachment_metadata( $track->ID );
 			$duration = get_post_meta( $track->ID, '_callboard_duration', true );
+			$notes    = get_post_meta( $track->ID, '_callboard_notes', true );
+			$levels   = (string) get_post_meta( $track->ID, '_callboard_levels', true );
+			$bpm      = (int) get_post_meta( $track->ID, '_callboard_bpm', true );
 			$tracks[] = array(
 				'id'       => $track->ID,
 				'index'    => ++$index,
@@ -160,6 +163,9 @@ final class Sets {
 				'url'      => esc_url_raw( wp_get_attachment_url( $track->ID ) ),
 				'duration' => '' !== $duration ? (float) $duration : (float) ( $meta['length'] ?? 0 ),
 				'bytes'    => (int) ( $meta['filesize'] ?? filesize( $file ) ),
+				'levels'   => '' !== $levels ? $levels : null,
+				'bpm'      => $bpm > 0 ? $bpm : null,
+				'notes'    => is_array( $notes ) ? array_values( $notes ) : array(),
 			);
 			$uploader = get_post_meta( $track->ID, '_callboard_uploader', true );
 			if ( $uploader ) {

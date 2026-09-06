@@ -51,12 +51,20 @@ final class Admin {
 			echo '<p>' . esc_html__( 'No audio yet. Upload audio files to the Media Library and attach them to this set, or import a folder.', 'callboard' ) . '</p>';
 			return;
 		}
-		echo '<p class="description">' . esc_html__( 'Drag to reorder. Titles are what the cast sees.', 'callboard' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Drag to reorder. Titles are what the cast sees. Open a track for its tempo and director notes.', 'callboard' ) . '</p>';
 		echo '<ol class="callboard-tracks" id="callboard-tracks">';
 		foreach ( $tracks as $track ) {
-			$meta = (array) wp_get_attachment_metadata( $track->ID );
+			$meta  = (array) wp_get_attachment_metadata( $track->ID );
+			$bpm   = (int) get_post_meta( $track->ID, '_callboard_bpm', true );
+			$notes = get_post_meta( $track->ID, '_callboard_notes', true );
+			$lines = array();
+			foreach ( is_array( $notes ) ? $notes : array() as $n ) {
+				$lines[] = callboard_fmt( (float) $n['t'] ) . ' ' . $n['text'];
+			}
 			printf(
-				'<li data-id="%1$d"><span class="dashicons dashicons-menu" aria-hidden="true"></span><input type="hidden" name="callboard_order[]" value="%1$d"><label class="screen-reader-text" for="callboard-title-%1$d">%6$s</label><input type="text" class="regular-text" id="callboard-title-%1$d" name="callboard_title[%1$d]" value="%2$s"><span class="callboard-len">%3$s</span><button type="button" class="button-link callboard-move" data-dir="-1" aria-label="%7$s">&uarr;</button><button type="button" class="button-link callboard-move" data-dir="1" aria-label="%8$s">&darr;</button><a href="%4$s">%5$s</a></li>',
+				'<li data-id="%1$d"><div class="callboard-track-row"><span class="dashicons dashicons-menu" aria-hidden="true"></span><input type="hidden" name="callboard_order[]" value="%1$d"><label class="screen-reader-text" for="callboard-title-%1$d">%6$s</label><input type="text" class="regular-text" id="callboard-title-%1$d" name="callboard_title[%1$d]" value="%2$s"><span class="callboard-len">%3$s</span><button type="button" class="button-link callboard-move" data-dir="-1" aria-label="%7$s">&uarr;</button><button type="button" class="button-link callboard-move" data-dir="1" aria-label="%8$s">&darr;</button><a href="%4$s">%5$s</a></div>'
+				. '<details class="callboard-track-more"%9$s><summary>%10$s</summary><p><label for="callboard-bpm-%1$d">%11$s</label> <input type="number" id="callboard-bpm-%1$d" name="callboard_bpm[%1$d]" value="%12$s" min="30" max="300" step="1" class="small-text"> <span class="description">%13$s</span></p>'
+				. '<p><label for="callboard-notes-%1$d">%14$s</label><br><textarea id="callboard-notes-%1$d" name="callboard_notes[%1$d]" rows="3" class="large-text code" placeholder="1:32 Softer here">%15$s</textarea><span class="description">%16$s</span></p></details></li>',
 				(int) $track->ID,
 				esc_attr( $track->post_title ),
 				esc_html( $meta['length_formatted'] ?? '' ),
@@ -65,7 +73,15 @@ final class Admin {
 				/* translators: %s: track title. */
 				esc_attr( sprintf( __( 'Title for %s', 'callboard' ), $track->post_title ) ),
 				esc_attr__( 'Move up', 'callboard' ),
-				esc_attr__( 'Move down', 'callboard' )
+				esc_attr__( 'Move down', 'callboard' ),
+				$bpm || $lines ? ' open' : '',
+				esc_html__( 'Tempo and notes', 'callboard' ),
+				esc_html__( 'Tempo (BPM)', 'callboard' ),
+				esc_attr( $bpm ? (string) $bpm : '' ),
+				esc_html__( 'With a tempo, Play from the top counts in four beats.', 'callboard' ),
+				esc_html__( 'Director notes', 'callboard' ),
+				esc_textarea( implode( "\n", $lines ) ),
+				esc_html__( 'One per line: a time, then the note. Each note is dated the day it is first saved and pinned at that time on the player.', 'callboard' )
 			);
 		}
 		echo '</ol>';
@@ -134,6 +150,10 @@ final class Admin {
 				$update['post_title'] = $titles[ $track_id ];
 			}
 			wp_update_post( $update );
+			$bpms = array_map( 'intval', (array) ( $_POST['callboard_bpm'] ?? array() ) );
+			update_post_meta( $track_id, '_callboard_bpm', Importer::clamp_bpm( (int) ( $bpms[ $track_id ] ? $bpms[ $track_id ] : 0 ) ) );
+			$raw = isset( $_POST['callboard_notes'][ $track_id ] ) ? sanitize_textarea_field( wp_unslash( (string) $_POST['callboard_notes'][ $track_id ] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized here.
+			update_post_meta( $track_id, '_callboard_notes', self::parse_notes( $raw, (array) get_post_meta( $track_id, '_callboard_notes', true ) ) );
 		}
 		$credits = isset( $_POST['callboard_credits'] ) ? array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['callboard_credits'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per element.
 		update_post_meta(
@@ -147,6 +167,36 @@ final class Admin {
 		);
 		update_post_meta( $post_id, '_callboard_lyrics_approved', empty( $_POST['callboard_lyrics_approved'] ) ? 0 : 1 );
 		Sets::flush();
+	}
+
+	/**
+	 * "m:ss text" lines into dated notes. A line that already existed keeps its date.
+	 *
+	 * @param string            $raw      Textarea content.
+	 * @param array<int, mixed> $existing Stored notes.
+	 * @return array<int, array{t: float, text: string, date: string}>
+	 */
+	public static function parse_notes( string $raw, array $existing ): array {
+		$dates = array();
+		foreach ( $existing as $n ) {
+			if ( is_array( $n ) && isset( $n['t'], $n['text'] ) ) {
+				$dates[ (string) (float) $n['t'] . '|' . $n['text'] ] = (string) ( $n['date'] ?? '' );
+			}
+		}
+		$notes = array();
+		foreach ( preg_split( '/\r\n|\r|\n/', $raw ) ?: array() as $line ) { // phpcs:ignore Universal.Operators.DisallowShortTernary.Found
+			if ( ! preg_match( '/^\s*(?:(\d+):)?(\d+(?:\.\d+)?)\s+(.+?)\s*$/', $line, $m ) ) {
+				continue;
+			}
+			$t       = ( (int) $m[1] ) * 60 + (float) $m[2];
+			$text    = sanitize_text_field( $m[3] );
+			$notes[] = array(
+				't'    => $t,
+				'text' => $text,
+				'date' => $dates[ (string) $t . '|' . $text ] ?? '',
+			);
+		}
+		return Importer::sanitize_notes( $notes );
 	}
 
 	/**
@@ -369,7 +419,7 @@ wp callboard run   <?php esc_html_e( '# or drain everything queued above', 'call
 		}
 		wp_enqueue_script( 'jquery-ui-sortable' );
 		wp_add_inline_script( 'jquery-ui-sortable', 'jQuery(function($){$("#callboard-tracks").sortable({handle:".dashicons-menu"});$("#callboard-tracks").on("click",".callboard-move",function(){var li=$(this).closest("li"),dir=+$(this).data("dir");if(dir<0){li.prev().before(li);}else{li.next().after(li);}$(this).focus();});});' );
-		wp_add_inline_style( 'wp-admin', '.callboard-move{padding:0 6px;font-size:16px;line-height:1}.callboard-tracks{margin:0}.callboard-tracks li{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #dcdcde}.callboard-tracks .dashicons-menu{cursor:grab;color:#787c82}.callboard-tracks input[type=text]{flex:1}.callboard-len{color:#646970;font-variant-numeric:tabular-nums;min-width:3em}' );
+		wp_add_inline_style( 'wp-admin', '.callboard-move{padding:0 6px;font-size:16px;line-height:1}.callboard-tracks{margin:0}.callboard-tracks li{padding:6px 0;border-bottom:1px solid #dcdcde}.callboard-track-row{display:flex;align-items:center;gap:10px}.callboard-track-more{margin:4px 0 0 34px}.callboard-track-more summary{cursor:pointer;color:#2271b1}.callboard-track-more p{margin:8px 0}.callboard-tracks .dashicons-menu{cursor:grab;color:#787c82}.callboard-tracks input[type=text]{flex:1}.callboard-len{color:#646970;font-variant-numeric:tabular-nums;min-width:3em}' );
 	}
 
 	/**

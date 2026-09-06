@@ -67,6 +67,41 @@ test.describe( 'Admin', () => {
 		void requestUtils;
 	} );
 
+	test( 'a track keeps its tempo and dated director notes', async ( {
+		admin,
+		page,
+	} ) => {
+		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
+		await page
+			.locator( '.wp-list-table tbody tr', { hasText: 'Demo Set' } )
+			.first()
+			.locator( 'a.row-title' )
+			.click();
+		const first = page.locator( '#callboard-tracks li' ).first();
+		await first.locator( 'summary' ).click();
+		await first.locator( 'input[type=number]' ).fill( '100' );
+		await first.locator( 'textarea' ).fill( '0:03 Softer here' );
+		await page.click( '#publish' );
+		await expect( page.locator( '#message' ) ).toContainText( /updated/i );
+		const again = page.locator( '#callboard-tracks li' ).first();
+		await expect( again.locator( 'input[type=number]' ) ).toHaveValue(
+			'100'
+		);
+		await expect( again.locator( 'textarea' ) ).toHaveValue(
+			'0:03 Softer here'
+		);
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expect( page.locator( '#seek-marks .pin' ) ).toHaveCount( 1 );
+		// put it back for the other tests
+		await page.goBack();
+		const back = page.locator( '#callboard-tracks li' ).first();
+		await back.locator( 'input[type=number]' ).fill( '' );
+		await back.locator( 'textarea' ).fill( '' );
+		await page.click( '#publish' );
+		await expect( page.locator( '#message' ) ).toContainText( /updated/i );
+	} );
+
 	test( 'the import page queues a YouTube request', async ( {
 		admin,
 		page,

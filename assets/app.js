@@ -328,58 +328,112 @@ ${ footer( s ) }
 		document.querySelectorAll( '.eq i' ).forEach( ( b ) => {
 			b.style.transform = '';
 		} );
+		glowAnim?.cancel();
+		glowAnim = null;
+		if ( glow ) {
+			glow.style.opacity = '';
+		}
 	};
+	// ---- Meter: the light strip on the deck and the bars on the playing row. Sources, in order:
+	// a live analyser (not iOS), the track's measured envelope (ten levels a second, from import), or a slow breath.
+	const glow = $( 'deck-glow' );
+	const envelope = ( t ) => {
+		const e = queue?.tracks[ i ]?.levels;
+		if ( ! e || t < 0 ) {
+			return null;
+		}
+		const x = t * 10,
+			k = Math.min( e.length - 1, Math.floor( x ) ),
+			a = +e[ k ] / 9,
+			b = +e[ Math.min( e.length - 1, k + 1 ) ] / 9;
+		return a + ( b - a ) * ( x - k );
+	};
+	let glowAnim = null;
 	const eqStart = ( row ) => {
 		eqStop();
 		if ( reduce() ) {
+			if ( glow ) {
+				glow.style.opacity = 0.5;
+			}
 			return; // the static bars still mark the playing row
 		}
-		if ( analyser && row ) {
-			// real levels: three bands, transforms only
-			const bars = row.querySelectorAll( '.eq i' ),
-				data = new Uint8Array( analyser.frequencyBinCount );
-			const bands = [
-				[ 1, 4 ],
-				[ 4, 10 ],
-				[ 10, 24 ],
-			];
-			const tick = () => {
+		const bars = row ? [ ...row.querySelectorAll( '.eq i' ) ] : [];
+		const data = analyser
+			? new Uint8Array( analyser.frequencyBinCount )
+			: null;
+		const bands = [
+			[ 1, 4 ],
+			[ 4, 10 ],
+			[ 10, 24 ],
+		];
+		const hasEnvelope = !! queue?.tracks[ i ]?.levels;
+		if ( ! analyser && ! hasEnvelope ) {
+			bars.forEach( ( bar, k ) =>
+				eqAnims.push(
+					bar.animate(
+						[
+							{ transform: 'scaleY(.35)' },
+							{ transform: 'scaleY(1)' },
+							{ transform: 'scaleY(.35)' },
+						],
+						{
+							duration: [ 1100, 900, 1300 ][ k ] || 1000,
+							delay: -k * 300,
+							iterations: Infinity,
+							easing: 'ease-in-out',
+						}
+					)
+				)
+			);
+			if ( glow ) {
+				glowAnim = glow.animate(
+					[ { opacity: 0.25 }, { opacity: 0.7 }, { opacity: 0.25 } ],
+					{
+						duration: 2600,
+						iterations: Infinity,
+						easing: 'ease-in-out',
+					}
+				);
+			}
+			return;
+		}
+		const tick = () => {
+			let levels;
+			if ( analyser ) {
 				analyser.getByteFrequencyData( data );
-				bands.forEach( ( [ a, b ], k ) => {
+				levels = bands.map( ( [ a, b ] ) => {
 					let sum = 0;
 					for ( let n = a; n < b; n++ ) {
 						sum += data[ n ];
 					}
-					const level =
-						0.3 + 0.7 * Math.min( 1, sum / ( b - a ) / 200 );
-					if ( bars[ k ] ) {
-						bars[ k ].style.transform = `scaleY(${ level.toFixed(
-							2
-						) })`;
-					}
+					return Math.min( 1, sum / ( b - a ) / 200 );
 				} );
-				eqRaf = requestAnimationFrame( tick );
-			};
-			tick();
-			return;
-		}
-		row?.querySelectorAll( '.eq i' ).forEach( ( bar, k ) =>
-			eqAnims.push(
-				bar.animate(
-					[
-						{ transform: 'scaleY(.35)' },
-						{ transform: 'scaleY(1)' },
-						{ transform: 'scaleY(.35)' },
-					],
-					{
-						duration: [ 1100, 900, 1300 ][ k ] || 1000,
-						delay: -k * 300,
-						iterations: Infinity,
-						easing: 'ease-in-out',
-					}
-				)
-			)
-		);
+			} else {
+				const t = audio.currentTime;
+				levels = [
+					envelope( t ),
+					envelope( t - 0.12 ),
+					envelope( t - 0.24 ),
+				].map( ( v ) => ( v === null ? 0.3 : v ) );
+			}
+			bars.forEach( ( bar, k ) => {
+				bar.style.transform = `scaleY(${ (
+					0.3 +
+					0.7 * levels[ k ]
+				).toFixed( 2 ) })`;
+			} );
+			if ( glow ) {
+				glow.style.opacity = (
+					0.2 +
+					0.8 *
+						( levels[ 0 ] * 0.5 +
+							levels[ 1 ] * 0.3 +
+							levels[ 2 ] * 0.2 )
+				).toFixed( 2 );
+			}
+			eqRaf = requestAnimationFrame( tick );
+		};
+		tick();
 	};
 	function syncRows() {
 		rows = [ ...document.querySelectorAll( '.track' ) ];
@@ -407,11 +461,16 @@ ${ footer( s ) }
 			pa.classList.toggle( 'is-playing', loaded && ! audio.paused );
 		}
 	}
-	function setTitle( text ) {
+	function setTitle( text, detail = '' ) {
 		const mq = nowTitle.firstElementChild;
 		mq.innerHTML = '';
 		const a = document.createElement( 'span' );
 		a.textContent = text;
+		if ( detail ) {
+			const d = document.createElement( 'small' );
+			d.textContent = detail;
+			a.appendChild( d );
+		}
 		mq.appendChild( a );
 		nowTitle.classList.remove( 'marquee' );
 		if ( a.scrollWidth > nowTitle.clientWidth + 2 ) {
@@ -480,6 +539,29 @@ ${ footer( s ) }
 			);
 		}
 		syncLyrics( audio.currentTime );
+		syncNotes( audio.currentTime );
+	}
+	let noteShown = null;
+	const fmtDate = ( d ) =>
+		d
+			? new Date( `${ d }T00:00` ).toLocaleDateString( undefined, {
+					month: 'short',
+					day: 'numeric',
+			  } )
+			: '';
+	function syncNotes( t ) {
+		const notes = queue?.tracks[ i ]?.notes || [];
+		const n = notes.find( ( x ) => t >= x.t && t < x.t + 6 ) || null;
+		if ( n === noteShown ) {
+			return;
+		}
+		noteShown = n;
+		nowTitle.classList.toggle( 'is-note', !! n );
+		if ( n ) {
+			setTitle( n.text, fmtDate( n.date ) );
+		} else if ( i >= 0 ) {
+			setTitle( queue.tracks[ i ].title );
+		}
 	}
 	function positionState() {
 		if (
@@ -512,16 +594,27 @@ ${ footer( s ) }
 		}
 		deck.hidden = false;
 		document.body.classList.add( 'has-deck' );
+		noteShown = null;
+		nowTitle.classList.remove( 'is-note' );
 		setTitle( t.title );
 		dur.textContent = fmt( t.duration );
 		lastSec = -1;
 		setProgress( 0 );
+		clearLoop();
+		countStop();
 		paint( true );
-		renderLyrics( t.id );
+		renderSheet( t.id );
+		paintMarks( t );
 		syncRows();
 		if ( play ) {
 			ensureAnalyser();
-			audio.play().catch( () => {} );
+			if ( ! at && t.bpm ) {
+				countIn( t.bpm ).then(
+					( ok ) => ok && audio.play().catch( () => {} )
+				);
+			} else {
+				audio.play().catch( () => {} );
+			}
 		}
 		if ( 'mediaSession' in navigator ) {
 			navigator.mediaSession.metadata = new MediaMetadata( {
@@ -591,9 +684,81 @@ ${ footer( s ) }
 		retrigger( $( 'next' ), 'kick-r' );
 		load( i < 0 ? 0 : i + 1 );
 	} );
-	toggle.addEventListener( 'click', () =>
-		i < 0 ? load( 0 ) : audio.paused ? audio.play() : audio.pause()
-	);
+	toggle.addEventListener( 'click', () => {
+		if ( countStop() ) {
+			return audio.play().catch( () => {} );
+		}
+		return i < 0 ? load( 0 ) : audio.paused ? audio.play() : audio.pause();
+	} );
+
+	// ---- Count-in: with a tempo, Play from the top taps four beats first (a soft click, the button breathes)
+	let countCancel = null,
+		clickCtx = null;
+	const click = ( first ) => {
+		try {
+			clickCtx =
+				clickCtx ||
+				new ( window.AudioContext || window.webkitAudioContext )();
+			const o = clickCtx.createOscillator(),
+				g = clickCtx.createGain(),
+				at = clickCtx.currentTime;
+			o.frequency.value = first ? 1320 : 880;
+			g.gain.setValueAtTime( 0.0001, at );
+			g.gain.exponentialRampToValueAtTime( 0.18, at + 0.006 );
+			g.gain.exponentialRampToValueAtTime( 0.0001, at + 0.07 );
+			o.connect( g ).connect( clickCtx.destination );
+			o.start( at );
+			o.stop( at + 0.08 );
+		} catch {}
+	};
+	function countStop() {
+		if ( ! countCancel ) {
+			return false;
+		}
+		countCancel();
+		countCancel = null;
+		return true;
+	}
+	function countIn( bpm ) {
+		countStop();
+		const beat = 60000 / bpm;
+		return new Promise( ( resolve ) => {
+			const timers = [];
+			deck.classList.add( 'counting' );
+			nowTitle.classList.add( 'is-count' );
+			const done = ( ok ) => {
+				timers.forEach( clearTimeout );
+				deck.classList.remove( 'counting' );
+				nowTitle.classList.remove( 'is-count' );
+				countCancel = null;
+				if ( i >= 0 ) {
+					setTitle( queue.tracks[ i ].title );
+				}
+				resolve( ok );
+			};
+			countCancel = () => done( false );
+			for ( let k = 1; k <= 4; k++ ) {
+				timers.push(
+					setTimeout(
+						() => {
+							setTitle(
+								Array.from(
+									{ length: k },
+									( _, n ) => n + 1
+								).join( '   ' )
+							); // the count accumulates: 1, 1 2, 1 2 3, 1 2 3 4
+							click( k === 1 );
+							if ( ! reduce() ) {
+								retrigger( toggle, 'beat' );
+							}
+						},
+						( k - 1 ) * beat
+					)
+				);
+			}
+			timers.push( setTimeout( () => done( true ), 4 * beat ) );
+		} );
+	}
 	const morph = ( to ) => {
 		const path = $( 'pp-path' ),
 			anim = $( 'pp-anim' );
@@ -647,6 +812,9 @@ ${ footer( s ) }
 		if ( audio.currentTime > 0 ) {
 			deck.classList.remove( 'buffering' );
 		}
+		if ( loop && audio.currentTime >= loop.b ) {
+			audio.currentTime = loop.a;
+		}
 		paint();
 		if ( ( audio.currentTime | 0 ) % 5 === 0 ) {
 			remember();
@@ -657,7 +825,142 @@ ${ footer( s ) }
 		paint( true );
 		positionState();
 	} );
+	// ---- Marks on the seek line: ticks where singing resumes after a rest (from the lyrics), pins for director notes
+	const marks = $( 'seek-marks' );
+	let ticks = [];
+	function paintMarks( t ) {
+		if ( ! marks ) {
+			return;
+		}
+		marks.innerHTML = '';
+		ticks = [];
+		const d = t.duration || 0;
+		if ( ! d ) {
+			return;
+		}
+		const cuesFor = ( queue?.lyrics && queue.lyrics[ t.id ] ) || [];
+		let prevEnd = -10;
+		cuesFor.forEach( ( [ s, e ] ) => {
+			if (
+				s - prevEnd >= 3 &&
+				s > 1.5 &&
+				s < d - 1.5 &&
+				ticks.length < 40
+			) {
+				ticks.push( s );
+			}
+			prevEnd = e;
+		} );
+		( t.notes || [] ).forEach( ( n ) => ticks.push( n.t ) );
+		ticks.forEach( ( at ) => {
+			const el = document.createElement( 'i' );
+			el.className = 'tick';
+			el.style.left = `${ ( ( at / d ) * 100 ).toFixed( 2 ) }%`;
+			marks.appendChild( el );
+		} );
+		( t.notes || [] ).forEach( ( n ) => {
+			const el = document.createElement( 'i' );
+			el.className = 'pin';
+			el.dataset.t = n.t;
+			el.style.left = `${ ( ( n.t / d ) * 100 ).toFixed( 2 ) }%`;
+			marks.appendChild( el );
+		} );
+	}
+	marks?.addEventListener( 'click', ( e ) => {
+		const pin = e.target.closest( '.pin' );
+		if ( ! pin ) {
+			return;
+		}
+		audio.currentTime = +pin.dataset.t;
+		audio.play().catch( () => {} );
+	} );
+	const settle = ( t, d ) => {
+		const near = ticks.find( ( x ) => Math.abs( x - t ) < d * 0.02 );
+		return near === undefined ? t : near;
+	};
+
+	// ---- A-B loop: hold two fingers on the seek line; on a keyboard [ and ] set the ends, \ clears
+	let loop = null,
+		loopGesture = false;
+	const loopBand = $( 'loop-band' ),
+		loopChip = $( 'loop' );
+	const trackDur = () => audio.duration || queue?.tracks[ i ]?.duration || 0;
+	function setLoop( a, b ) {
+		const d = trackDur();
+		a = Math.max( 0, a );
+		b = Math.min( d || b, b );
+		if ( ! d || b - a < 1 ) {
+			return;
+		}
+		loop = { a, b };
+		loopBand.style.transform = `translateX(${ ( ( a / d ) * 100 ).toFixed(
+			2
+		) }%) scaleX(${ ( ( b - a ) / d ).toFixed( 4 ) })`;
+		loopBand.classList.add( 'on' );
+		loopChip.textContent = `${ T.loop } ${ fmt( a ) }–${ fmt( b ) }`;
+		loopChip.setAttribute(
+			'aria-label',
+			`${ T.loop_clear }: ${ fmt( a ) }–${ fmt( b ) }`
+		);
+		loopChip.hidden = false;
+		if ( audio.currentTime < a || audio.currentTime > b ) {
+			audio.currentTime = a;
+		}
+		audio.play().catch( () => {} );
+	}
+	function clearLoop() {
+		loop = null;
+		if ( loopBand ) {
+			loopBand.classList.remove( 'on' );
+			loopChip.hidden = true;
+		}
+	}
+	loopChip?.addEventListener( 'click', clearLoop );
+	const seekWrap = document.querySelector( '.seek-wrap' ),
+		pointers = new Map();
+	let loopHold = 0;
+	seekWrap?.addEventListener(
+		'pointerdown',
+		( e ) => {
+			pointers.set( e.pointerId, e.clientX );
+			if ( pointers.size === 2 ) {
+				clearTimeout( loopHold );
+				loopHold = setTimeout( () => {
+					const rect = seek.getBoundingClientRect(),
+						d = trackDur();
+					const r = ( x ) =>
+						Math.min(
+							1,
+							Math.max( 0, ( x - rect.left ) / rect.width )
+						);
+					const xs = [ ...pointers.values() ].map( r );
+					loopGesture = true;
+					seeking = false;
+					deck.classList.remove( 'seeking' );
+					setLoop( Math.min( ...xs ) * d, Math.max( ...xs ) * d );
+				}, 300 );
+			}
+		},
+		true
+	);
+	const lift = ( e ) => {
+		pointers.delete( e.pointerId );
+		if ( pointers.size < 2 ) {
+			clearTimeout( loopHold );
+		}
+		if ( ! pointers.size ) {
+			setTimeout( () => {
+				loopGesture = false;
+			}, 50 );
+		}
+	};
+	seekWrap?.addEventListener( 'pointerup', lift, true );
+	seekWrap?.addEventListener( 'pointercancel', lift, true );
+
 	seek.addEventListener( 'input', () => {
+		if ( loopGesture || pointers.size > 1 ) {
+			return;
+		}
 		seeking = true;
 		deck.classList.add( 'seeking' );
 		const d = audio.duration || queue?.tracks[ i ]?.duration || 0,
@@ -671,8 +974,12 @@ ${ footer( s ) }
 	} );
 	seek.addEventListener( 'change', () => {
 		const d = audio.duration || queue?.tracks[ i ]?.duration;
+		if ( loopGesture ) {
+			paint( true );
+			return;
+		}
 		if ( d ) {
-			audio.currentTime = ( seek.value / 1000 ) * d;
+			audio.currentTime = settle( ( seek.value / 1000 ) * d, d );
 		}
 		seeking = false;
 		deck.classList.remove( 'seeking' );
@@ -699,32 +1006,66 @@ ${ footer( s ) }
 			audio.currentTime += 5;
 		} else if ( e.key === 'ArrowLeft' ) {
 			audio.currentTime -= 5;
+		} else if ( e.key === '[' ) {
+			setLoop( audio.currentTime, loop ? loop.b : trackDur() );
+		} else if ( e.key === ']' ) {
+			setLoop( loop ? loop.a : 0, audio.currentTime );
+		} else if ( e.key === '\\' ) {
+			clearLoop();
 		} else if ( e.key === 'Escape' && ! lyricsSheet.hidden ) {
 			hideLyrics();
 		}
 	} );
 
 	// ---- Lyrics (only where a set has approved lyrics); otherwise the deck title finds the playing track
-	function renderLyrics( id ) {
+	let sheetKind = '';
+	function renderSheet( id ) {
 		cues = ( queue?.lyrics && queue.lyrics[ id ] ) || [];
+		const notes = queue?.tracks[ i ]?.notes || [];
 		cueIdx = -1;
 		lyricsList.innerHTML = '';
-		openLyrics.classList.toggle( 'has-lyrics', cues.length > 0 );
+		sheetKind = cues.length ? 'lyrics' : notes.length ? 'notes' : '';
+		openLyrics.classList.toggle( 'has-lyrics', !! sheetKind );
+		if ( sheetKind ) {
+			openLyrics.dataset.sheet =
+				sheetKind === 'lyrics' ? T.lyrics_label : T.notes;
+		} else {
+			delete openLyrics.dataset.sheet;
+		}
 		openLyrics.setAttribute(
 			'aria-label',
-			cues.length ? T.show_lyrics : T.show_track
+			sheetKind === 'lyrics'
+				? T.show_lyrics
+				: sheetKind
+				? T.show_notes
+				: T.show_track
 		);
-		cueEls = cues.map( ( [ s, , text ] ) => {
+		$( 'sheet-label' ).textContent =
+			sheetKind === 'notes' ? T.notes_sheet : T.lyrics_sheet;
+		const item = ( at, text, detail ) => {
 			const li = document.createElement( 'li' );
-			li.textContent = text;
+			if ( detail !== undefined ) {
+				const time = document.createElement( 'time' );
+				time.textContent = fmt( at );
+				li.appendChild( time );
+			}
+			li.appendChild( document.createTextNode( text ) );
+			if ( detail ) {
+				const d = document.createElement( 'small' );
+				d.textContent = detail;
+				li.appendChild( d );
+			}
 			li.tabIndex = 0;
 			li.addEventListener( 'click', () => {
-				audio.currentTime = s;
+				audio.currentTime = at;
 				audio.play().catch( () => {} );
 			} );
 			lyricsList.appendChild( li );
 			return li;
-		} );
+		};
+		cueEls = cues.length
+			? cues.map( ( [ s, , text ] ) => item( s, text ) )
+			: notes.map( ( n ) => item( n.t, n.text, fmtDate( n.date ) ) );
 	}
 	function syncLyrics( t ) {
 		if ( ! cues.length ) {
@@ -772,7 +1113,10 @@ ${ footer( s ) }
 		keepAwake();
 		lyricsSheet.hidden = false;
 		openLyrics.setAttribute( 'aria-expanded', 'true' );
-		openLyrics.setAttribute( 'aria-label', T.hide_lyrics );
+		openLyrics.setAttribute(
+			'aria-label',
+			sheetKind === 'notes' ? T.hide_notes : T.hide_lyrics
+		);
 		if ( cueIdx >= 0 ) {
 			cueEls[ cueIdx ].scrollIntoView( { block: 'center' } );
 		}
@@ -782,14 +1126,17 @@ ${ footer( s ) }
 		letSleep();
 		lyricsSheet.hidden = true;
 		openLyrics.setAttribute( 'aria-expanded', 'false' );
-		openLyrics.setAttribute( 'aria-label', T.show_lyrics );
+		openLyrics.setAttribute(
+			'aria-label',
+			sheetKind === 'notes' ? T.show_notes : T.show_lyrics
+		);
 		openLyrics.focus();
 	}
 	openLyrics.addEventListener( 'click', () => {
 		if ( i < 0 ) {
 			return;
 		}
-		if ( cues.length ) {
+		if ( sheetKind ) {
 			return lyricsSheet.hidden ? showLyrics() : hideLyrics();
 		}
 		if ( ! onQueuePage() ) {

@@ -114,6 +114,11 @@ final class Fetcher {
 		);
 		file_put_contents( $dir . '/manifest.json', wp_json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 
+		$levels = self::levels_for_dir( $dir, $tools['ffmpeg'], $progress );
+		if ( $levels ) {
+			file_put_contents( $dir . '/levels.json', json_encode( $levels ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.WP.AlternativeFunctions.json_encode_json_encode -- plain digits, no WP needed.
+		}
+
 		$lyrics = self::lyrics( $dir );
 		if ( $lyrics ) {
 			file_put_contents( $dir . '/lyrics.json', wp_json_encode( $lyrics, JSON_UNESCAPED_UNICODE ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
@@ -177,6 +182,65 @@ final class Fetcher {
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		$meta = wp_read_audio_metadata( $file );
 		return isset( $meta['length'] ) ? (float) $meta['length'] : null;
+	}
+
+	/**
+	 * Loudness envelopes for every audio file in a folder, keyed by video id: a string of digits 0-9, ten per second.
+	 * The app drives its light and level meters from this, so iPhones (which cannot analyse audio live) see real levels.
+	 *
+	 * @param string        $dir      Set folder.
+	 * @param string|null   $ffmpeg   ffmpeg binary.
+	 * @param callable|null $progress Line callback.
+	 * @return array<string, string>
+	 */
+	public static function levels_for_dir( string $dir, ?string $ffmpeg, ?callable $progress = null ): array {
+		if ( ! $ffmpeg ) {
+			return array();
+		}
+		$out = array();
+		foreach ( glob( $dir . '/*.{mp3,m4a,opus,ogg,wav,flac}', GLOB_BRACE ) ?: array() as $file ) { // phpcs:ignore Universal.Operators.DisallowShortTernary.Found
+			if ( ! preg_match( '/\[([^\]]+)\]\.[a-z0-9]+$/i', basename( $file ), $m ) ) {
+				continue;
+			}
+			$env = self::levels( $file, $ffmpeg );
+			if ( $env ) {
+				$out[ $m[1] ] = $env;
+			}
+		}
+		if ( $progress && $out ) {
+			/* translators: %d: number of tracks analysed. */
+			$progress( sprintf( __( 'Measured levels for %d tracks.', 'callboard' ), count( $out ) ) );
+		}
+		return $out;
+	}
+
+	/**
+	 * One track's envelope: mono 8-bit at 1 kHz from ffmpeg, mean deviation per 100 samples, scaled to 0-9.
+	 *
+	 * @param string $file   Audio file.
+	 * @param string $ffmpeg ffmpeg binary.
+	 */
+	public static function levels( string $file, string $ffmpeg ): string {
+		$pcm = self::run( array( $ffmpeg, '-v', 'error', '-i', $file, '-ac', '1', '-ar', '1000', '-f', 'u8', '-' ) );
+		if ( ! is_string( $pcm ) || strlen( $pcm ) < 200 ) {
+			return '';
+		}
+		$n      = intdiv( strlen( $pcm ), 100 );
+		$levels = array();
+		$peak   = 1;
+		for ( $k = 0; $k < $n; $k++ ) {
+			$sum = 0;
+			for ( $j = 0; $j < 100; $j++ ) {
+				$sum += abs( ord( $pcm[ $k * 100 + $j ] ) - 128 );
+			}
+			$levels[ $k ] = $sum / 100;
+			$peak         = max( $peak, $levels[ $k ] );
+		}
+		$digits = '';
+		foreach ( $levels as $v ) {
+			$digits .= (string) min( 9, (int) round( 9 * sqrt( $v / $peak ) ) ); // sqrt: quiet passages still move.
+		}
+		return $digits;
 	}
 
 	/**

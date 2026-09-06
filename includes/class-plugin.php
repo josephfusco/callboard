@@ -45,6 +45,7 @@ final class Plugin {
 		}
 		update_option( 'callboard_version', CALLBOARD_VERSION, false );
 		Sets::flush();
+		Importer::import_all(); // sidecar files (levels, notes, tempo) added by a deploy land here.
 		Pwa::write_files();
 	}
 

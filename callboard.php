@@ -6,6 +6,8 @@
  * Requires at least: 6.5
  * Requires PHP: 8.1
  * Author: Callboard
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: callboard
  *
  * @package Callboard

@@ -310,8 +310,8 @@ ${ footer( s ) }
 				analyser.getByteFrequencyData( data );
 				bands.forEach( ( [ a, b ], k ) => {
 					let sum = 0;
-					for ( let i = a; i < b; i++ ) {
-						sum += data[ i ];
+					for ( let n = a; n < b; n++ ) {
+						sum += data[ n ];
 					}
 					const level =
 						0.3 + 0.7 * Math.min( 1, sum / ( b - a ) / 200 );

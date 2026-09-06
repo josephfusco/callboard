@@ -39,6 +39,32 @@ test.describe( 'Front end', () => {
 		); // pinned to the bottom edge
 	} );
 
+	test( 'saving a set offline marks every track, including slashed titles', async ( {
+		page,
+	} ) => {
+		await page.goto( '/long-set/' );
+		await page.waitForTimeout( 900 );
+		await page.locator( '#offline' ).click();
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			24,
+			{ timeout: 30000 }
+		);
+		await expect( page.locator( '#offline' ) ).toContainText(
+			/Saved offline/
+		);
+		await page.reload();
+		await page.waitForTimeout( 1200 );
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			24
+		);
+		await page.locator( '#offline' ).click(); // asks first
+		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
+		await page.locator( '#offline' ).click();
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			0
+		);
+	} );
+
 	test( 'a set shows its tracks, credits and no personal chrome', async ( {
 		page,
 	} ) => {

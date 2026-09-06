@@ -937,6 +937,7 @@ ${ footer( s ) }
 	// ---- Offline, per track. Each row has its own control; the set button drives them all.
 	const CACHE = 'callboard-audio-v1';
 	const dlAborts = new Map();
+	const norm = ( u ) => new URL( u, location.href ).href; // cache keys are browser-normalized (percent-encoded)
 	const sizeLabel = ( bytes ) =>
 		bytes < 1048576
 			? `${ Math.max( 1, Math.round( bytes / 1024 ) ) } KB`
@@ -970,7 +971,9 @@ ${ footer( s ) }
 		const c = await caches.open( CACHE );
 		const have = new Set( ( await c.keys() ).map( ( r ) => r.url ) );
 		return new Set(
-			tracks.filter( ( t ) => have.has( t.url ) ).map( ( t ) => t.url )
+			tracks
+				.filter( ( t ) => have.has( norm( t.url ) ) )
+				.map( ( t ) => t.url )
 		);
 	}
 	async function saveTrack( t ) {
@@ -994,7 +997,7 @@ ${ footer( s ) }
 			let got = 0;
 			if ( r.body && total ) {
 				const reader = r.body.getReader();
-				for ( ;; ) {
+				for ( ; ; ) {
 					const { done, value } = await reader.read();
 					if ( done ) {
 						break;
@@ -1011,7 +1014,7 @@ ${ footer( s ) }
 				: await r.blob();
 			const c = await caches.open( CACHE );
 			await c.put(
-				t.url,
+				norm( t.url ),
 				new Response( body, {
 					headers: {
 						'Content-Type': body.type,
@@ -1028,7 +1031,7 @@ ${ footer( s ) }
 	}
 	async function removeTrack( t ) {
 		const c = await caches.open( CACHE );
-		await c.delete( t.url );
+		await c.delete( norm( t.url ) );
 		paintDl( t, '', 0 );
 	}
 	function bindOffline( set ) {

@@ -1,5 +1,7 @@
 [default.extend-words]
 # Intentional spellings go here, one per line, as `word = "word"`.
+# HTMLMediaElement fires a `seeked` event; it is not a misspelling of "sought".
+seeked = "seeked"
 
 [files]
 extend-exclude = [

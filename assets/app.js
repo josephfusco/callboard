@@ -393,6 +393,11 @@ ${ footer( s ) }
 		}
 		retrigger( nowTitle, 'swap' );
 	}
+	window.addEventListener( 'resize', () => {
+		if ( i >= 0 ) {
+			setTitle( queue.tracks[ i ].title );
+		}
+	} );
 	const remember = () => {
 		if ( queue ) {
 			ls.set( key(), { i, t: Math.floor( audio.currentTime || 0 ) } );
@@ -472,13 +477,13 @@ ${ footer( s ) }
 		if ( at ) {
 			audio.currentTime = at;
 		}
+		deck.hidden = false;
+		document.body.classList.add( 'has-deck' );
 		setTitle( t.title );
 		dur.textContent = fmt( t.duration );
 		lastSec = -1;
 		setProgress( 0 );
 		paint( true );
-		deck.hidden = false;
-		document.body.classList.add( 'has-deck' );
 		renderLyrics( t.id );
 		syncRows();
 		if ( play ) {

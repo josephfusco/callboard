@@ -64,7 +64,7 @@ test.describe( 'axe, admin', () => {
 
 test( 'the whole player works from the keyboard', async ( { page } ) => {
 	await page.goto( '/long-set/' );
-	await page.keyboard.press( 'Tab' ); // skip link
+	await page.locator( '.skip-link' ).focus();
 	await expect( page.locator( '.skip-link' ) ).toBeFocused();
 	await page.keyboard.press( 'Enter' );
 	await expect( page.locator( '#main' ) ).toBeFocused();

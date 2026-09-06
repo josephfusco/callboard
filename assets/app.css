@@ -272,4 +272,4 @@ body.is-offline #offline:not(.is-done){opacity:.5}
 #notify.is-done{color:var(--ink-2);pointer-events:auto}
 body.view-home .actions{margin-top:6px}
 #offline:hover,#offline:focus-visible,#notify:hover,#notify:focus-visible{color:var(--ink)}
-#offline.is-busy{color:var(--accent-text)}
+#offline.is-busy{color:var(--ink-2)}

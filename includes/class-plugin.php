@@ -18,6 +18,7 @@ final class Plugin {
 	 * Register every component.
 	 */
 	public static function boot(): void {
+		add_action( 'init', array( self::class, 'maybe_upgrade' ), 1 );
 		Post_Types::register_hooks();
 		Sets::register_hooks();
 		Importer::register_hooks();
@@ -33,6 +34,18 @@ final class Plugin {
 		if ( is_admin() ) {
 			Admin::register_hooks();
 		}
+	}
+
+	/**
+	 * After an update: drop cached data shaped by the old version and refresh the app files.
+	 */
+	public static function maybe_upgrade(): void {
+		if ( get_option( 'callboard_version' ) === CALLBOARD_VERSION ) {
+			return;
+		}
+		update_option( 'callboard_version', CALLBOARD_VERSION, false );
+		Sets::flush();
+		Pwa::write_files();
 	}
 
 	/**

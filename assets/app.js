@@ -65,6 +65,25 @@
 		window.matchMedia( '(display-mode: standalone)' ).matches ||
 		navigator.standalone === true;
 	document.documentElement.classList.toggle( 'is-standalone', standalone );
+	let hapticSwitch = null;
+	const haptic = () => {
+		if ( ! isIOS ) {
+			return;
+		}
+		if ( ! hapticSwitch ) {
+			hapticSwitch = document.createElement( 'input' );
+			hapticSwitch.type = 'checkbox';
+			hapticSwitch.setAttribute( 'switch', '' );
+			hapticSwitch.tabIndex = -1;
+			hapticSwitch.setAttribute( 'aria-hidden', 'true' );
+			hapticSwitch.style.cssText =
+				'position:fixed;left:-100px;top:-100px;width:1px;height:1px;opacity:0;pointer-events:none';
+			document.body.appendChild( hapticSwitch );
+		}
+		try {
+			hapticSwitch.click();
+		} catch {}
+	};
 	// In-app browsers (Instagram, Facebook, TikTok, Snapchat, Messenger) hide Add to Home Screen; Safari has it.
 	const inApp =
 		/FBAN|FBAV|Instagram|Snapchat|TikTok|musical_ly|Messenger/i.test(
@@ -727,6 +746,78 @@ ${ footer( s ) }
 		syncRows();
 		paintTip();
 	}
+	let edge = null;
+	document.addEventListener( 'pointerdown', ( e ) => {
+		if (
+			! standalone ||
+			e.pointerType === 'mouse' ||
+			! view() ||
+			e.clientX > 24
+		) {
+			return;
+		}
+		edge = {
+			x: e.clientX,
+			y: e.clientY,
+			id: e.pointerId,
+			main: $( 'main' ),
+		};
+		edge.main.style.transition = 'none';
+	} );
+	document.addEventListener( 'pointermove', ( e ) => {
+		if ( ! edge || e.pointerId !== edge.id ) {
+			return;
+		}
+		const dx = e.clientX - edge.x;
+		if ( Math.abs( e.clientY - edge.y ) > 60 ) {
+			edge.main.style.transform = '';
+			edge = null;
+			return;
+		}
+		if ( dx > 0 ) {
+			edge.main.style.transform = `translateX(${ dx.toFixed( 0 ) }px)`;
+			if (
+				dx > Math.min( 120, window.innerWidth / 3 ) &&
+				! edge.detent
+			) {
+				edge.detent = true;
+				haptic();
+			}
+		}
+	} );
+	const edgeEnd = ( e ) => {
+		if ( ! edge || e.pointerId !== edge.id ) {
+			return;
+		}
+		const main = edge.main,
+			dx = e.clientX - edge.x;
+		edge = null;
+		main.style.transition = '';
+		if ( dx > Math.min( 120, window.innerWidth / 3 ) ) {
+			main.animate(
+				[
+					{ transform: main.style.transform },
+					{ transform: 'translateX(100%)' },
+				],
+				{ duration: 200, easing: 'cubic-bezier(.2,.8,.2,1)' }
+			).onfinish = () => {
+				main.style.transform = '';
+				go( G.home, true, false ); // the drag was the transition
+			};
+			return;
+		}
+		main.animate(
+			[ { transform: main.style.transform }, { transform: 'none' } ],
+			{
+				duration: 200,
+				easing: 'cubic-bezier(.34,1.4,.64,1)',
+			}
+		).onfinish = () => {
+			main.style.transform = '';
+		};
+	};
+	document.addEventListener( 'pointerup', edgeEnd );
+	document.addEventListener( 'pointercancel', edgeEnd );
 	const deckRow = deck.querySelector( '.deck-row' );
 	let swipe = null;
 	deckRow?.addEventListener( 'pointerdown', ( e ) => {
@@ -744,15 +835,20 @@ ${ footer( s ) }
 			deck.style.transform = `translateY(${ Math.min( dy, 120 ).toFixed(
 				0
 			) }px)`;
+			if ( dy > 70 && ! swipe.detent ) {
+				swipe.detent = true;
+				haptic();
+			}
 		}
 	} );
 	const swipeEnd = ( e ) => {
 		if ( ! swipe || e.pointerId !== swipe.id ) {
 			return;
 		}
-		const dy = e.clientY - swipe.y;
+		const dy = e.clientY - swipe.y,
+			dx = Math.abs( e.clientX - swipe.x );
 		swipe = null;
-		if ( dy > 70 && Math.abs( e.clientX - swipe?.x || 0 ) < 40 ) {
+		if ( dy > 70 && dx < 40 ) {
 			const slide = deck.animate(
 				[
 					{ transform: deck.style.transform },
@@ -872,6 +968,7 @@ ${ footer( s ) }
 								).join( '   ' )
 							); // the count accumulates: 1, 1 2, 1 2 3, 1 2 3 4
 							click( k === 1 );
+							haptic();
 							if ( ! reduce() ) {
 								retrigger( toggle, 'beat' );
 							}
@@ -1002,6 +1099,9 @@ ${ footer( s ) }
 	} );
 	const settle = ( t, d ) => {
 		const near = ticks.find( ( x ) => Math.abs( x - t ) < d * 0.02 );
+		if ( near !== undefined && near !== t ) {
+			haptic();
+		}
 		return near === undefined ? t : near;
 	};
 
@@ -1019,6 +1119,7 @@ ${ footer( s ) }
 			return;
 		}
 		loop = { a, b };
+		haptic();
 		loopBand.style.transform = `translateX(${ ( ( a / d ) * 100 ).toFixed(
 			2
 		) }%) scaleX(${ ( ( b - a ) / d ).toFixed( 4 ) })`;
@@ -1037,6 +1138,9 @@ ${ footer( s ) }
 	}
 	let loopFrom = null;
 	function clearLoop() {
+		if ( loop ) {
+			haptic();
+		}
 		loop = null;
 		loopFrom = null;
 		if ( loopBand ) {
@@ -1261,9 +1365,13 @@ ${ footer( s ) }
 			keepAwake();
 		}
 	} );
+	let sheetTimer = 0;
 	function showLyrics() {
 		keepAwake();
+		clearTimeout( sheetTimer );
+		lyricsSheet.classList.remove( 'closing' );
 		lyricsSheet.hidden = false;
+		document.body.classList.add( 'sheet-open' );
 		openLyrics.setAttribute( 'aria-expanded', 'true' );
 		openLyrics.setAttribute(
 			'aria-label',
@@ -1276,7 +1384,17 @@ ${ footer( s ) }
 	}
 	function hideLyrics() {
 		letSleep();
-		lyricsSheet.hidden = true;
+		document.body.classList.remove( 'sheet-open' );
+		if ( reduce() || lyricsSheet.hidden ) {
+			lyricsSheet.hidden = true;
+		} else {
+			lyricsSheet.classList.add( 'closing' ); // slides away, then leaves the tree
+			clearTimeout( sheetTimer );
+			sheetTimer = setTimeout( () => {
+				lyricsSheet.hidden = true;
+				lyricsSheet.classList.remove( 'closing' );
+			}, 320 );
+		}
 		openLyrics.setAttribute( 'aria-expanded', 'false' );
 		openLyrics.setAttribute(
 			'aria-label',
@@ -1489,6 +1607,7 @@ ${ footer( s ) }
 				}
 			} catch {}
 			btn.disabled = false;
+			haptic();
 			paintBtn();
 		};
 	}
@@ -1750,6 +1869,7 @@ ${ footer( s ) }
 				return;
 			}
 			offBtn.dataset.confirm = '1';
+			haptic();
 			offBtn.textContent = T.remove_confirm;
 			setTimeout( () => {
 				if ( offBtn.dataset.confirm ) {
@@ -1791,6 +1911,7 @@ ${ footer( s ) }
 			if ( offBtn.dataset.confirm ) {
 				delete offBtn.dataset.confirm;
 				await Promise.all( tracks.map( removeTrack ) );
+				haptic();
 				return paintAll();
 			}
 			if ( have.size === tracks.length ) {
@@ -1804,6 +1925,9 @@ ${ footer( s ) }
 				}
 			};
 			await Promise.all( [ worker(), worker() ] );
+			if ( ( await savedSet( tracks ) ).size === tracks.length ) {
+				haptic();
+			}
 			paintAll();
 		};
 		document.querySelectorAll( '.dl' ).forEach( ( b ) => {

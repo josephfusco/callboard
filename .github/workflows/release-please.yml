@@ -32,10 +32,9 @@ jobs:
     steps:
       # GITHUB_TOKEN can open the release pull request because "Allow GitHub
       # Actions to create and approve pull requests" is on for the repository.
-      # Events it raises never start other workflows, so the sync-versions job
-      # below dispatches CI onto the release branch by hand; workflow_dispatch
-      # is the one trigger the token is allowed to fire. A RELEASE_PLEASE_TOKEN
-      # secret (PAT or app token) is honored if one is ever added.
+      # GitHub holds that pull request's CI runs for approval; the sync-versions
+      # job below approves them. A RELEASE_PLEASE_TOKEN secret (PAT or app
+      # token) is honored if one is ever added.
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         id: release
         with:
@@ -56,8 +55,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
-      # Reading a commit's check runs needs checks: read; dispatching needs actions: write.
-      checks: read
+      # Approving held workflow runs needs actions: write.
       actions: write
     steps:
       - name: Find the open release pull request
@@ -97,27 +95,34 @@ jobs:
             gh auth setup-git
             git push
           fi
-      # main requires the CI and title-lint checks, and a pull request opened
-      # by GITHUB_TOKEN gets neither on its own. Dispatching them onto the
-      # release branch attaches their check runs to its head commit, so the
-      # release pull request is gated on the exact commit that will be tagged.
-      # Skipped when the head commit already has check runs.
-      - name: Run the required checks on the release branch
+      # main requires the CI checks, and GitHub holds the pull_request runs
+      # for a pull request opened by GITHUB_TOKEN until someone approves them.
+      # Approving from here lets CI run the full suite on the exact commit that
+      # will be tagged, and those runs are the ones the merge box counts.
+      # (A workflow_dispatch run on the same commit is not; its check runs
+      # never reach the pull request's status rollup.)
+      - name: Approve the held CI runs on the release branch
         if: steps.release-pr.outputs.branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          BRANCH: ${{ steps.release-pr.outputs.branch }}
         run: |
           set -euo pipefail
           HEAD_SHA=$(git rev-parse HEAD)
-          EXISTING=$(gh api "repos/${GH_REPO}/commits/${HEAD_SHA}/check-runs" --jq '[.check_runs[] | select(.name == "gate")] | length')
-          if [[ "$EXISTING" -gt 0 ]]; then
-            echo "Checks already reported on ${HEAD_SHA}."
+          # The push above may take a moment to surface as a held run.
+          for _ in $(seq 12); do
+            RUNS=$(gh api "repos/${GH_REPO}/actions/runs?head_sha=${HEAD_SHA}&status=action_required&per_page=50" --jq '.workflow_runs[].id')
+            [[ -n "$RUNS" ]] && break
+            sleep 10
+          done
+          if [[ -z "$RUNS" ]]; then
+            echo "No held runs on ${HEAD_SHA}; nothing to approve."
             exit 0
           fi
-          gh workflow run ci.yml --ref "$BRANCH"
-          gh workflow run lint-pr.yml --ref "$BRANCH"
+          for RUN in $RUNS; do
+            gh api --method POST "repos/${GH_REPO}/actions/runs/${RUN}/approve" >/dev/null
+            echo "Approved run ${RUN}."
+          done
 
   # When the release pull request merges, release-please tags and cuts the
   # GitHub Release. Build the distribution zip and attach it.

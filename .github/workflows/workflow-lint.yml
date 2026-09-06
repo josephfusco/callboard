@@ -1,0 +1,52 @@
+name: Lint GitHub Actions Workflows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - '.github/dependabot.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - '.github/dependabot.yml'
+
+permissions: {}
+
+jobs:
+  # actionlint: expression type checks, shellcheck on run: blocks, glob syntax.
+  # See https://github.com/rhysd/actionlint
+  actionlint:
+    name: Run actionlint
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run actionlint
+        uses: docker://rhysd/actionlint@sha256:5457037ba91acd225478edac3d4b32e45cf6c10291e0dabbfd2491c63129afe1 # v1.7.11
+        with:
+          args: "-color -verbose"
+
+  # zizmor: unpinned actions, excessive permissions, template injection,
+  # dangerous triggers, credential persistence. Plain output rather than SARIF
+  # because code scanning is not available on a private repository.
+  # See https://github.com/zizmorcore/zizmor
+  zizmor:
+    name: Zizmor
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - name: Run zizmor
+        run: uvx zizmor@1.24.1 --persona=regular --strict-collection .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

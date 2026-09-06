@@ -1,8 +1,12 @@
 vendor/
 node_modules/
-.phpcs.cache
+build/
 artifacts/
 test-results/
 playwright-report/
+.phpcs.cache
+.wp-env.override.json
+plugin-check.json
 *.zip
+.DS_Store
 tests/fixtures/callboard/splash/

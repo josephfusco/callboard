@@ -1,14 +1,14 @@
 name: Playground Preview Publish
 
-# Runs in the base-repo context so it can write even for fork PRs. Downloads the
-# build from the triggering "Playground Preview" run, pushes it to a per-PR
-# preview-pr-N branch that raw.githubusercontent.com serves with CORS, and posts
-# (or updates) a sticky comment with the Playground link. Every PR-derived input
-# is validated; the blueprint comes from the base ref, only asset URLs are
-# rewritten, and those always point at this repository.
+# Runs in the base-repo context so it can write even for fork pull requests.
+# Downloads the build from the triggering "Playground Preview" run, pushes it
+# to a per-PR preview-pr-N branch that raw.githubusercontent.com serves with
+# CORS, and posts (or updates) a sticky comment with the Playground link. Every
+# PR-derived input is validated; the blueprint comes from the base ref, only
+# asset URLs are rewritten, and those always point at this repository.
 
 on:
-  workflow_run:
+  workflow_run: # zizmor: ignore[dangerous-triggers] never checks out or executes pull request code
     workflows: ["Playground Preview"]
     types: [completed]
 
@@ -16,20 +16,23 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: true
 
-permissions:
-  contents: write
-  actions: read
-  pull-requests: write
+permissions: {}
 
 jobs:
   publish:
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-        with: { persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Download artifacts from the triggering run
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fs = require('fs');
@@ -61,12 +64,14 @@ jobs:
             echo "::notice::No open pull request at $TRUSTED_HEAD_SHA; nothing to publish."
             echo "skipped=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
-          { echo "PR_NUMBER=$PR_NUMBER"; echo "HEAD_SHA=$TRUSTED_HEAD_SHA"; } >> "$GITHUB_ENV"
+          { echo "pr_number=$PR_NUMBER"; echo "head_sha=$TRUSTED_HEAD_SHA"; } >> "$GITHUB_OUTPUT"
       - name: Publish preview assets
         if: steps.meta.outputs.skipped != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
         run: |
           set -euo pipefail
           mkdir -p "preview/${HEAD_SHA}" && cp artifacts/release-assets/callboard.zip "preview/${HEAD_SHA}/"
@@ -80,6 +85,8 @@ jobs:
         if: steps.meta.outputs.skipped != 'true'
         env:
           REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
         run: |
           set -euo pipefail
           PLUGIN_URL="https://raw.githubusercontent.com/${REPO}/preview-pr-${PR_NUMBER}/${HEAD_SHA}/callboard.zip"
@@ -89,10 +96,10 @@ jobs:
           echo "url=https://playground.wordpress.net/#$(printf '%s' "$BLUEPRINT" | base64 -w0)" >> "$GITHUB_OUTPUT"
       - name: Post or update the sticky comment
         if: steps.meta.outputs.skipped != 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          PR_NUMBER: ${{ env.PR_NUMBER }}
-          HEAD_SHA: ${{ env.HEAD_SHA }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
           PLAYGROUND_URL: ${{ steps.playground.outputs.url }}
         with:
           script: |

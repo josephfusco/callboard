@@ -1,18 +1,21 @@
 name: Playground Preview Cleanup
 
-# Deletes the per-PR preview branch when the PR closes. pull_request_target so it
-# also runs for fork PRs; it never checks out PR code.
+# Deletes the per-PR preview branch when the pull request closes.
+# pull_request_target so it also runs for fork pull requests; it never checks
+# out pull request code.
 
 on:
-  pull_request_target:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] no checkout, only deletes a branch ref
     types: [closed]
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   cleanup:
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
       - env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

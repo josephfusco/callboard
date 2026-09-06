@@ -1,0 +1,43 @@
+# Dependabot configuration.
+#
+# Weekly version updates with a one-week cooldown, plus out-of-cycle security
+# updates. Every ecosystem pins commit-message to the `build` prefix because
+# that is the type release-please files under "Dependencies"; Dependabot would
+# otherwise infer a prefix from recent history and the bumps could drop out of
+# the changelog.
+#
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "build"
+      prefix-development: "build"
+      include: "scope"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "build"
+      prefix-development: "build"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "build"
+      include: "scope"

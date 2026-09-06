@@ -1,7 +1,8 @@
 name: Playground Main Build
 
-# Builds callboard.zip from main and force-pushes it to the preview-main branch,
-# which is what blueprint.json installs, so the README badge always boots current code.
+# Builds callboard.zip from main and force-pushes it to the preview-main
+# branch, which is what blueprint.json installs, so the README badge always
+# boots current code.
 
 on:
   push:
@@ -9,21 +10,28 @@ on:
     paths-ignore: [ '**.md', '.github/**', 'tests/**' ]
   workflow_dispatch:
 
+# Queued, not cancelled: the last push to finish is the one that wins.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   build:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-        with: { persist-credentials: false }
-      - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.3', tools: composer }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
       - run: composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
       - name: Build callboard.zip
         run: |
@@ -44,6 +52,9 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
+          # Force-pushed from a throwaway repo so no zip reaches the history
+          # everyone clones. The path is fixed because blueprint.json commits
+          # to it; raw serves it with a five-minute cache.
           mkdir -p preview && cp build/callboard.zip preview/
           cd preview
           git init -q -b preview-main

@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 $callboard_set   = $args['set'];
 $callboard_badge = Callboard\Settings::get( 'badge' );
 ?>
-<main class="app" id="main">
+<main class="app" id="main" tabindex="-1">
 	<header class="masthead">
 		<a class="back" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'All sets', 'callboard' ); ?></a>
 		<h1 style="view-transition-name:set-<?php echo esc_attr( $callboard_set['slug'] ); ?>"><?php echo esc_html( $callboard_set['name'] ); ?></h1>

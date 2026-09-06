@@ -97,7 +97,7 @@
 				: ''
 		}</footer>`;
 	};
-	const renderHome = () => `<main class="app" id="main">
+	const renderHome = () => `<main class="app" id="main" tabindex="-1">
 <header class="masthead"><h1>${ esc( G.site ) }</h1>${
 		G.push
 			? `<div class="actions"><button type="button" class="btn btn-quiet" id="notify" hidden>${ esc(
@@ -127,7 +127,7 @@ ${
 }
 ${ footer( null ) }
 </main>`;
-	const renderSet = ( s ) => `<main class="app" id="main">
+	const renderSet = ( s ) => `<main class="app" id="main" tabindex="-1">
 <header class="masthead">
 <a class="back" href="${ esc( G.home ) }">${ esc( T.all_sets ) }</a>
 <h1 style="view-transition-name:set-${ esc( s.slug ) }">${ esc( s.name ) }</h1>
@@ -297,6 +297,9 @@ ${ footer( s ) }
 	};
 	const eqStart = ( row ) => {
 		eqStop();
+		if ( reduce() ) {
+			return; // the static bars still mark the playing row
+		}
 		if ( analyser && row ) {
 			// real levels: three bands, transforms only
 			const bars = row.querySelectorAll( '.eq i' ),
@@ -591,8 +594,8 @@ ${ footer( s ) }
 	} );
 	audio.addEventListener( 'timeupdate', () => {
 		if ( audio.currentTime > 0 ) {
-deck.classList.remove( 'buffering' );
-}
+			deck.classList.remove( 'buffering' );
+		}
 		paint();
 		if ( ( audio.currentTime | 0 ) % 5 === 0 ) {
 			remember();
@@ -745,6 +748,13 @@ deck.classList.remove( 'buffering' );
 		rows[ i ]?.focus( { preventScroll: true } );
 	} );
 	$( 'close-lyrics' ).addEventListener( 'click', hideLyrics );
+
+	document
+		.querySelector( '.skip-link' )
+		?.addEventListener( 'click', ( e ) => {
+			e.preventDefault();
+			$( 'main' ).focus();
+		} );
 
 	// ---- Delegated clicks: track rows and in-app links
 	document.addEventListener( 'click', ( e ) => {

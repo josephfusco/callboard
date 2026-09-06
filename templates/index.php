@@ -14,11 +14,12 @@ $callboard_set  = $callboard_view ? Callboard\Sets::by_slug( $callboard_view ) :
 <html <?php language_attributes(); ?>>
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 	<meta name="referrer" content="no-referrer">
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( $callboard_set ? 'view-set' : 'view-home' ); ?> data-slug="<?php echo esc_attr( (string) $callboard_view ); ?>">
+<a class="skip-link" href="#main"><?php esc_html_e( 'Skip to content', 'callboard' ); ?></a>
 <div class="topbar" aria-hidden="true"><span class="topbar-title" id="topbar-title"><?php echo esc_html( Callboard\Router::page_title() ); ?></span></div>
 <?php
 callboard_template(

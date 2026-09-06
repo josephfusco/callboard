@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
 
 $callboard_sets = Callboard\Sets::all();
 ?>
-<main class="app" id="main">
+<main class="app" id="main" tabindex="-1">
 	<header class="masthead">
 		<h1><?php bloginfo( 'name' ); ?></h1>
 		<?php if ( Callboard\Settings::get( 'push' ) && Callboard\Push::available() ) : ?>

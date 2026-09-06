@@ -56,12 +56,16 @@ final class Admin {
 		foreach ( $tracks as $track ) {
 			$meta = (array) wp_get_attachment_metadata( $track->ID );
 			printf(
-				'<li data-id="%1$d"><span class="dashicons dashicons-menu"></span><input type="hidden" name="callboard_order[]" value="%1$d"><input type="text" class="regular-text" name="callboard_title[%1$d]" value="%2$s"><span class="callboard-len">%3$s</span><a href="%4$s">%5$s</a></li>',
+				'<li data-id="%1$d"><span class="dashicons dashicons-menu" aria-hidden="true"></span><input type="hidden" name="callboard_order[]" value="%1$d"><label class="screen-reader-text" for="callboard-title-%1$d">%6$s</label><input type="text" class="regular-text" id="callboard-title-%1$d" name="callboard_title[%1$d]" value="%2$s"><span class="callboard-len">%3$s</span><button type="button" class="button-link callboard-move" data-dir="-1" aria-label="%7$s">&uarr;</button><button type="button" class="button-link callboard-move" data-dir="1" aria-label="%8$s">&darr;</button><a href="%4$s">%5$s</a></li>',
 				(int) $track->ID,
 				esc_attr( $track->post_title ),
 				esc_html( $meta['length_formatted'] ?? '' ),
 				esc_url( get_edit_post_link( $track->ID ) ),
-				esc_html__( 'Media', 'callboard' )
+				esc_html__( 'Media', 'callboard' ),
+				/* translators: %s: track title. */
+				esc_attr( sprintf( __( 'Title for %s', 'callboard' ), $track->post_title ) ),
+				esc_attr__( 'Move up', 'callboard' ),
+				esc_attr__( 'Move down', 'callboard' )
 			);
 		}
 		echo '</ol>';
@@ -364,8 +368,8 @@ wp callboard run   <?php esc_html_e( '# or drain everything queued above', 'call
 			return;
 		}
 		wp_enqueue_script( 'jquery-ui-sortable' );
-		wp_add_inline_script( 'jquery-ui-sortable', 'jQuery(function($){$("#callboard-tracks").sortable({handle:".dashicons-menu"});});' );
-		wp_add_inline_style( 'wp-admin', '.callboard-tracks{margin:0}.callboard-tracks li{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #dcdcde}.callboard-tracks .dashicons-menu{cursor:grab;color:#787c82}.callboard-tracks input[type=text]{flex:1}.callboard-len{color:#646970;font-variant-numeric:tabular-nums;min-width:3em}' );
+		wp_add_inline_script( 'jquery-ui-sortable', 'jQuery(function($){$("#callboard-tracks").sortable({handle:".dashicons-menu"});$("#callboard-tracks").on("click",".callboard-move",function(){var li=$(this).closest("li"),dir=+$(this).data("dir");if(dir<0){li.prev().before(li);}else{li.next().after(li);}$(this).focus();});});' );
+		wp_add_inline_style( 'wp-admin', '.callboard-move{padding:0 6px;font-size:16px;line-height:1}.callboard-tracks{margin:0}.callboard-tracks li{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #dcdcde}.callboard-tracks .dashicons-menu{cursor:grab;color:#787c82}.callboard-tracks input[type=text]{flex:1}.callboard-len{color:#646970;font-variant-numeric:tabular-nums;min-width:3em}' );
 	}
 
 	/**

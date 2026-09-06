@@ -112,6 +112,25 @@ final class Frontend {
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 		<meta name="apple-mobile-web-app-title" content="<?php echo esc_attr( callboard_site_name() ); ?>">
 		<?php
+		$loc = Pwa::splash_location();
+		if ( is_dir( $loc['dir'] ) ) {
+			foreach ( Pwa::splash_sizes() as $dims ) {
+				list( $w, $h, $dpr ) = $dims;
+				foreach ( array( 'light', 'dark' ) as $scheme ) {
+					$file = sprintf( '%s/%s-%dx%d.png', $loc['dir'], $scheme, $w, $h );
+					if ( file_exists( $file ) ) {
+						printf(
+							'<link rel="apple-touch-startup-image" media="(device-width: %1$dpx) and (device-height: %2$dpx) and (-webkit-device-pixel-ratio: %3$d) and (orientation: portrait)%4$s" href="%5$s">' . "\n",
+							(int) ( $w / $dpr ),
+							(int) ( $h / $dpr ),
+							(int) $dpr,
+							'dark' === $scheme ? ' and (prefers-color-scheme: dark)' : '',
+							esc_url( sprintf( '%s/%s-%dx%d.png', $loc['url'], $scheme, $w, $h ) )
+						);
+					}
+				}
+			}
+		}
 	}
 
 	/**

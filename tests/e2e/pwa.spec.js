@@ -13,6 +13,8 @@ test.describe( 'PWA and previews', () => {
 		expect( manifest.display ).toBe( 'standalone' );
 		expect( manifest.start_url ).toBe( '/' );
 		expect( manifest.icons.length ).toBeGreaterThanOrEqual( 2 );
+		expect( manifest.id ).toBe( '/' );
+		expect( manifest.shortcuts[ 0 ].name ).toBe( 'Demo Set' );
 	} );
 
 	test( 'service worker is served from the root with push handlers', async ( {
@@ -23,6 +25,7 @@ test.describe( 'PWA and previews', () => {
 		const body = await res.text();
 		expect( body ).toMatch( /addEventListener\(\s*'push'/ );
 		expect( body ).toMatch( /addEventListener\(\s*'fetch'/ );
+		expect( body ).toContain( 'navigationPreload' );
 	} );
 
 	test( 'head carries app meta and Open Graph tags per view', async ( {
@@ -36,6 +39,9 @@ test.describe( 'PWA and previews', () => {
 		await expect(
 			page.locator( 'link[rel=apple-touch-icon]' )
 		).toHaveCount( 1 );
+		expect(
+			await page.locator( 'link[rel=apple-touch-startup-image]' ).count()
+		).toBeGreaterThanOrEqual( 10 );
 		await expect(
 			page.locator( 'meta[property="og:title"]' )
 		).toHaveAttribute( 'content', 'Demo Set' );

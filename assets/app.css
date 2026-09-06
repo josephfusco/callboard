@@ -236,3 +236,7 @@ html[data-nav="back"]::view-transition-old(root){animation-name:pop-out}
 .note.small{font-size:.875rem;color:var(--ink-3);margin:0}
 .actions .note.small{flex-basis:100%}
 #notify.is-done{color:var(--ink-2)}
+
+/* offline */
+body.is-offline .deck-time::after{content:" · " attr(data-offline);color:var(--accent-text)}
+body.is-offline #offline:not(.is-done){opacity:.5}

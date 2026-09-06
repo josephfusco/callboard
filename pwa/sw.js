@@ -21,6 +21,9 @@ self.addEventListener( 'activate', ( e ) =>
 					await caches.delete( k );
 				}
 			}
+			if ( self.registration.navigationPreload ) {
+				await self.registration.navigationPreload.enable(); // the page request races the worker boot
+			}
 			await self.clients.claim();
 		} )()
 	)
@@ -86,7 +89,7 @@ self.addEventListener( 'fetch', ( e ) => {
 		if ( url.pathname.startsWith( '/wp-' ) ) {
 			return;
 		}
-		return e.respondWith( page( req ) );
+		return e.respondWith( page( req, e ) );
 	}
 	if (
 		url.pathname.startsWith( PLUGIN ) ||
@@ -131,10 +134,10 @@ async function audio( req, url ) {
 		},
 	} );
 }
-async function page( req ) {
+async function page( req, e ) {
 	const cache = await caches.open( SHELL );
 	try {
-		const res = await fetch( req );
+		const res = ( await e.preloadResponse ) || ( await fetch( req ) );
 		if ( res.ok ) {
 			cache.put( req.url, res.clone() );
 		}

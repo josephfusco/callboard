@@ -114,30 +114,30 @@ final class Pwa {
 		if ( ! WP_Filesystem() ) {
 			return false;
 		}
-		$root     = wp_make_link_relative( home_url( '/' ) );
-		$root     = '' !== $root ? $root : '/';
-		$name     = callboard_site_name();
-		$short    = $name;
+		$root  = wp_make_link_relative( home_url( '/' ) );
+		$root  = '' !== $root ? $root : '/';
+		$name  = callboard_site_name();
+		$short = $name;
 		if ( mb_strlen( $name ) > 12 ) { // the Home Screen label: cut at a word, never mid-word.
 			$cut   = mb_substr( $name, 0, 13 );
 			$space = mb_strrpos( $cut, ' ' );
 			$short = $space ? mb_substr( $cut, 0, $space ) : mb_substr( $name, 0, 12 );
 		}
 		$manifest = array(
-			'name'             => $name,
-			'short_name'       => $short,
-			'description'      => Settings::get( 'tagline' ),
-			'start_url'        => $root,
-			'scope'            => $root,
-			'id'               => $root,
-			'lang'             => str_replace( '_', '-', get_locale() ),
-			'display'          => 'standalone',
-			'display_override' => array( 'standalone', 'minimal-ui' ),
-			'launch_handler'   => array( 'client_mode' => 'navigate-existing' ), // a link opens in the running app, never a second window
-			'handle_links'     => 'preferred',
+			'name'                        => $name,
+			'short_name'                  => $short,
+			'description'                 => Settings::get( 'tagline' ),
+			'start_url'                   => $root,
+			'scope'                       => $root,
+			'id'                          => $root,
+			'lang'                        => str_replace( '_', '-', get_locale() ),
+			'display'                     => 'standalone',
+			'display_override'            => array( 'standalone', 'minimal-ui' ),
+			'launch_handler'              => array( 'client_mode' => 'navigate-existing' ), // A link opens in the running app, never a second window.
+			'handle_links'                => 'preferred',
 			'prefer_related_applications' => false,
-			'categories'       => array( 'music', 'education' ),
-			'shortcuts'        => array_map(
+			'categories'                  => array( 'music', 'education' ),
+			'shortcuts'                   => array_map(
 				static fn( array $set ) => array(
 					'name'  => $set['name'],
 					'url'   => wp_make_link_relative( home_url( '/' . $set['slug'] . '/' ) ),
@@ -150,10 +150,10 @@ final class Pwa {
 				),
 				array_slice( Sets::all(), 0, 4 )
 			),
-			'orientation'      => 'portrait',
-			'background_color' => '#eceae5',
-			'theme_color'      => '#eceae5',
-			'icons'            => array(
+			'orientation'                 => 'portrait',
+			'background_color'            => '#eceae5',
+			'theme_color'                 => '#eceae5',
+			'icons'                       => array(
 				array(
 					'src'   => wp_make_link_relative( CALLBOARD_URL . 'assets/icon-192.png' ),
 					'sizes' => '192x192',

@@ -59,6 +59,11 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			24
 		);
+		await page.locator( '.back' ).click(); // home shows the same mark on the set
+		await expect(
+			page.locator( '.set-off[data-slug="long-set"]' )
+		).toHaveAttribute( 'data-state', 'saved' );
+		await page.goBack();
 		await page.locator( '#offline' ).click(); // a plain tap does nothing
 		await expect( page.locator( '#offline' ) ).toHaveText(
 			'Saved offline'
@@ -159,13 +164,24 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#loop' ) ).toHaveText( /Loop 0:02–0:06/ );
 		await expect( page.locator( '#loop-band' ) ).toHaveClass( /on/ );
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toBeHidden();
+		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
+		// and from the control alone: start, end, clear
+		await page.locator( '#loop' ).click();
+		await expect( page.locator( '#loop' ) ).toHaveText( /Loop from 0:0\d/ );
+		await page.evaluate( () => {
+			document.getElementById( 'audio' ).currentTime = 8;
+		} );
+		await page.locator( '#loop' ).click();
+		await expect( page.locator( '#loop' ) ).toHaveText( /Loop 0:0\d–0:08/ );
+		await page.locator( '#loop' ).click();
+		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
 	} );
 
 	test( 'a track with a tempo counts in before it plays', async ( {
 		page,
 	} ) => {
 		await page.goto( '/long-set/' );
+		await expect( page.locator( '.track .bpm' ) ).toHaveText( '♩ 120' );
 		await page.locator( '.track' ).nth( 2 ).click(); // The Wish, 120 BPM
 		await expect( page.locator( '#deck' ) ).toHaveClass( /counting/ );
 		await expect( page.locator( '#now-title' ) ).toHaveText(

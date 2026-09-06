@@ -57,6 +57,8 @@ final class Frontend {
 			'open_safari_go' => __( 'Open in Safari', 'callboard' ),
 			'save'           => __( 'Save offline', 'callboard' ),
 			'saved'          => __( 'Saved offline', 'callboard' ),
+			/* translators: 1: tracks saved so far, 2: total tracks. */
+			'saving_set'     => __( 'Saving offline, %1$s of %2$s', 'callboard' ),
 			'saved_hint'     => __( 'Saved offline. Press and hold, or press Delete, to remove the copies.', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
 			'saving'         => __( 'Saving %1$s/%2$s · Cancel', 'callboard' ),
@@ -78,6 +80,11 @@ final class Frontend {
 			'hide_notes'     => __( 'Hide director notes', 'callboard' ),
 			'loop'           => __( 'Loop', 'callboard' ),
 			'loop_clear'     => __( 'Clear loop', 'callboard' ),
+			'loop_set'       => __( 'Set a loop: tap at the start, then at the end', 'callboard' ),
+			'loop_from'      => __( 'Loop from', 'callboard' ),
+			'loop_end'       => __( 'Tap at the end of the loop', 'callboard' ),
+			/* translators: %d: beats per minute. */
+			'tempo'          => __( '%d beats per minute, counts in', 'callboard' ),
 			'show_lyrics'    => __( 'Show lyrics', 'callboard' ),
 			'hide_lyrics'    => __( 'Hide lyrics', 'callboard' ),
 			'show_track'     => __( 'Show current track', 'callboard' ),

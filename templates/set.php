@@ -41,7 +41,11 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 				<?php
 				if ( $callboard_badge ) :
 					?>
-					<span class="hh" aria-hidden="true"><?php echo esc_html( $callboard_badge ); ?></span><?php endif; ?><?php echo esc_html( callboard_fmt( $callboard_t['duration'] ) ); ?></span>
+					<span class="hh" aria-hidden="true"><?php echo esc_html( $callboard_badge ); ?></span><?php endif; ?>
+					<?php
+					if ( ! empty( $callboard_t['bpm'] ) ) :
+						?>
+						<span class="bpm" aria-label="<?php echo esc_attr( sprintf( /* translators: %d: beats per minute. */ __( '%d beats per minute, counts in', 'callboard' ), $callboard_t['bpm'] ) ); ?>">♩ <?php echo (int) $callboard_t['bpm']; ?></span><?php endif; ?><?php echo esc_html( callboard_fmt( $callboard_t['duration'] ) ); ?></span>
 			</button>
 			<?php if ( Callboard\Settings::get( 'offline' ) ) : ?>
 			<button type="button" class="dl" data-i="<?php echo (int) $callboard_i; ?>" data-state="" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: track title. */ __( 'Save %s offline', 'callboard' ), $callboard_t['title'] ) ); ?>" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>

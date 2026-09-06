@@ -148,7 +148,9 @@ ${
 							s.name
 						) }</span><span class="set-meta">${ esc(
 							s.meta
-						) }</span></span><span class="set-go" aria-hidden="true"></span></a></li>`
+						) }</span></span><span class="set-off" data-slug="${ esc(
+							s.slug
+						) }" data-state="" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span><span class="set-go" aria-hidden="true"></span></a></li>`
 				)
 				.join( '' ) }</ul>`
 		: `<p class="note">${ esc( T.nothing ) }</p>`
@@ -197,6 +199,12 @@ ${
 								? `<span class="hh" aria-hidden="true">${ esc(
 										S.badge
 								  ) }</span>`
+								: ''
+						}${
+							t.bpm
+								? `<span class="bpm" aria-label="${ esc(
+										tpl( T.tempo, t.bpm )
+								  ) }">♩ ${ t.bpm }</span>`
 								: ''
 						}${ fmt( t.duration ) }</span></button>${
 							S.offline
@@ -897,25 +905,48 @@ ${ footer( s ) }
 			2
 		) }%) scaleX(${ ( ( b - a ) / d ).toFixed( 4 ) })`;
 		loopBand.classList.add( 'on' );
+		loopChip.dataset.state = 'on';
 		loopChip.textContent = `${ T.loop } ${ fmt( a ) }–${ fmt( b ) }`;
 		loopChip.setAttribute(
 			'aria-label',
 			`${ T.loop_clear }: ${ fmt( a ) }–${ fmt( b ) }`
 		);
-		loopChip.hidden = false;
 		if ( audio.currentTime < a || audio.currentTime > b ) {
 			audio.currentTime = a;
 		}
 		audio.play().catch( () => {} );
 	}
+	let loopFrom = null;
 	function clearLoop() {
 		loop = null;
+		loopFrom = null;
 		if ( loopBand ) {
 			loopBand.classList.remove( 'on' );
-			loopChip.hidden = true;
+			loopChip.dataset.state = '';
+			loopChip.textContent = T.loop;
+			loopChip.setAttribute( 'aria-label', T.loop_set );
 		}
 	}
-	loopChip?.addEventListener( 'click', clearLoop );
+	// One control, three taps: mark the start, mark the end, clear. Two fingers on the line or [ ] do the same.
+	loopChip?.addEventListener( 'click', () => {
+		if ( loop ) {
+			return clearLoop();
+		}
+		if ( loopFrom === null ) {
+			loopFrom = audio.currentTime;
+			loopChip.dataset.state = 'armed';
+			loopChip.textContent = `${ T.loop_from } ${ fmt( loopFrom ) }`;
+			loopChip.setAttribute( 'aria-label', T.loop_end );
+			return;
+		}
+		const a = Math.min( loopFrom, audio.currentTime ),
+			b = Math.max( loopFrom, audio.currentTime );
+		loopFrom = null;
+		if ( b - a < 1 ) {
+			return clearLoop(); // the same spot twice: nothing to loop
+		}
+		setLoop( a, b );
+	} );
 	const seekWrap = document.querySelector( '.seek-wrap' ),
 		pointers = new Map();
 	let loopHold = 0;
@@ -1342,11 +1373,55 @@ ${ footer( s ) }
 	}
 
 	// ---- Per-view bindings (first load and after every render)
+	let homeOffTimer = 0;
+	async function paintHomeOffline() {
+		clearTimeout( homeOffTimer );
+		if ( ! ( 'caches' in window ) || view() ) {
+			return;
+		}
+		let busy = false;
+		for ( const s of G.sets ) {
+			const el = document.querySelector(
+				`.set-off[data-slug="${ s.slug }"]`
+			);
+			if ( ! el || ! s.tracks.length ) {
+				continue;
+			}
+			const have = ( await savedSet( s.tracks ) ).size,
+				saving = s.tracks.some( ( t ) => dlAborts.has( t.url ) );
+			busy = busy || saving;
+			const state = saving
+				? 'saving'
+				: have === s.tracks.length
+				? 'saved'
+				: have
+				? 'partial'
+				: '';
+			el.dataset.state = state;
+			el.hidden = ! state;
+			el.style.setProperty(
+				'--p',
+				( have / s.tracks.length ).toFixed( 3 )
+			);
+			el.setAttribute(
+				'aria-label',
+				state === 'saved'
+					? T.saved
+					: state
+					? tpl( T.saving_set, have, s.tracks.length )
+					: ''
+			);
+		}
+		if ( busy ) {
+			homeOffTimer = setTimeout( paintHomeOffline, 800 );
+		}
+	}
 	function bindView() {
 		const set = setBy( view() );
 		$( 'topbar-title' ).textContent = set ? set.name : G.site;
 		if ( ! set ) {
 			bindNotify().catch( () => {} );
+			paintHomeOffline().catch( () => {} );
 		}
 		if ( set?.tracks.length ) {
 			if ( ! queue ) {

@@ -1,30 +1,30 @@
 {
-	"name": "Demo Set",
-	"slug": "demo-set",
-	"order": 0,
-	"playlist_url": "https://www.youtube.com/playlist?list=demo",
-	"curator": "Demo Curator",
-	"curator_url": "https://www.youtube.com/@demo",
-	"tracks": [
-		{
-			"index": 1,
-			"id": "tone01",
-			"title": "1. Tone One (Demo OBC)",
-			"file": "01 - Tone 1 [tone01].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=tone01",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
-		},
-		{
-			"index": 2,
-			"id": "tone02",
-			"title": "2. Tone Two (Demo OBC)",
-			"file": "02 - Tone 2 [tone02].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=tone02",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
-		}
-	]
+  "name": "Demo Set",
+  "slug": "demo-set",
+  "order": 0,
+  "playlist_url": "https://www.youtube.com/playlist?list=demo",
+  "curator": "Demo Curator",
+  "curator_url": "https://www.youtube.com/@demo",
+  "tracks": [
+    {
+      "index": 1,
+      "id": "tone01",
+      "title": "1. Tone One (Demo OBC)",
+      "file": "01 - Tone 1 [tone01].mp3",
+      "duration": 8.0,
+      "url": "https://www.youtube.com/watch?v=tone01",
+      "uploader": "Demo Uploader",
+      "uploader_url": "https://www.youtube.com/@uploader"
+    },
+    {
+      "index": 2,
+      "id": "tone02",
+      "title": "2. Tone Two (Demo OBC)",
+      "file": "02 - Tone 2 [tone02].mp3",
+      "duration": 2.0,
+      "url": "https://www.youtube.com/watch?v=tone02",
+      "uploader": "Demo Uploader",
+      "uploader_url": "https://www.youtube.com/@uploader"
+    }
+  ]
 }

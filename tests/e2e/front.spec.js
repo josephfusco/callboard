@@ -9,6 +9,7 @@ test.describe( 'Front end', () => {
 	} ) => {
 		await page.goto( '/' );
 		await expect( page ).toHaveTitle( /./ );
+		await expect( page.locator( 'a.set' ) ).toHaveCount( 2 );
 		const card = page.locator( 'a.set' ).first();
 		await expect( card ).toBeVisible();
 		await expect( card.locator( '.set-name' ) ).toHaveText( 'Demo Set' );
@@ -18,6 +19,24 @@ test.describe( 'Front end', () => {
 		);
 		await expect( page.locator( '#deck' ) ).toBeHidden();
 		await expect( page.locator( '#wpadminbar' ) ).toHaveCount( 0 ); // even logged in, no admin bar on the app
+	} );
+
+	test( 'a long set scrolls and keeps the deck pinned', async ( {
+		page,
+	} ) => {
+		await page.goto( '/long-set/' );
+		await expect( page.locator( '.track' ) ).toHaveCount( 24 );
+		await page.locator( '.track' ).nth( 20 ).click();
+		await expect( page.locator( '#deck' ) ).toBeVisible();
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'Underscore A'
+		);
+		await page.locator( '.track' ).nth( 20 ).scrollIntoViewIfNeeded();
+		const deckBox = await page.locator( '#deck' ).boundingBox();
+		const viewport = page.viewportSize();
+		expect( deckBox.y + deckBox.height ).toBeGreaterThanOrEqual(
+			viewport.height - 130
+		); // pinned to the bottom edge
 	} );
 
 	test( 'a set shows its tracks, credits and no personal chrome', async ( {

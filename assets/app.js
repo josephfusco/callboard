@@ -383,9 +383,23 @@ ${ footer( s ) }
 			ls.set( key(), { i, t: Math.floor( audio.currentTime || 0 ) } );
 		}
 	};
+	const seekKnob = $( 'seek-knob' );
+	let seekWidth = 0;
+	const measureSeek = () => {
+		seekWidth = seek.clientWidth - ( seekKnob ? seekKnob.offsetWidth : 0 );
+	};
+	window.addEventListener( 'resize', measureSeek );
 	const setProgress = ( ratio ) => {
+		if ( ! seekWidth ) {
+			measureSeek();
+		}
 		seek.value = Math.round( ratio * 1000 );
 		seekFill.style.transform = `scaleX(${ ratio })`;
+		if ( seekKnob ) {
+			seekKnob.style.transform = `translateX(${ (
+				ratio * seekWidth
+			).toFixed( 1 ) }px)`;
+		}
 	};
 	function paint( force = false ) {
 		const d = audio.duration || queue?.tracks[ i ]?.duration,
@@ -528,16 +542,21 @@ ${ footer( s ) }
 		i < 0 ? load( 0 ) : audio.paused ? audio.play() : audio.pause()
 	);
 	const morph = ( to ) => {
-		const anim = $( to === 'pause' ? 'pp-to-pause' : 'pp-to-play' );
-		if (
-			! anim ||
-			! anim.beginElement ||
-			$( 'pp-path' ).dataset.state === to
-		) {
+		const path = $( 'pp-path' ),
+			anim = $( 'pp-anim' );
+		if ( ! path || path.dataset.state === to ) {
 			return;
 		}
-		$( 'pp-path' ).dataset.state = to;
-		anim.beginElement();
+		const fromShape = path.dataset[ path.dataset.state || 'play' ],
+			toShape = path.dataset[ to ];
+		path.dataset.state = to;
+		if ( anim && anim.beginElement ) {
+			anim.setAttribute( 'from', fromShape );
+			anim.setAttribute( 'to', toShape );
+			anim.beginElement();
+		} else {
+			path.setAttribute( 'd', toShape );
+		}
 	};
 	audio.addEventListener( 'play', () => {
 		morph( 'pause' );
@@ -571,6 +590,9 @@ ${ footer( s ) }
 		positionState();
 	} );
 	audio.addEventListener( 'timeupdate', () => {
+		if ( audio.currentTime > 0 ) {
+deck.classList.remove( 'buffering' );
+}
 		paint();
 		if ( ( audio.currentTime | 0 ) % 5 === 0 ) {
 			remember();
@@ -586,7 +608,7 @@ ${ footer( s ) }
 		deck.classList.add( 'seeking' );
 		const d = audio.duration || queue?.tracks[ i ]?.duration || 0,
 			r = seek.value / 1000;
-		seekFill.style.transform = `scaleX(${ r })`;
+		setProgress( r );
 		cur.textContent = fmt( r * d );
 		seek.setAttribute(
 			'aria-valuetext',
@@ -907,9 +929,13 @@ ${ footer( s ) }
 		}
 		const CACHE = 'callboard-audio-v1',
 			tracks = set.tracks;
-		const mb = Math.round(
-			tracks.reduce( ( a, t ) => a + ( t.bytes || 0 ), 0 ) / 1048576
-		);
+		const bytes = tracks.reduce( ( a, t ) => a + ( t.bytes || 0 ), 0 );
+		const mb =
+			bytes < 1048576
+				? `${ Math.max( 1, Math.round( bytes / 1024 ) ) } KB`
+				: bytes < 10485760
+				? `${ ( bytes / 1048576 ).toFixed( 1 ) } MB`
+				: `${ Math.round( bytes / 1048576 ) } MB`;
 		let busy = false,
 			abort = null;
 		const saved = async () => {
@@ -925,7 +951,7 @@ ${ footer( s ) }
 			offBtn.classList.toggle( 'is-done', n === tracks.length );
 			offBtn.classList.remove( 'is-busy' );
 			offBtn.textContent =
-				n === tracks.length ? T.saved : `${ T.save } · ${ mb } MB`;
+				n === tracks.length ? T.saved : `${ T.save } · ${ mb }`;
 		};
 		paintBtn().catch( () => {} );
 		offBtn.addEventListener( 'click', async () => {

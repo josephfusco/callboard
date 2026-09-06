@@ -38,7 +38,9 @@ test.describe( 'Admin', () => {
 	} ) => {
 		// Find the demo set's ID through the list table (REST is closed to anonymous but we're logged in here).
 		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
-		const row = page.locator( '.wp-list-table tbody tr' ).first();
+		const row = page
+			.locator( '.wp-list-table tbody tr', { hasText: 'Demo Set' } )
+			.first();
 		await expect( row ).toContainText( 'Demo Set' );
 		await expect( row.locator( 'td.tracks' ) ).toHaveText( '2' );
 		await row.locator( 'a.row-title' ).click();

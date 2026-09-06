@@ -88,3 +88,22 @@ jobs:
   typos:
     needs: gate
     uses: ./.github/workflows/typos.yml
+
+  # The one context main requires. A skipped reusable-workflow job reports
+  # under its short name, so requiring "phpcs / WordPress Coding Standards"
+  # directly would leave a docs-only pull request blocked forever. This job
+  # always runs, passes when every job above succeeded or was skipped, and
+  # fails on any failure or cancellation.
+  status:
+    name: CI status
+    needs: [gate, changes, phpcs, e2e, plugin-check, lint-js, typos]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          jq -r 'to_entries[] | "\(.value.result)\t\(.key)"' <<< "$RESULTS"
+          jq -e '[.[] | .result] | all(. == "success" or . == "skipped")' <<< "$RESULTS" > /dev/null

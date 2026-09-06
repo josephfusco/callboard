@@ -40,23 +40,45 @@ jobs:
   # header, the CALLBOARD_VERSION define, readme.txt's Stable tag and
   # package.json are synced by scripts/sync-versions.sh, the same script a
   # maintainer runs locally, so the CI behavior is grep-able.
+  #
+  # This runs on every push to main, not only when release-please reports a
+  # pull request: it reports one only on runs where it touched it, and a push
+  # of chore commits leaves the release pull request untouched but still
+  # needing its checks. The job finds the open release pull request itself.
   sync-versions:
     needs: release-please
-    if: ${{ needs.release-please.outputs.pr }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      pull-requests: read
       actions: write
     steps:
+      - name: Find the open release pull request
+        id: release-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          BRANCH=$(gh pr list --state open --search 'head:release-please--' --json headRefName --jq 'first(.[] | select(.headRefName | startswith("release-please--")) | .headRefName) // empty')
+          if [[ -z "$BRANCH" ]]; then
+            echo "No open release pull request."
+            exit 0
+          fi
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.release-pr.outputs.branch
         with:
           persist-credentials: false
-          ref: ${{ fromJSON(needs.release-please.outputs.pr).headBranchName }}
+          ref: ${{ steps.release-pr.outputs.branch }}
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.release-pr.outputs.branch
         with:
           node-version: 22
       - run: bash scripts/sync-versions.sh
+        if: steps.release-pr.outputs.branch
       - name: Commit synced versions back to the release pull request
+        if: steps.release-pr.outputs.branch
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
@@ -72,12 +94,21 @@ jobs:
       # by GITHUB_TOKEN gets neither on its own. Dispatching them onto the
       # release branch attaches their check runs to its head commit, so the
       # release pull request is gated on the exact commit that will be tagged.
+      # Skipped when the head commit already has check runs.
       - name: Run the required checks on the release branch
+        if: steps.release-pr.outputs.branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          BRANCH: ${{ fromJSON(needs.release-please.outputs.pr).headBranchName }}
+          BRANCH: ${{ steps.release-pr.outputs.branch }}
         run: |
+          set -euo pipefail
+          HEAD_SHA=$(git rev-parse HEAD)
+          EXISTING=$(gh api "repos/${GH_REPO}/commits/${HEAD_SHA}/check-runs" --jq '[.check_runs[] | select(.name == "gate")] | length')
+          if [[ "$EXISTING" -gt 0 ]]; then
+            echo "Checks already reported on ${HEAD_SHA}."
+            exit 0
+          fi
           gh workflow run ci.yml --ref "$BRANCH"
           gh workflow run lint-pr.yml --ref "$BRANCH"
 

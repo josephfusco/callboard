@@ -29,6 +29,7 @@ final class Frontend {
 		add_filter( 'should_load_separate_core_block_assets', '__return_false' );
 		add_filter( 'wp_img_tag_add_auto_sizes', '__return_false' );
 		add_filter( 'wp_speculation_rules_configuration', '__return_null' );
+		add_filter( 'show_admin_bar', '__return_false' ); // the app is the whole front end; admins use wp-admin.
 	}
 
 	/**

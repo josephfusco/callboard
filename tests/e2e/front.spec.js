@@ -17,6 +17,7 @@ test.describe( 'Front end', () => {
 			'For rehearsal use only.'
 		);
 		await expect( page.locator( '#deck' ) ).toBeHidden();
+		await expect( page.locator( '#wpadminbar' ) ).toHaveCount( 0 ); // even logged in, no admin bar on the app
 	} );
 
 	test( 'a set shows its tracks, credits and no personal chrome', async ( {

@@ -65,23 +65,26 @@
 		window.matchMedia( '(display-mode: standalone)' ).matches ||
 		navigator.standalone === true;
 	document.documentElement.classList.toggle( 'is-standalone', standalone );
-	let hapticSwitch = null;
+	// Haptics: iOS 17.4+ clicks a switch control with a haptic, and it is the only route the web has.
+	// It fires only inside a user activation (a tap, a touch end, a click), never from a timer or a move.
+	let hapticLabel = null;
 	const haptic = () => {
 		if ( ! isIOS ) {
 			return;
 		}
-		if ( ! hapticSwitch ) {
-			hapticSwitch = document.createElement( 'input' );
-			hapticSwitch.type = 'checkbox';
-			hapticSwitch.setAttribute( 'switch', '' );
-			hapticSwitch.tabIndex = -1;
-			hapticSwitch.setAttribute( 'aria-hidden', 'true' );
-			hapticSwitch.style.cssText =
-				'position:fixed;left:-100px;top:-100px;width:1px;height:1px;opacity:0;pointer-events:none';
-			document.body.appendChild( hapticSwitch );
+		if ( ! hapticLabel ) {
+			hapticLabel = document.createElement( 'label' );
+			hapticLabel.setAttribute( 'aria-hidden', 'true' );
+			hapticLabel.style.display = 'none';
+			const sw = document.createElement( 'input' );
+			sw.type = 'checkbox';
+			sw.setAttribute( 'switch', '' );
+			sw.tabIndex = -1;
+			hapticLabel.appendChild( sw );
+			document.head.appendChild( hapticLabel );
 		}
 		try {
-			hapticSwitch.click();
+			hapticLabel.click();
 		} catch {}
 	};
 	// In-app browsers (Instagram, Facebook, TikTok, Snapchat, Messenger) hide Add to Home Screen; Safari has it.
@@ -835,10 +838,6 @@ ${ footer( s ) }
 			deck.style.transform = `translateY(${ Math.min( dy, 120 ).toFixed(
 				0
 			) }px)`;
-			if ( dy > 70 && ! swipe.detent ) {
-				swipe.detent = true;
-				haptic();
-			}
 		}
 	} );
 	const swipeEnd = ( e ) => {
@@ -849,6 +848,7 @@ ${ footer( s ) }
 			dx = Math.abs( e.clientX - swipe.x );
 		swipe = null;
 		if ( dy > 70 && dx < 40 ) {
+			haptic();
 			const slide = deck.animate(
 				[
 					{ transform: deck.style.transform },

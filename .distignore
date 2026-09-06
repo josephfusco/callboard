@@ -27,3 +27,4 @@ vendor/wp-coding-standards
 vendor/phpcsstandards
 vendor/dealerdirect
 vendor/phpcompatibility
+.wordpress-org

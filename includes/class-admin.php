@@ -252,9 +252,54 @@ final class Admin {
 				<?php wp_nonce_field( 'callboard_import' ); ?>
 				<?php submit_button( __( 'Import now', 'callboard' ), 'primary', 'submit', false ); ?>
 			</form>
+			<hr>
+			<h2><?php esc_html_e( 'From YouTube', 'callboard' ); ?></h2>
+			<p><?php esc_html_e( 'Paste a video or playlist URL. A runner with yt-dlp picks it up, fetches audio only, and the set appears here when it finishes.', 'callboard' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="callboard-request">
+				<input type="hidden" name="action" value="callboard_request">
+				<?php wp_nonce_field( 'callboard_request' ); ?>
+				<p><label for="callboard-url"><?php esc_html_e( 'YouTube URL', 'callboard' ); ?></label><br><input type="url" class="regular-text" id="callboard-url" name="callboard_url" required placeholder="https://www.youtube.com/playlist?list=…"></p>
+				<p><label for="callboard-name"><?php esc_html_e( 'Set name', 'callboard' ); ?></label><br><input type="text" class="regular-text" id="callboard-name" name="callboard_name" required></p>
+				<?php submit_button( __( 'Queue it', 'callboard' ), 'secondary', 'submit', false ); ?>
+			</form>
+			<?php self::requests_table(); ?>
+			<details>
+				<summary><?php esc_html_e( 'Running the fetcher', 'callboard' ); ?></summary>
+				<p><?php esc_html_e( 'Managed hosts cannot run yt-dlp, so a small runner does the fetching from any Mac, Linux box, or CI job and pushes the result here. Create an application password for your user (Users → Profile), then:', 'callboard' ); ?></p>
+				<pre><code>python3 runner/runner.py --site <?php echo esc_html( home_url( '/' ) ); ?> --user <?php echo esc_html( wp_get_current_user()->user_login ); ?> --watch</code></pre>
+				<p><?php esc_html_e( 'The runner folder ships with the plugin; see runner/README.md for requirements.', 'callboard' ); ?></p>
+				<p><?php esc_html_e( 'The runner asks for the application password once and keeps polling for queued requests.', 'callboard' ); ?></p>
+			</details>
 			<?php do_action( 'callboard_import_page' ); ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Queue table on the import page.
+	 */
+	private static function requests_table(): void {
+		$requests = Requests::all();
+		if ( ! $requests ) {
+			return;
+		}
+		echo '<table class="widefat striped" style="max-width:900px;margin-top:12px"><thead><tr><th>' . esc_html__( 'Set', 'callboard' ) . '</th><th>' . esc_html__( 'Source', 'callboard' ) . '</th><th>' . esc_html__( 'Status', 'callboard' ) . '</th><th></th></tr></thead><tbody>';
+		foreach ( $requests as $post ) {
+			$r      = Requests::to_array( $post );
+			$delete = wp_nonce_url( admin_url( 'admin-post.php?action=callboard_request_delete&id=' . $r['id'] ), 'callboard_request_delete_' . $r['id'] );
+			printf(
+				'<tr><td><strong>%1$s</strong><br><code>%2$s</code></td><td><a href="%3$s" target="_blank" rel="noopener noreferrer">%4$s</a></td><td><span class="callboard-status callboard-status-%5$s">%5$s</span>%6$s</td><td><a href="%7$s" class="submitdelete">%8$s</a></td></tr>',
+				esc_html( $r['name'] ),
+				esc_html( $r['slug'] ),
+				esc_url( $r['url'] ),
+				esc_html( wp_parse_url( $r['url'], PHP_URL_HOST ) . wp_parse_url( $r['url'], PHP_URL_PATH ) ),
+				esc_html( $r['status'] ),
+				$r['log'] ? '<br><small>' . esc_html( mb_substr( $r['log'], -160 ) ) . '</small>' : '',
+				esc_url( $delete ),
+				esc_html__( 'Remove', 'callboard' )
+			);
+		}
+		echo '</tbody></table>';
 	}
 
 	/**

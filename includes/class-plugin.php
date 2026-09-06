@@ -21,6 +21,8 @@ final class Plugin {
 		Post_Types::register_hooks();
 		Sets::register_hooks();
 		Importer::register_hooks();
+		Requests::register_hooks();
+		Rest::register_hooks();
 		Router::register_hooks();
 		Frontend::register_hooks();
 		Privacy::register_hooks();

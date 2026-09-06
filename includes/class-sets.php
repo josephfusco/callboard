@@ -1,0 +1,228 @@
+<?php
+/**
+ * Read model: sets, their tracks, and the data blob the front end renders from.
+ *
+ * @package Callboard
+ */
+
+namespace Callboard;
+
+use WP_Post;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Data access for sets.
+ */
+final class Sets {
+
+	private const CACHE_KEY = 'callboard_sets_v1';
+
+	/**
+	 * Hook registration: keep the cache honest.
+	 */
+	public static function register_hooks(): void {
+		foreach ( array( 'save_post', 'deleted_post', 'add_attachment', 'edit_attachment', 'delete_attachment', 'callboard_imported' ) as $hook ) {
+			add_action( $hook, array( self::class, 'flush' ) );
+		}
+	}
+
+	/**
+	 * Drop the cached data.
+	 */
+	public static function flush(): void {
+		delete_transient( self::CACHE_KEY );
+	}
+
+	/**
+	 * Every published set, in menu order, as render-ready arrays.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function all(): array {
+		$cached = get_transient( self::CACHE_KEY );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+		$posts = get_posts(
+			array(
+				'post_type'      => Post_Types::SET,
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'orderby'        => array(
+					'menu_order' => 'ASC',
+					'title'      => 'ASC',
+				),
+			)
+		);
+		$sets  = array_map( array( self::class, 'build' ), $posts );
+		set_transient( self::CACHE_KEY, $sets, DAY_IN_SECONDS );
+		return $sets;
+	}
+
+	/**
+	 * One set by slug.
+	 *
+	 * @param string $slug Post name.
+	 * @return array<string, mixed>|null
+	 */
+	public static function by_slug( string $slug ): ?array {
+		foreach ( self::all() as $set ) {
+			if ( $set['slug'] === $slug ) {
+				return $set;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * The set post for a slug, published or not.
+	 *
+	 * @param string $slug Post name.
+	 */
+	public static function post_by_slug( string $slug ): ?WP_Post {
+		$posts = get_posts(
+			array(
+				'post_type'      => Post_Types::SET,
+				'name'           => $slug,
+				'post_status'    => array( 'publish', 'draft', 'pending', 'private' ),
+				'posts_per_page' => 1,
+			)
+		);
+		return $posts[0] ?? null;
+	}
+
+	/**
+	 * Audio attachments of a set, in menu order.
+	 *
+	 * @param int $set_id Set post ID.
+	 * @return WP_Post[]
+	 */
+	public static function track_posts( int $set_id ): array {
+		return get_children(
+			array(
+				'post_parent'    => $set_id,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'audio',
+				'orderby'        => 'menu_order',
+				'order'          => 'ASC',
+			)
+		);
+	}
+
+	/**
+	 * Build a set's render-ready array.
+	 *
+	 * @param WP_Post $post Set post.
+	 * @return array<string, mixed>
+	 */
+	public static function build( WP_Post $post ): array {
+		$approved  = (bool) get_post_meta( $post->ID, '_callboard_lyrics_approved', true );
+		$credits   = (array) get_post_meta( $post->ID, '_callboard_credits', true );
+		$tracks    = array();
+		$lyrics    = array();
+		$uploaders = array();
+
+		$index = 0;
+		foreach ( self::track_posts( $post->ID ) as $track ) {
+			$file = get_attached_file( $track->ID );
+			if ( ! $file || ! file_exists( $file ) ) {
+				continue;
+			}
+			$meta     = (array) wp_get_attachment_metadata( $track->ID );
+			$duration = get_post_meta( $track->ID, '_callboard_duration', true );
+			$tracks[] = array(
+				'id'       => $track->ID,
+				'index'    => ++$index,
+				'title'    => $track->post_title,
+				'url'      => esc_url_raw( wp_get_attachment_url( $track->ID ) ),
+				'duration' => '' !== $duration ? (float) $duration : (float) ( $meta['length'] ?? 0 ),
+				'bytes'    => (int) ( $meta['filesize'] ?? filesize( $file ) ),
+			);
+			$uploader = get_post_meta( $track->ID, '_callboard_uploader', true );
+			if ( $uploader ) {
+				$uploader_url           = get_post_meta( $track->ID, '_callboard_uploader_url', true );
+				$uploaders[ $uploader ] = $uploader_url ? $uploader_url : null;
+			}
+			$cues = $approved ? get_post_meta( $track->ID, '_callboard_lyrics', true ) : null;
+			if ( is_array( $cues ) && $cues ) {
+				$lyrics[ $track->ID ] = $cues;
+			}
+		}
+
+		return array(
+			'id'      => $post->ID,
+			'slug'    => $post->post_name,
+			'name'    => $post->post_title,
+			'tracks'  => $tracks,
+			'meta'    => callboard_meta( $tracks ),
+			'lyrics'  => $lyrics ? $lyrics : (object) array(),
+			'art'     => self::art( $post->ID ),
+			'share'   => self::share_image( $post->ID ),
+			'credits' => array(
+				'uploaders'    => $uploaders ? $uploaders : (object) array(),
+				'playlist_url' => $credits['playlist_url'] ?? null,
+				'curator'      => $credits['curator'] ?? null,
+				'curator_url'  => $credits['curator_url'] ?? null,
+			),
+		);
+	}
+
+	/**
+	 * Media Session artwork candidates: the featured image, else the app icon.
+	 *
+	 * @param int $set_id Set post ID.
+	 * @return array<int, array<string, string>>
+	 */
+	private static function art( int $set_id ): array {
+		$thumb = get_post_thumbnail_id( $set_id );
+		$out   = array();
+		if ( $thumb ) {
+			foreach ( array(
+				'full'                => '1024x1024',
+				'callboard-cover-512' => '512x512',
+			) as $size => $dims ) {
+				$src = wp_get_attachment_image_src( $thumb, $size );
+				if ( $src ) {
+					$out[] = array(
+						'src'   => $src[0],
+						'sizes' => $dims,
+						'type'  => 'image/png',
+					);
+				}
+			}
+		}
+		return $out ? $out : array(
+			array(
+				'src'   => callboard_asset( 'assets/icon-512.png' ),
+				'sizes' => '512x512',
+				'type'  => 'image/png',
+			),
+		);
+	}
+
+	/**
+	 * Link-preview image URL for a set.
+	 *
+	 * @param int $set_id Set post ID.
+	 */
+	private static function share_image( int $set_id ): string {
+		$id = (int) get_post_meta( $set_id, '_callboard_share_image', true );
+		return $id ? (string) wp_get_attachment_url( $id ) : callboard_asset( 'assets/share.png' );
+	}
+
+	/**
+	 * Everything the client needs to render any view, shipped once.
+	 *
+	 * @param string|null $view '' for home, a slug, or null for an unknown path.
+	 * @return array<string, mixed>
+	 */
+	public static function app_data( ?string $view ): array {
+		return array(
+			'site' => get_bloginfo( 'name' ),
+			'home' => home_url( '/' ),
+			'slug' => $view ? $view : '',
+			'sets' => self::all(),
+		);
+	}
+}

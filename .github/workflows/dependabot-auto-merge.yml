@@ -1,0 +1,36 @@
+name: Dependabot Auto-merge
+
+# Dependabot pull requests for minor and patch bumps merge themselves. This
+# only flips the pull request's auto-merge switch; GitHub performs the merge
+# after every required status check on main passes, so a bump that breaks
+# PHPCS, Playwright or Plugin Check stays open. Major bumps are left for a
+# person to look at.
+#
+# pull_request_target so the token can write, which is safe here because the
+# job never checks out or runs anything from the pull request.
+
+on:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] no checkout, only reads metadata and enables auto-merge
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        id: meta
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Enable auto-merge for minor and patch updates
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"

@@ -5,6 +5,11 @@ on:
     branches: [ main ]
   # Unfiltered: `branches: [ main ]` would skip pull requests against another base.
   pull_request:
+  # wp-env runs against current WordPress core, so a weekly run catches a core
+  # release or a drifting dependency even when nothing has been pushed.
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -31,15 +36,21 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      code: ${{ steps.filter.outputs.code }}
+      code: ${{ steps.filter.outputs.code || steps.everything.outputs.code }}
     steps:
+      # A scheduled or manual run has no diff to filter; run the whole suite.
+      - id: everything
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: echo "code=true" >> "$GITHUB_OUTPUT"
       # Full history so the filter can diff against the previous push without
       # fetching, which it cannot do once the checkout drops its credentials.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.everything.outcome == 'skipped'
         with:
           persist-credentials: false
           fetch-depth: 0
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        if: steps.everything.outcome == 'skipped'
         id: filter
         with:
           filters: |

@@ -1,10 +1,14 @@
 # Dependabot configuration.
 #
-# Weekly version updates with a one-week cooldown, plus out-of-cycle security
-# updates. Every ecosystem pins commit-message to the `build` prefix because
-# that is the type release-please files under "Dependencies"; Dependabot would
-# otherwise infer a prefix from recent history and the bumps could drop out of
-# the changelog.
+# One grouped pull request per ecosystem per month for minor and patch bumps,
+# which dependabot-auto-merge.yml merges once every required check is green.
+# Major bumps arrive as their own pull requests and wait for a person.
+# Security updates ignore the schedule and ship as soon as an advisory lands.
+#
+# Every ecosystem pins commit-message to the `build` prefix because that is
+# the type release-please files under "Dependencies"; Dependabot would
+# otherwise infer a prefix from recent history and the bumps could drop out
+# of the changelog.
 #
 # Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
@@ -13,9 +17,13 @@ updates:
   - package-ecosystem: "composer"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     cooldown:
       default-days: 7
+    groups:
+      composer-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: "build"
       prefix-development: "build"
@@ -24,9 +32,13 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     cooldown:
       default-days: 7
+    groups:
+      npm-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: "build"
       prefix-development: "build"
@@ -35,9 +47,13 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     cooldown:
       default-days: 7
+    groups:
+      actions-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: "build"
       include: "scope"

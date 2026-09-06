@@ -48,16 +48,17 @@ jobs:
           npx wp-env run cli wp plugin install plugin-check --activate
           npx wp-env run cli wp plugin activate callboard
 
-      # The directory forbids proc_open() outright. The WP-CLI fetcher spawns
-      # yt-dlp with it on purpose, and Callboard is not distributed through
-      # WordPress.org, so that one rule is ignored rather than the whole
-      # coding-standards check.
+      # Two codes are ignored. The directory forbids proc_open() outright, but
+      # the WP-CLI fetcher spawns yt-dlp with it on purpose and Callboard is
+      # not distributed through WordPress.org. And "Tested up to" is written
+      # by scripts/sync-versions.sh at release time from the core version the
+      # suite just ran against, so it is allowed to lag between releases.
       - name: Run Plugin Check
         run: |
           set -euo pipefail
           npx wp-env run cli wp plugin check callboard \
             --format=strict-json \
-            --ignore-codes=Generic.PHP.ForbiddenFunctions.Found \
+            --ignore-codes=Generic.PHP.ForbiddenFunctions.Found,outdated_tested_upto_header \
             --fields=file,line,column,type,code,message > plugin-check.json
 
           jq -r '.[] | "\(.type)  \(.file):\(.line):\(.column)  \(.code)\n    \(.message)"' plugin-check.json

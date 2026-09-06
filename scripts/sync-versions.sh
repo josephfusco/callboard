@@ -8,6 +8,11 @@
 #   - readme.txt `Stable tag:`
 #   - package.json and package-lock.json `version`
 #
+# It also writes readme.txt's `Tested up to:` from the current WordPress
+# release. wp-env runs the suite against current core, so at release time that
+# is the version the plugin was in fact tested on. Skipped quietly when
+# api.wordpress.org cannot be reached.
+#
 # Called from .github/workflows/release-please.yml after release-please opens
 # (or updates) its release pull request. Also runnable locally:
 #
@@ -53,6 +58,17 @@ grep -q "^define( 'CALLBOARD_VERSION', '${VERSION}' );" callboard.php \
 	|| { echo "Failed to update CALLBOARD_VERSION in callboard.php" >&2; exit 1; }
 grep -q "^Stable tag: ${VERSION}\$" readme.txt \
 	|| { echo "Failed to update Stable tag in readme.txt" >&2; exit 1; }
+
+TESTED=$(curl -sf --max-time 10 https://api.wordpress.org/core/version-check/1.7/ 2>/dev/null \
+	| jq -r '.offers[0].version' 2>/dev/null | grep -oE '^[0-9]+\.[0-9]+' || true)
+if [[ -n "$TESTED" ]]; then
+	sed_inplace "s/^(Tested up to: ).*/\1${TESTED}/" readme.txt
+	grep -q "^Tested up to: ${TESTED}\$" readme.txt \
+		|| { echo "Failed to update Tested up to in readme.txt" >&2; exit 1; }
+	echo "Tested up to: ${TESTED}"
+else
+	echo "Could not reach api.wordpress.org; leaving Tested up to as is" >&2
+fi
 [[ "$(jq -r .version package.json)" == "$VERSION" ]] \
 	|| { echo "Failed to update version in package.json" >&2; exit 1; }
 

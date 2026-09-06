@@ -6,6 +6,10 @@ on:
       - opened
       - edited
       - synchronize
+  # The release workflow dispatches this onto release-please's branch. There is
+  # no pull request payload to lint on that path, so both jobs skip, which
+  # satisfies the required checks on main for a title release-please wrote.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,6 +20,7 @@ jobs:
   # change in the changelog however the branch commits happen to be written.
   title:
     name: Validate pull request title
+    if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     # The action reports its result as a commit status, which needs
@@ -54,6 +59,7 @@ jobs:
   # nothing, so reject the combination rather than let it mislead.
   breaking-change:
     name: Validate breaking change marker
+    if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:

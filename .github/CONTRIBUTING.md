@@ -59,8 +59,8 @@ bash scripts/sync-versions.sh
 </details>
 
 <details>
-<summary>Why the release pull request has no CI</summary>
+<summary>How the release pull request gets its checks</summary>
 
-By default release-please opens its pull request with the workflow's own `GITHUB_TOKEN`, and events raised by that token never start other workflows. To get CI and a Playground preview on the release pull request, add a fine-grained personal access token with `contents` and `pull-requests` write on this repository as the `RELEASE_PLEASE_TOKEN` secret. `release-please.yml` prefers it when present.
+release-please opens its pull request with the workflow's own `GITHUB_TOKEN`, and events raised by that token never start other workflows. The one exception is `workflow_dispatch`, so after syncing the version strings the release workflow dispatches CI and the title lint onto the release branch. Their check runs attach to the branch's head commit, which is what the protected `main` branch reads. No personal access token is involved, so nothing expires.
 
 </details>

@@ -19,11 +19,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # release-please's own pull request only touches the manifest, CHANGELOG.md
-  # and the synced version strings, so the suite has nothing to tell it.
+  # release-please's own pushes to its branch carry nothing the suite can
+  # judge; the release workflow dispatches a full run onto that branch once
+  # the version strings are synced, and that dispatch is what gates the
+  # release pull request.
   gate:
     runs-on: ubuntu-24.04
-    if: ${{ !startsWith(github.head_ref, 'release-please--') && !startsWith(github.ref, 'refs/heads/release-please--') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (!startsWith(github.head_ref, 'release-please--') && !startsWith(github.ref, 'refs/heads/release-please--')) }}
     steps:
       - run: true
 

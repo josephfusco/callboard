@@ -68,7 +68,7 @@ final class Router {
 	 */
 	public static function title(): string {
 		$view = self::view();
-		return $view ? Sets::by_slug( $view )['name'] . ' · ' . get_bloginfo( 'name' ) : get_bloginfo( 'name' );
+		return $view ? Sets::by_slug( $view )['name'] . ' · ' . callboard_site_name() : callboard_site_name();
 	}
 
 	/**
@@ -76,6 +76,6 @@ final class Router {
 	 */
 	public static function page_title(): string {
 		$view = self::view();
-		return $view ? Sets::by_slug( $view )['name'] : get_bloginfo( 'name' );
+		return $view ? Sets::by_slug( $view )['name'] : callboard_site_name();
 	}
 }

@@ -74,6 +74,13 @@ function callboard_icon( string $name ): string {
 }
 
 /**
+ * The site title as plain text (get_bloginfo() returns it HTML-encoded).
+ */
+function callboard_site_name(): string {
+	return wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+}
+
+/**
  * Cache-busted URL for a plugin asset.
  *
  * @param string $path Path relative to the plugin root.

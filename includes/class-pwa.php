@@ -37,8 +37,8 @@ final class Pwa {
 		}
 		$root     = wp_make_link_relative( home_url( '/' ) );
 		$root     = '' !== $root ? $root : '/';
-		$name     = get_bloginfo( 'name' );
-		$short    = mb_strlen( $name ) > 12 ? mb_substr( $name, 0, 12 ) : $name;
+		$name     = callboard_site_name();
+		$short    = mb_strlen( $name ) > 12 ? rtrim( mb_substr( $name, 0, 12 ) ) : $name;
 		$manifest = array(
 			'name'             => $name,
 			'short_name'       => $short,

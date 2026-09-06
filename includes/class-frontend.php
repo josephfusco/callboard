@@ -99,7 +99,7 @@ final class Frontend {
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-		<meta name="apple-mobile-web-app-title" content="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
+		<meta name="apple-mobile-web-app-title" content="<?php echo esc_attr( callboard_site_name() ); ?>">
 		<?php
 	}
 
@@ -122,7 +122,7 @@ final class Frontend {
 		}
 		$tags = array(
 			'og:type'             => 'website',
-			'og:site_name'        => get_bloginfo( 'name' ),
+			'og:site_name'        => callboard_site_name(),
 			'og:title'            => $title,
 			'og:description'      => $desc,
 			'og:url'              => $url,

@@ -219,7 +219,7 @@ final class Sets {
 	 */
 	public static function app_data( ?string $view ): array {
 		return array(
-			'site' => get_bloginfo( 'name' ),
+			'site' => callboard_site_name(),
 			'home' => home_url( '/' ),
 			'slug' => $view ? $view : '',
 			'sets' => self::all(),

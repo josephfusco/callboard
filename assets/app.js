@@ -26,7 +26,7 @@
 	const fmt = ( s ) =>
 		isFinite( s ) && s >= 0
 			? `${ Math.floor( s / 60 ) }:${ String(
-					Math.floor( s % 60 )
+				Math.floor( s % 60 )
 			  ).padStart( 2, '0' ) }`
 			: '0:00';
 	const esc = ( v ) =>
@@ -65,9 +65,9 @@
 	const link = ( text, url ) =>
 		url
 			? `<a href="${ esc(
-					url
+				url
 			  ) }" target="_blank" rel="nofollow noopener noreferrer">${ esc(
-					text
+				text
 			  ) }</a>`
 			: esc( text );
 	const footer = ( set ) => {
@@ -81,18 +81,18 @@
 		return `<footer class="colophon">${
 			names.length
 				? `<p>${ esc( T.audio_by ) } ${ names
-						.map( ( n ) => link( n, c.uploaders[ n ] ) )
-						.join( ', ' ) }${
-						c.playlist_url
-							? ` · ${ link( T.playlist, c.playlist_url ) }${
-									c.curator
-										? ` ${ esc( T.by ) } ${ link(
-												c.curator,
-												c.curator_url
+					.map( ( n ) => link( n, c.uploaders[ n ] ) )
+					.join( ', ' ) }${
+					c.playlist_url
+						? ` · ${ link( T.playlist, c.playlist_url ) }${
+							c.curator
+								? ` ${ esc( T.by ) } ${ link(
+									c.curator,
+									c.curator_url
 										  ) }`
-										: ''
+								: ''
 							  }`
-							: ''
+						: ''
 				  }</p>`
 				: ''
 		}</footer>`;
@@ -101,30 +101,30 @@
 <header class="masthead"><h1>${ esc( G.site ) }</h1>${
 		G.push
 			? `<div class="actions"><button type="button" class="btn btn-quiet" id="notify" hidden>${ esc(
-					T.notify
+				T.notify
 			  ) }</button><p class="note small" id="notify-note" hidden></p></div>`
 			: ''
 	}</header>
 ${
 	G.sets.length
 		? `<ul class="sets">${ G.sets
-				.map(
-					( s ) =>
-						`<li><a class="set" href="${ esc( G.home ) }${ esc(
-							s.slug
-						) }/"><span class="set-mark" aria-hidden="true">${ esc(
-							s.name.slice( 0, 1 ).toUpperCase()
-						) }</span><span class="set-text"><span class="set-name" style="view-transition-name:set-${ esc(
-							s.slug
-						) }">${ esc(
-							s.name
-						) }</span><span class="set-meta">${ esc(
-							s.meta
-						) }</span></span><span class="set-go" aria-hidden="true"></span></a></li>`
-				)
-				.join( '' ) }</ul>`
+			.map(
+				( s ) =>
+					`<li><a class="set" href="${ esc( G.home ) }${ esc(
+						s.slug
+					) }/"><span class="set-mark" aria-hidden="true">${ esc(
+						s.name.slice( 0, 1 ).toUpperCase()
+					) }</span><span class="set-text"><span class="set-name" style="view-transition-name:set-${ esc(
+						s.slug
+					) }">${ esc(
+						s.name
+					) }</span><span class="set-meta">${ esc(
+						s.meta
+					) }</span></span><span class="set-go" aria-hidden="true"></span></a></li>`
+			)
+			.join( '' ) }</ul>`
 		: `<p class="note">${ esc( T.nothing ) }</p>`
-}
+	}
 ${ footer( null ) }
 </main>`;
 	const renderSet = ( s ) => `<main class="app" id="main">
@@ -137,7 +137,7 @@ ${ footer( null ) }
 	) }</button>${
 		S.offline
 			? `<button type="button" class="btn btn-quiet" id="offline" hidden>${ esc(
-					T.save
+				T.save
 			  ) }</button>`
 			: ''
 	}</div>
@@ -145,36 +145,36 @@ ${ footer( null ) }
 ${
 	s.tracks.length
 		? `<ol class="tracks" id="tracks" aria-label="${ esc(
-				T.tracks
+			T.tracks
 		  ) }">${ s.tracks
-				.map(
-					( t, i ) =>
-						`<li><button type="button" class="track" data-i="${ i }" aria-label="${ esc(
-							tpl( T.play, t.title )
-						) }"><span class="num"><span class="digits">${ String(
-							t.index
-						).padStart(
-							2,
-							'0'
-						) }</span><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span></span><span class="title">${ esc(
-							t.title
-						) }${
-							hasLyrics( s, t.id )
-								? ` <span class="has-lyrics">${ esc(
-										T.lyrics
+			.map(
+				( t, i ) =>
+					`<li><button type="button" class="track" data-i="${ i }" aria-label="${ esc(
+						tpl( T.play, t.title )
+					) }"><span class="num"><span class="digits">${ String(
+						t.index
+					).padStart(
+						2,
+						'0'
+					) }</span><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span></span><span class="title">${ esc(
+						t.title
+					) }${
+						hasLyrics( s, t.id )
+							? ` <span class="has-lyrics">${ esc(
+								T.lyrics
 								  ) }</span>`
-								: ''
-						}</span><span class="len">${
-							S.badge
-								? `<span class="hh" aria-hidden="true">${ esc(
-										S.badge
+							: ''
+					}</span><span class="len">${
+						S.badge
+							? `<span class="hh" aria-hidden="true">${ esc(
+								S.badge
 								  ) }</span>`
-								: ''
-						}${ fmt( t.duration ) }</span></button></li>`
-				)
-				.join( '' ) }</ol>`
+							: ''
+					}${ fmt( t.duration ) }</span></button></li>`
+			)
+			.join( '' ) }</ol>`
 		: `<p class="note">${ esc( T.no_audio ) }</p>`
-}
+	}
 ${ footer( s ) }
 </main>`;
 

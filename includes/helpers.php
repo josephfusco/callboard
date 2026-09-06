@@ -53,7 +53,13 @@ function callboard_meta( array $tracks ): string {
 	$seconds = (int) round( array_sum( array_map( static fn( array $t ) => (float) ( $t['duration'] ?? 0 ), $tracks ) ) );
 	$hours   = intdiv( $seconds, 3600 );
 	$minutes = (int) round( ( $seconds % 3600 ) / 60 );
-	$total   = $hours ? sprintf( '%d hr %d min', $hours, $minutes ) : sprintf( '%d min', $minutes );
+	if ( $hours ) {
+		$total = sprintf( '%d hr %d min', $hours, $minutes );
+	} elseif ( $seconds < 60 ) {
+		$total = sprintf( '%d sec', $seconds );
+	} else {
+		$total = sprintf( '%d min', $minutes );
+	}
 	/* translators: 1: number of tracks, 2: total length such as "42 min". */
 	return sprintf( _n( '%1$d track · %2$s', '%1$d tracks · %2$s', count( $tracks ), 'callboard' ), count( $tracks ), $total );
 }

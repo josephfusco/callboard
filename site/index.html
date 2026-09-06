@@ -34,7 +34,6 @@ h1,h2{letter-spacing:-.03em;line-height:1.02;font-weight:700;margin:0;text-wrap:
 h1{font-size:clamp(2.75rem,7vw,5.5rem)}
 h2{font-size:clamp(2rem,4.2vw,3.25rem)}
 .lede{font-size:clamp(1.125rem,1.6vw,1.375rem);color:var(--ink-2);max-width:36rem;text-wrap:pretty;line-height:1.4}
-.k{color:var(--ink-3);font-size:.8125rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
 /* buttons: machined, no chrome beyond the hairline */
 .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 22px;height:50px;display:inline-flex;align-items:center;gap:10px;font-weight:600;text-decoration:none;font-size:.9375rem;transition:transform var(--t) var(--ease),background var(--t)}
 .btn.quiet{background:transparent;color:var(--ink);border-color:var(--line)}
@@ -52,23 +51,18 @@ h2{font-size:clamp(2rem,4.2vw,3.25rem)}
 .stage .device{position:absolute;width:320px}
 .stage .back{left:0;top:0;transform:rotate(-2deg)}
 .stage .front{left:220px;top:56px;z-index:1;transform:rotate(1.5deg)}
-/* proof strip */
-.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.strip .wrap{display:flex;flex-wrap:wrap;gap:10px 36px;padding:18px 28px;color:var(--ink-3);font-size:.875rem}
 /* statements: one idea, one image, alternating */
 .stmt{padding:120px 0}
 .stmt .wrap{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
 .stmt.flip .wrap>:first-child{order:2}
-.stmt .k{margin-bottom:18px;display:block}
-.stmt p{font-size:1.125rem;color:var(--ink-2);max-width:32rem;margin:20px 0 0;text-wrap:pretty}
+.stmt .stmt p{font-size:1.125rem;color:var(--ink-2);max-width:32rem;margin:20px 0 0;text-wrap:pretty}
 .crop{overflow:hidden;border-radius:28px;border:1px solid var(--line);background:var(--surface);aspect-ratio:4/3;position:relative}
 .crop img{position:absolute;left:50%;transform:translateX(-50%);width:min(100%,420px);border-radius:24px 24px 0 0;box-shadow:0 30px 70px -20px rgba(0,0,0,.35)}
 .crop.top img{top:8%}
 .crop.bottom img{bottom:-12%;top:auto;border-radius:24px}
 /* the dark room: the player, at scale */
 .dark{background:#111;color:#f2f1ee;padding:140px 0;position:relative}
-.dark .k{color:#8a8985}
-.dark .lede{color:#b3b2ae}
+.dark .dark .lede{color:#b3b2ae}
 .dark .wrap{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
 .dark .device{width:360px;justify-self:center}
 .dark h2{color:#f2f1ee}
@@ -105,8 +99,7 @@ html.js .r.in{opacity:1;transform:none}
 <main id="top">
 <section class="hero"><div class="wrap">
 	<div class="r">
-		<span class="k">WordPress plugin</span>
-		<h1 style="margin-top:18px">Rehearsal tracks for a cast, on their phones.</h1>
+		<h1>Rehearsal tracks for a cast, on their phones.</h1>
 		<p class="lede">Sets of audio served from your own WordPress site. A persistent player, offline saving, lock-screen controls, push notices, and Add to Home Screen on iPhone. No accounts.</p>
 		<div class="cta"><a class="btn" href="#install">Install</a><a class="btn quiet" href="https://github.com/josephfusco/callboard">Source</a></div>
 		<!-- Once the repo is public, add: <a class="btn quiet" href="https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/josephfusco/callboard/main/blueprint.json">Try it in Playground</a> -->
@@ -114,30 +107,28 @@ html.js .r.in{opacity:1;transform:none}
 	<div class="stage r" aria-hidden="true"><span class="device back"><img src="home-light.png" alt=""></span><span class="device front"><img src="set-dark.png" alt=""></span></div>
 </div></section>
 
-<div class="strip"><div class="wrap"><span>GPL</span><span>Works with any theme</span><span>WCAG 2.2 AA audited</span><span>No build step</span><span>One stylesheet, one script</span></div></div>
-
 <section class="stmt"><div class="wrap">
-	<div class="r"><span class="k">Keeps playing</span><h2>Playback continues across pages.</h2><p>Moving between sets, locking the phone, or switching apps does not stop the player. Artwork and controls appear on the lock screen and in Control Center.</p></div>
+	<div class="r"><h2>Playback continues across pages.</h2><p>Moving between sets, locking the phone, or switching apps does not stop the player. Artwork and controls appear on the lock screen and in Control Center.</p></div>
 	<div class="crop bottom r"><img src="set-dark.png" alt=""></div>
 </div></section>
 
 <section class="stmt flip"><div class="wrap">
-	<div class="r"><span class="k">Offline</span><h2>Tracks save for offline, per track or per set.</h2><p>Each row shows its own progress and a mark when saved. Saved tracks play without a connection. Removing offline copies requires a second tap.</p></div>
+	<div class="r"><h2>Tracks save for offline, per track or per set.</h2><p>Each row shows its own progress and a mark when saved. Saved tracks play without a connection. Removing offline copies requires a second tap.</p></div>
 	<div class="crop top r"><img src="set-light.png" alt=""></div>
 </div></section>
 
 <section class="dark" id="player"><div class="wrap">
 	<span class="device r"><img src="set-dark.png" alt="The set page with the player pinned to the bottom"></span>
-	<div class="r"><span class="k">The player</span><h2>The player.</h2><p class="lede" style="margin-top:20px">Play and pause morph between shapes. The level bars follow the audio where the platform allows it. The scrubber knob moves with the fill. All motion stops under Reduce Motion.</p></div>
+	<div class="r"><h2>The player.</h2><p class="lede" style="margin-top:20px">Play and pause morph between shapes. The level bars follow the audio where the platform allows it. The scrubber knob moves with the fill. All motion stops under Reduce Motion.</p></div>
 </div></section>
 
 <section class="stmt"><div class="wrap">
-	<div class="r"><span class="k">Notices</span><h2>Notices reach the cast's phones.</h2><p>Opt-in Web Push. Publishing a set sends a notification. Sets → Notices sends a message with an optional link.</p></div>
+	<div class="r"><h2>Notices reach the cast's phones.</h2><p>Opt-in Web Push. Publishing a set sends a notification. Sets → Notices sends a message with an optional link.</p></div>
 	<div class="crop top r"><img src="home-light.png" alt=""></div>
 </div></section>
 
 <section class="how" id="how"><div class="wrap">
-	<div class="r"><span class="k">How it works</span><h2 style="margin-top:18px">Sets are posts. Tracks are attachments.</h2></div>
+	<div class="r"><h2>Sets are posts. Tracks are attachments.</h2></div>
 	<div class="grid r">
 		<div><span class="n">01</span><h3>Add a set</h3><p>Upload audio to a set in the admin, drop a folder into uploads, or fetch a playlist with WP-CLI where yt-dlp exists.</p></div>
 		<div><span class="n">02</span><h3>Share one link</h3><p>The home page lists every set. Nothing to sign up for.</p></div>
@@ -147,7 +138,7 @@ html.js .r.in{opacity:1;transform:none}
 </div></section>
 
 <section class="install" id="install"><div class="wrap r">
-	<span class="k">Install</span><h2 style="margin-top:18px">Install</h2>
+	<h2>Install</h2>
 	<pre><code>wp plugin install https://github.com/josephfusco/callboard/releases/latest/download/callboard.zip --activate
 wp callboard fetch 'https://www.youtube.com/playlist?list=…' --name="Spring Show"</code></pre>
 	<p class="lede">Or upload the zip under Plugins → Add New. Requires WordPress 6.5 and PHP 8.1. Fetching from YouTube needs <code class="i">yt-dlp</code> and <code class="i">ffmpeg</code> wherever WP-CLI runs.</p>

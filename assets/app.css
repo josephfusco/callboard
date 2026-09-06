@@ -26,7 +26,7 @@ button{font:inherit;color:inherit}
 body.has-deck .app{padding-bottom:calc(var(--deck-h) + var(--safe-b) + 40px)}
 
 /* type */
-.label{margin:0;color:var(--ink-3);font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.label{margin:0;color:var(--ink-3);font-size:.9375rem}
 h1{margin:6px 0 0;font-size:2.125rem;line-height:1.1;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
 
 .masthead{padding:16px 0 20px;border-bottom:1px solid var(--line)}

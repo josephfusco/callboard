@@ -12,7 +12,6 @@ $callboard_sets = Callboard\Sets::all();
 ?>
 <main class="app" id="main">
 	<header class="masthead">
-		<p class="label"><?php echo esc_html( Callboard\Settings::get( 'tagline' ) ); ?></p>
 		<h1><?php bloginfo( 'name' ); ?></h1>
 		<?php if ( Callboard\Settings::get( 'push' ) && Callboard\Push::available() ) : ?>
 		<div class="actions"><button type="button" class="btn btn-quiet" id="notify" hidden><?php esc_html_e( 'Notify me about new sets', 'callboard' ); ?></button><p class="note small" id="notify-note" hidden></p></div>

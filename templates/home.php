@@ -29,7 +29,14 @@ $callboard_sets = Callboard\Sets::all();
 		<?php foreach ( $callboard_sets as $callboard_s ) : ?>
 		<li>
 			<a class="set" href="<?php echo esc_url( home_url( '/' . $callboard_s['slug'] . '/' ) ); ?>">
-				<span class="set-mark" aria-hidden="true"><?php echo esc_html( mb_strtoupper( mb_substr( $callboard_s['name'], 0, 1 ) ) ); ?></span>
+				<?php
+				if ( ! empty( $callboard_s['cover'] ) ) :
+					?>
+					<img class="set-art" src="<?php echo esc_url( $callboard_s['cover'] ); ?>" alt="" width="56" height="56" loading="lazy" decoding="async">
+					<?php
+else :
+	?>
+					<span class="set-mark" aria-hidden="true"><?php echo esc_html( mb_strtoupper( mb_substr( $callboard_s['name'], 0, 1 ) ) ); ?></span><?php endif; ?>
 				<span class="set-text">
 					<span class="set-name" style="view-transition-name:set-<?php echo esc_attr( $callboard_s['slug'] ); ?>"><?php echo esc_html( $callboard_s['name'] ); ?></span>
 					<span class="set-meta"><?php echo esc_html( $callboard_s['meta'] ); ?></span>

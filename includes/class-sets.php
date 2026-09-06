@@ -180,6 +180,7 @@ final class Sets {
 			'meta'    => callboard_meta( $tracks ),
 			'lyrics'  => $lyrics ? $lyrics : (object) array(),
 			'art'     => self::art( $post->ID ),
+			'cover'   => get_post_thumbnail_id( $post->ID ) ? wp_get_attachment_image_url( get_post_thumbnail_id( $post->ID ), 'callboard-cover-512' ) : null,
 			'share'   => self::share_image( $post->ID ),
 			'credits' => array(
 				'uploaders'    => $uploaders ? $uploaders : (object) array(),

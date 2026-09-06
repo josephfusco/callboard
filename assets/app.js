@@ -112,9 +112,15 @@ ${
 					( s ) =>
 						`<li><a class="set" href="${ esc( G.home ) }${ esc(
 							s.slug
-						) }/"><span class="set-mark" aria-hidden="true">${ esc(
-							s.name.slice( 0, 1 ).toUpperCase()
-						) }</span><span class="set-text"><span class="set-name" style="view-transition-name:set-${ esc(
+						) }/">${
+							s.cover
+								? `<img class="set-art" src="${ esc(
+										s.cover
+								  ) }" alt="" width="56" height="56" loading="lazy" decoding="async">`
+								: `<span class="set-mark" aria-hidden="true">${ esc(
+										s.name.slice( 0, 1 ).toUpperCase()
+								  ) }</span>`
+						}<span class="set-text"><span class="set-name" style="view-transition-name:set-${ esc(
 							s.slug
 						) }">${ esc(
 							s.name
@@ -997,7 +1003,7 @@ ${ footer( s ) }
 			let got = 0;
 			if ( r.body && total ) {
 				const reader = r.body.getReader();
-				for ( ; ; ) {
+				while ( true ) {
 					const { done, value } = await reader.read();
 					if ( done ) {
 						break;

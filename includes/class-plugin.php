@@ -43,8 +43,8 @@ final class Plugin {
 		if ( ! get_option( 'permalink_structure' ) ) { // /<set>/ routes need pretty permalinks.
 			update_option( 'permalink_structure', '/%postname%/' );
 		}
+		Importer::import_all(); // Before the manifest, so shortcuts and artwork reflect the sets.
 		Pwa::write_files();
-		Importer::import_all();
 		flush_rewrite_rules();
 	}
 }

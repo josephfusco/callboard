@@ -15,6 +15,8 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
 html,body{touch-action:manipulation} /* blocks double-tap zoom, keeps pinch zoom */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none} /* an instrument, not a document: a long press never opens selection handles */
+input,textarea{-webkit-user-select:text;user-select:text}
 button,a,input,label{touch-action:manipulation;-webkit-touch-callout:none}
 [hidden]{display:none!important}
 html{height:100%}
@@ -111,7 +113,7 @@ input[type=range]{position:relative;z-index:2}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:transparent;border:0;margin-top:-9px}
 
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:transparent;border:0}
-.deck-row{touch-action:pan-x;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;margin-top:2px}
+.deck-row{touch-action:pan-x;display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-top:2px}
 /* light strip: the deck's top edge carries the level (opacity only) */
 .deck-glow,.deck-glow-hot,.deck-glow-halo{position:absolute;left:0;right:0;top:0;opacity:0;will-change:opacity;pointer-events:none}
 .deck-glow{height:2px;background:var(--accent)}
@@ -126,7 +128,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* A-B loop: a band on the line, a quiet chip that clears it */
 .loop-band{position:absolute;inset:0;background:var(--ink);opacity:0;transform-origin:0 50%;transform:scaleX(0);transition:opacity var(--t)}
 .loop-band.on{opacity:.4}
-.loop-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:999px;height:30px;padding:0 10px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:color var(--t),border-color var(--t)}
+.loop-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:999px;height:24px;padding:0 8px;margin-left:-4px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:color var(--t),border-color var(--t)}
 .loop-chip[data-state="armed"]{color:var(--ink-2)}
 .loop-chip[data-state="armed"]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .loop-chip[data-state="on"]{color:var(--ink-2);border-color:var(--line-strong)}
@@ -141,10 +143,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 @keyframes beat{35%{transform:scale(1.09)}100%{transform:none}}
 .lyrics-lines li time{color:var(--ink-3);font-size:1rem;font-weight:500;margin-right:12px;font-variant-numeric:tabular-nums}
 .lyrics-lines li small{display:block;font-size:.8125rem;font-weight:500;color:var(--ink-3);margin-top:2px}
-.deck-text{appearance:none;background:transparent;border:0;padding:6px 0;text-align:left;min-width:0;display:flex;flex-direction:column;gap:3px;cursor:pointer;color:inherit;border-radius:8px}
-.deck-text:active .deck-title{opacity:.6}
-.deck-text[data-sheet]::after{content:attr(data-sheet);color:var(--ink-3);font-size:.8125rem}
-.deck-text[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
+.deck-text{padding:6px 0;min-width:0;display:flex;flex-direction:column;gap:3px}
+.deck-open{appearance:none;background:transparent;border:0;padding:0;text-align:left;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:3px;cursor:pointer;color:inherit;border-radius:8px}
+.deck-open:active .deck-title{opacity:.6}
+.deck-open[data-sheet]::after{content:attr(data-sheet);color:var(--ink-3);font-size:.8125rem}
+.deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
+.deck-time{display:inline-flex;align-items:center;gap:10px}
 .deck-title{font-size:1rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;max-width:100%;display:block}
 .deck-title .mq{display:inline-flex;gap:2.5em}
 .deck-title:not(.marquee) .mq{display:block;overflow:hidden;text-overflow:ellipsis}

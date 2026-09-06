@@ -15,11 +15,12 @@ defined( 'ABSPATH' ) || exit;
 			<input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="<?php esc_attr_e( 'Seek', 'callboard' ); ?>" aria-valuetext="0:00">
 		</div>
 		<div class="deck-row">
-			<button type="button" class="deck-text" id="open-lyrics" aria-expanded="false" aria-controls="lyrics" aria-label="<?php esc_attr_e( 'Show current track', 'callboard' ); ?>">
-				<span class="deck-title" id="now-title" aria-live="polite"><span class="mq"><span><?php esc_html_e( 'Choose a track', 'callboard' ); ?></span></span></span>
-				<span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><span id="dur">0:00</span></span>
-			</button>
-			<button type="button" class="loop-chip" id="loop" data-state="" aria-label="<?php esc_attr_e( 'Set a loop: tap at the start, then at the end', 'callboard' ); ?>"><?php esc_html_e( 'Loop', 'callboard' ); ?></button>
+			<div class="deck-text">
+				<button type="button" class="deck-open" id="open-lyrics" aria-expanded="false" aria-controls="lyrics" aria-label="<?php esc_attr_e( 'Show current track', 'callboard' ); ?>">
+					<span class="deck-title" id="now-title" aria-live="polite"><span class="mq"><span><?php esc_html_e( 'Choose a track', 'callboard' ); ?></span></span></span>
+				</button>
+				<span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><span id="dur">0:00</span><button type="button" class="loop-chip" id="loop" data-state="" aria-label="<?php esc_attr_e( 'Set a loop: tap at the start, then at the end', 'callboard' ); ?>"><?php esc_html_e( 'Loop', 'callboard' ); ?></button></span>
+			</div>
 			<div class="deck-controls">
 				<button type="button" class="ctl skip" id="prev" aria-label="<?php esc_attr_e( 'Previous', 'callboard' ); ?>"><?php echo callboard_icon( 'prev' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
 				<button type="button" class="ctl play" id="toggle" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><svg class="pp" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path id="pp-path" d="M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z" data-play="M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z" data-pause="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z"><animate id="pp-anim" attributeName="d" dur="0.22s" begin="indefinite" fill="freeze" calcMode="spline" keySplines=".3 .7 .2 1" keyTimes="0;1"/></path></svg></button>

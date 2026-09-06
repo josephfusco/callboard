@@ -53,7 +53,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .sets{list-style:none;margin:0;padding:0}
 .sets li{border-bottom:1px solid var(--line)}
 .sets li:last-child{border-bottom:0}
-.set{display:grid;grid-template-columns:52px 1fr 20px;align-items:center;gap:16px;padding:18px 16px;margin:0 -16px;width:calc(100% + 32px);text-decoration:none;min-height:88px;transition:background .12s}
+.set{display:grid;grid-template-columns:52px 1fr 20px;align-items:center;gap:16px;padding:18px 16px;margin:0 -16px;width:calc(100% + 32px);border-radius:10px;text-decoration:none;min-height:88px;transition:background .12s}
 .set:active{background:var(--surface-2)}
 .set-mark{width:52px;height:52px;border-radius:12px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:1.375rem;font-weight:700;letter-spacing:-.02em;position:relative}
 .set-mark::after{content:"";position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--accent);animation:breathe 3.6s ease-in-out infinite}
@@ -66,10 +66,11 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 
 /* tracks */
 .tracks{list-style:none;margin:0;padding:0}
-.tracks li{border-bottom:1px solid var(--line)}
-.tracks li:last-child{border-bottom:0}
-.track{appearance:none;width:100%;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;text-align:left;background:transparent;border:0;padding:15px 16px;margin:0 -16px;width:calc(100% + 32px);min-height:56px;cursor:pointer;border-radius:0;transition:background .12s}
-.track:active{background:var(--surface-2)}
+.tracks li{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;margin:0 -16px;padding:0 16px;border-radius:10px;transition:background .12s}
+.tracks li::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:1px;background:var(--line)}
+.tracks li:has(.track:active){background:var(--surface-2)}
+.tracks li:last-child::after{display:none}
+.track{appearance:none;width:100%;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;text-align:left;background:transparent;border:0;padding:15px 0;min-height:56px;cursor:pointer;border-radius:0}
 .track .num{color:var(--ink-3);font-size:.875rem;position:relative;height:20px;display:flex;align-items:center}
 .track .eq{display:none;position:absolute;left:1px;top:50%;height:14px;margin-top:-7px;align-items:flex-end;gap:3px}
 .track .eq i{display:block;width:3px;height:14px;border-radius:1.5px;background:var(--accent);transform:scaleY(.35);transform-origin:50% 100%}
@@ -177,7 +178,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
   .deck-inner{padding-top:6px;padding-bottom:10px}
   .ctl.play{width:60px;height:60px}
   h1{font-size:2.5rem}
-  .set:hover,.track:hover{background:var(--surface)}
+  .set:hover,.tracks li:hover{background:var(--surface)}
   .ctl:hover{background:var(--surface-2)}
   .ctl.play:hover{background:var(--ink)}
 }
@@ -185,7 +186,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 
 /* focus: always visible, never removed */
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
-.track:focus-visible,.set:focus-visible{outline-offset:-3px;border-radius:0}
+.track:focus-visible,.set:focus-visible{outline-offset:-3px;border-radius:10px}
 input[type=range]:focus-visible{outline-offset:0}
 @media (prefers-contrast:more){:root{--line:#8a8884;--line-strong:#55544f;--ink-3:#4a4945}.ctl.play{outline:2px solid var(--ink)}}
 @media (forced-colors:active){.set-mark,.ctl.play{forced-color-adjust:none;background:CanvasText;color:Canvas}.track.active .title{text-decoration:underline}}
@@ -246,3 +247,24 @@ body.is-offline #offline:not(.is-done){opacity:.5}
 .skip-link{position:absolute;left:12px;top:-100px;z-index:100;padding:10px 14px;border-radius:8px;background:var(--ink);color:var(--bg);font-weight:600;text-decoration:none}
 .skip-link:focus{top:calc(12px + env(safe-area-inset-top,0px))}
 #main:focus{outline:none}
+
+/* per-track offline: silent until something happens. A small ring while saving, a small muted mark once saved.
+   Idle shows nothing; on pointer devices the control appears on row hover or focus. */
+.dl{appearance:none;border:0;background:transparent;width:32px;height:44px;margin-right:-8px;display:grid;place-items:center;cursor:pointer;color:var(--ink-3);--p:0;transition:opacity .15s}
+.dl svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dl .dl-track{opacity:.35}
+.dl .dl-ring{stroke-dasharray:56.55;stroke-dashoffset:calc(56.55 * (1 - var(--p)));transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .2s linear;stroke:var(--accent);opacity:0}
+.dl .dl-check{opacity:0}
+.dl[data-state="saving"] .dl-arrow{opacity:0}
+.dl[data-state="saving"] .dl-ring{opacity:1}
+.dl[data-state="saved"] svg{width:12px;height:12px}
+.dl[data-state="saved"] .dl-arrow{opacity:0}
+.dl[data-state="saved"] .dl-track{opacity:1;fill:var(--ink-3);stroke:var(--ink-3)}
+.dl[data-state="saved"] .dl-check{opacity:1;stroke:var(--bg);stroke-width:2.6}
+@media (hover:hover){.dl[data-state=""]{opacity:0}.tracks li:hover .dl,.dl:focus-visible{opacity:1}}
+@media (hover:none){.dl[data-state=""]{visibility:hidden}}
+.dl:focus-visible{outline:3px solid var(--accent);outline-offset:-4px;border-radius:8px}
+/* the set-level control is secondary: quiet text, no chrome */
+#offline{border-color:transparent;color:var(--ink-3);padding-left:8px;padding-right:8px}
+#offline:hover,#offline:focus-visible{color:var(--ink)}
+#offline.is-busy{color:var(--accent-text)}

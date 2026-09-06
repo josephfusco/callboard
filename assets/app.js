@@ -170,7 +170,13 @@ ${
 										S.badge
 								  ) }</span>`
 								: ''
-						}${ fmt( t.duration ) }</span></button></li>`
+						}${ fmt( t.duration ) }</span></button>${
+							S.offline
+								? `<button type="button" class="dl" data-i="${ i }" data-state="" aria-label="${ esc(
+										tpl( T.save_track, t.title )
+								  ) }" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>`
+								: ''
+						}</li>`
 				)
 				.join( '' ) }</ol>`
 		: `<p class="note">${ esc( T.no_audio ) }</p>`
@@ -928,6 +934,103 @@ ${ footer( s ) }
 		}
 		syncRows();
 	}
+	// ---- Offline, per track. Each row has its own control; the set button drives them all.
+	const CACHE = 'callboard-audio-v1';
+	const dlAborts = new Map();
+	const sizeLabel = ( bytes ) =>
+		bytes < 1048576
+			? `${ Math.max( 1, Math.round( bytes / 1024 ) ) } KB`
+			: bytes < 10485760
+			? `${ ( bytes / 1048576 ).toFixed( 1 ) } MB`
+			: `${ Math.round( bytes / 1048576 ) } MB`;
+	const dlButton = ( t ) =>
+		document.querySelector( `.dl[data-i="${ t._i }"]` );
+	const paintDl = ( t, state, progress = 0 ) => {
+		const b = dlButton( t );
+		if ( ! b ) {
+			return;
+		}
+		b.hidden = false;
+		b.dataset.state = state;
+		b.style.setProperty( '--p', progress.toFixed( 3 ) );
+		b.setAttribute(
+			'aria-label',
+			tpl(
+				state === 'saved'
+					? T.saved_track
+					: state === 'saving'
+					? T.saving_track
+					: T.save_track,
+				t.title
+			)
+		);
+		b.disabled = state === 'saved'; // a saved mark is information, not a control; removal is deliberate, from the set button
+	};
+	async function savedSet( tracks ) {
+		const c = await caches.open( CACHE );
+		const have = new Set( ( await c.keys() ).map( ( r ) => r.url ) );
+		return new Set(
+			tracks.filter( ( t ) => have.has( t.url ) ).map( ( t ) => t.url )
+		);
+	}
+	async function saveTrack( t ) {
+		if ( dlAborts.has( t.url ) ) {
+			return;
+		}
+		const ctl = new AbortController();
+		dlAborts.set( t.url, ctl );
+		paintDl( t, 'saving', 0 );
+		try {
+			const r = await fetch( t.url, {
+				cache: 'no-store',
+				signal: ctl.signal,
+			} );
+			if ( ! r.ok || r.status !== 200 ) {
+				throw new Error( r.status );
+			}
+			const total =
+				Number( r.headers.get( 'Content-Length' ) ) || t.bytes || 0;
+			const chunks = [];
+			let got = 0;
+			if ( r.body && total ) {
+				const reader = r.body.getReader();
+				for ( ;; ) {
+					const { done, value } = await reader.read();
+					if ( done ) {
+						break;
+					}
+					chunks.push( value );
+					got += value.byteLength;
+					paintDl( t, 'saving', Math.min( got / total, 0.99 ) );
+				}
+			}
+			const body = chunks.length
+				? new Blob( chunks, {
+						type: r.headers.get( 'Content-Type' ) || 'audio/mpeg',
+				  } )
+				: await r.blob();
+			const c = await caches.open( CACHE );
+			await c.put(
+				t.url,
+				new Response( body, {
+					headers: {
+						'Content-Type': body.type,
+						'Content-Length': String( body.size ),
+					},
+				} )
+			);
+			paintDl( t, 'saved', 1 );
+		} catch {
+			paintDl( t, '', 0 );
+		} finally {
+			dlAborts.delete( t.url );
+		}
+	}
+	async function removeTrack( t ) {
+		const c = await caches.open( CACHE );
+		await c.delete( t.url );
+		paintDl( t, '', 0 );
+	}
 	function bindOffline( set ) {
 		const offBtn = $( 'offline' );
 		if (
@@ -937,90 +1040,82 @@ ${ footer( s ) }
 		) {
 			return;
 		}
-		const CACHE = 'callboard-audio-v1',
-			tracks = set.tracks;
-		const bytes = tracks.reduce( ( a, t ) => a + ( t.bytes || 0 ), 0 );
-		const mb =
-			bytes < 1048576
-				? `${ Math.max( 1, Math.round( bytes / 1024 ) ) } KB`
-				: bytes < 10485760
-				? `${ ( bytes / 1048576 ).toFixed( 1 ) } MB`
-				: `${ Math.round( bytes / 1048576 ) } MB`;
-		let busy = false,
-			abort = null;
-		const saved = async () => {
-			const c = await caches.open( CACHE );
-			const have = new Set( ( await c.keys() ).map( ( r ) => r.url ) );
-			return tracks.filter( ( t ) => have.has( t.url ) ).length;
-		};
-		const paintBtn = async () => {
-			const n = await saved();
+		const tracks = set.tracks.map( ( t, idx ) => ( { ...t, _i: idx } ) );
+		const total = sizeLabel(
+			tracks.reduce( ( a, t ) => a + ( t.bytes || 0 ), 0 )
+		);
+		const paintAll = async () => {
+			const have = await savedSet( tracks );
+			tracks.forEach( ( t ) =>
+				paintDl(
+					t,
+					dlAborts.has( t.url )
+						? 'saving'
+						: have.has( t.url )
+						? 'saved'
+						: '',
+					have.has( t.url ) ? 1 : 0
+				)
+			);
+			const busy = tracks.some( ( t ) => dlAborts.has( t.url ) );
 			offBtn.hidden = false;
-			offBtn.disabled = false;
-			busy = false;
-			offBtn.classList.toggle( 'is-done', n === tracks.length );
-			offBtn.classList.remove( 'is-busy' );
-			offBtn.textContent =
-				n === tracks.length ? T.saved : `${ T.save } · ${ mb }`;
+			offBtn.classList.toggle( 'is-busy', busy );
+			offBtn.classList.toggle(
+				'is-done',
+				! busy && have.size === tracks.length
+			);
+			offBtn.textContent = busy
+				? tpl( T.saving, have.size, tracks.length )
+				: have.size === tracks.length
+				? T.saved
+				: `${ T.save } · ${ total }`;
+			offBtn.disabled =
+				! navigator.onLine && ! busy && have.size !== tracks.length;
 		};
-		paintBtn().catch( () => {} );
-		offBtn.addEventListener( 'click', async () => {
-			if ( busy ) {
-				abort?.abort();
+		paintAll().catch( () => {} );
+		offBtn.onclick = async () => {
+			if ( tracks.some( ( t ) => dlAborts.has( t.url ) ) ) {
+				dlAborts.forEach( ( ctl ) => ctl.abort() );
 				return;
 			}
-			const c = await caches.open( CACHE );
-			if ( offBtn.classList.contains( 'is-done' ) ) {
-				await Promise.all( tracks.map( ( t ) => c.delete( t.url ) ) );
-				return paintBtn();
-			}
-			busy = true;
-			abort = new AbortController();
-			offBtn.classList.add( 'is-busy' );
-			let n = await saved();
-			try {
-				if ( navigator.storage?.estimate ) {
-					// don't start what can't finish
-					const { quota = 0, usage = 0 } =
-						await navigator.storage.estimate();
-					const need = tracks.reduce(
-						( a, t ) => a + ( t.bytes || 0 ),
-						0
-					);
-					if ( quota && quota - usage < need * 1.1 ) {
-						throw new Error( 'quota' );
-					}
-				}
-				const todo = [];
-				for ( const t of tracks ) {
-					if ( ! ( await c.match( t.url ) ) ) {
-						todo.push( t );
-					}
-				}
-				const worker = async () => {
-					while ( todo.length ) {
-						const t = todo.shift();
-						offBtn.textContent = tpl(
-							T.saving,
-							n + 1,
-							tracks.length
-						);
-						const r = await fetch( t.url, {
-							cache: 'no-store',
-							signal: abort.signal,
-						} );
-						if ( r.ok && r.status === 200 ) {
-							await c.put( t.url, r );
-							n++;
+			const have = await savedSet( tracks );
+			if ( have.size === tracks.length ) {
+				if ( ! offBtn.dataset.confirm ) {
+					// first tap asks; it forgets after a moment
+					offBtn.dataset.confirm = '1';
+					offBtn.textContent = T.remove_confirm;
+					setTimeout( () => {
+						if ( offBtn.dataset.confirm ) {
+							delete offBtn.dataset.confirm;
+							paintAll();
 						}
-					}
-				};
-				await Promise.all( [ worker(), worker() ] ); // two at a time: faster on good networks, gentle on weak ones
-			} catch {}
-			if ( abort.signal.aborted || n < tracks.length ) {
-				await Promise.all( tracks.map( ( t ) => c.delete( t.url ) ) );
+					}, 4000 );
+					return;
+				}
+				delete offBtn.dataset.confirm;
+				await Promise.all( tracks.map( removeTrack ) );
+				return paintAll();
 			}
-			paintBtn();
+			const todo = tracks.filter( ( t ) => ! have.has( t.url ) );
+			const worker = async () => {
+				while ( todo.length ) {
+					await saveTrack( todo.shift() );
+					await paintAll();
+				}
+			};
+			await Promise.all( [ worker(), worker() ] );
+			paintAll();
+		};
+		document.querySelectorAll( '.dl' ).forEach( ( b ) => {
+			b.onclick = async () => {
+				const t = tracks[ +b.dataset.i ];
+				if ( dlAborts.has( t.url ) ) {
+					dlAborts.get( t.url ).abort();
+				} else if ( b.dataset.state !== 'saved' ) {
+					await saveTrack( t );
+				}
+				paintAll();
+			};
 		} );
 	}
 

@@ -14,7 +14,7 @@
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* ground: a static grain (one small SVG noise tile, rasterized once) and a faint warm pool of light, both behind the content */
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");background-size:200px 200px;opacity:var(--grain);mix-blend-mode:overlay}
+body::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");background-size:200px 200px;opacity:var(--grain);mix-blend-mode:overlay}
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 70% at 50% -10%,var(--warmth),transparent 60%)}
 @media (prefers-reduced-transparency:reduce){body::before,body::after{display:none}}
 
@@ -135,13 +135,8 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ctl.play{width:66px;height:66px;background:var(--ink);color:var(--bg);margin:0 4px}
 .ctl.play:active{transform:scale(.96);background:var(--ink)}
 .ctl.play{position:relative;isolation:isolate}
-/* play ⇄ pause: two shapes whose clip-paths morph (works in Safari, Chrome, Firefox) */
-.pp{position:relative;display:block;width:28px;height:28px}
-.pp i{position:absolute;inset:0;background:currentColor;transition:clip-path .32s cubic-bezier(.3,.7,.2,1.05)}
-.pp-l{clip-path:polygon(22% 12%,58% 33%,58% 67%,22% 88%)}
-.pp-r{clip-path:polygon(58% 33%,86% 50%,86% 50%,58% 67%)}
-.deck.playing .pp-l{clip-path:polygon(22% 16%,42% 16%,42% 84%,22% 84%)}
-.deck.playing .pp-r{clip-path:polygon(58% 16%,78% 16%,78% 84%,58% 84%)}
+/* play ⇄ pause: one SVG path morphing between two shapes with the same vertex count (SMIL: smooth in Safari, no repaints of the deck) */
+.pp{display:block;width:30px;height:30px;fill:currentColor}
 /* soft ring when playback begins */
 .ctl.play::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--accent);opacity:0;pointer-events:none;z-index:-1}
 .ctl.play.ring::after{animation:ring .7s cubic-bezier(.2,.6,.2,1) forwards}

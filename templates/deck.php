@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 			</button>
 			<div class="deck-controls">
 				<button type="button" class="ctl skip" id="prev" aria-label="<?php esc_attr_e( 'Previous', 'callboard' ); ?>"><?php echo callboard_icon( 'prev' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
-				<button type="button" class="ctl play" id="toggle" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><span class="pp" aria-hidden="true"><i class="pp-l"></i><i class="pp-r"></i></span></button>
+				<button type="button" class="ctl play" id="toggle" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><svg class="pp" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path id="pp-path" d="M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z"><animate id="pp-to-pause" attributeName="d" dur="0.22s" begin="indefinite" fill="freeze" calcMode="spline" keySplines=".3 .7 .2 1" from="M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z" to="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z"/><animate id="pp-to-play" attributeName="d" dur="0.22s" begin="indefinite" fill="freeze" calcMode="spline" keySplines=".3 .7 .2 1" from="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z" to="M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z"/></path></svg></button>
 				<button type="button" class="ctl skip" id="next" aria-label="<?php esc_attr_e( 'Next', 'callboard' ); ?>"><?php echo callboard_icon( 'next' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
 			</div>
 		</div>

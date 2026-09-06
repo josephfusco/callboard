@@ -527,13 +527,27 @@ ${ footer( s ) }
 	toggle.addEventListener( 'click', () =>
 		i < 0 ? load( 0 ) : audio.paused ? audio.play() : audio.pause()
 	);
+	const morph = ( to ) => {
+		const anim = $( to === 'pause' ? 'pp-to-pause' : 'pp-to-play' );
+		if (
+			! anim ||
+			! anim.beginElement ||
+			$( 'pp-path' ).dataset.state === to
+		) {
+			return;
+		}
+		$( 'pp-path' ).dataset.state = to;
+		anim.beginElement();
+	};
 	audio.addEventListener( 'play', () => {
+		morph( 'pause' );
 		deck.classList.add( 'playing' );
 		syncRows();
 		retrigger( toggle, 'ring' );
 		positionState();
 	} );
 	audio.addEventListener( 'pause', () => {
+		morph( 'play' );
 		deck.classList.remove( 'playing', 'buffering' );
 		syncRows();
 		remember();

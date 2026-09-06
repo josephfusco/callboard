@@ -16,6 +16,10 @@ No install needed. Launch a scratch site from `main` with a demo set already imp
 
 Every pull request gets its own Playground link in a sticky comment, built from that PR's commit.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) to run it locally with wp-env and the Playwright suite.
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) to run it locally with wp-env and the Playwright suite.
+
+## Releases
+
+Pull request titles are [Conventional Commits](https://www.conventionalcommits.org/), and [release-please](https://github.com/googleapis/release-please) turns them into the version, the changelog, and a GitHub Release with `callboard.zip` attached. Install that zip like any other plugin.
 
 GPL-2.0-or-later.

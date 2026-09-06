@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Callboard
  * Description: Rehearsal tracks for a cast. Sets of audio, a persistent player, installable as a home-screen app.
- * Version: 1.0.0
+ * Version: 1.3.2
  * Requires at least: 6.5
  * Requires PHP: 8.1
  * Author: Callboard

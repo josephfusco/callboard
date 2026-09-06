@@ -367,12 +367,12 @@ ${ footer( s ) }
 	const glowHot = $( 'deck-glow-hot' ),
 		glowHalo = $( 'deck-glow-halo' );
 	const paintGlow = ( b ) => {
-		glow.style.opacity = ( 0.25 + 0.75 * b ).toFixed( 3 );
+		glow.style.opacity = ( 0.2 + 0.6 * b ).toFixed( 3 );
 		if ( glowHot ) {
-			glowHot.style.opacity = ( b * b ).toFixed( 3 ); // the hot centre only shows near full brightness
+			glowHot.style.opacity = ( 0.5 * b * b * b ).toFixed( 3 ); // the hot centre only shows at the peaks
 		}
 		if ( glowHalo ) {
-			glowHalo.style.opacity = ( 0.15 + 0.85 * b * b ).toFixed( 3 );
+			glowHalo.style.opacity = ( 0.35 * b * b ).toFixed( 3 );
 		}
 	};
 	let glowAnim = null;

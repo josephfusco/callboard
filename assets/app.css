@@ -116,7 +116,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-glow,.deck-glow-hot,.deck-glow-halo{position:absolute;left:0;right:0;top:0;opacity:0;will-change:opacity;pointer-events:none}
 .deck-glow{height:2px;background:var(--accent)}
 .deck-glow-hot{height:2px;background:linear-gradient(90deg,transparent,#ffd2a8 30%,#fff1dc 50%,#ffd2a8 70%,transparent)} /* the hot centre of a filament */
-.deck-glow-halo{height:18px;background:linear-gradient(180deg,var(--accent),transparent);filter:blur(6px);transform:translateZ(0)}
+.deck-glow-halo{height:10px;background:linear-gradient(180deg,var(--accent),transparent);filter:blur(5px);transform:translateZ(0)}
 /* marks on the seek line: ticks above it where singing resumes, pins for notes */
 .seek-marks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
 .seek-marks .tick{position:absolute;top:calc(50% - 11px);width:2px;height:6px;margin-left:-1px;border-radius:1px;background:var(--ink-3);opacity:.85}
@@ -218,7 +218,9 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 
 /* focus: always visible, never removed */
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
-.track:focus-visible,.set:focus-visible{outline-offset:-3px;border-radius:10px}
+.set:focus-visible{outline-offset:-3px;border-radius:10px}
+.track:focus-visible{outline:none} /* the ring goes on the row band, which is the hit box */
+.tracks li:has(.track:focus-visible){outline:3px solid var(--accent);outline-offset:-3px}
 input[type=range]:focus-visible{outline-offset:0}
 @media (prefers-contrast:more){:root{--line:#8a8884;--line-strong:#55544f;--ink-3:#4a4945}.ctl.play{outline:2px solid var(--ink)}}
 @media (forced-colors:active){.set-mark,.ctl.play{forced-color-adjust:none;background:CanvasText;color:Canvas}.track.active .title{text-decoration:underline}}

@@ -503,13 +503,14 @@ ${ footer( s ) }
 		}
 		mq.appendChild( a );
 		nowTitle.classList.remove( 'marquee' );
-		if ( a.scrollWidth > nowTitle.clientWidth + 2 ) {
+		const width = a.getBoundingClientRect().width; // the span is inline; scrollWidth would read 0
+		if ( width > nowTitle.clientWidth + 2 ) {
 			const b = a.cloneNode( true );
 			b.setAttribute( 'aria-hidden', 'true' );
 			mq.appendChild( b );
 			nowTitle.style.setProperty(
 				'--mq-dur',
-				`${ Math.max( 8, a.scrollWidth / 28 ) }s`
+				`${ Math.max( 8, width / 28 ) }s`
 			);
 			nowTitle.classList.add( 'marquee' );
 		}

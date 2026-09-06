@@ -202,6 +202,16 @@ test.describe( 'Front end', () => {
 		);
 	} );
 
+	test( 'a long title scrolls in the deck instead of truncating', async ( {
+		page,
+	}, testInfo ) => {
+		test.skip( testInfo.project.name !== 'iphone', 'phone width only' );
+		await page.goto( '/one-track/' );
+		await page.locator( '.track' ).first().click();
+		await expect( page.locator( '#now-title' ) ).toHaveClass( /marquee/ );
+		await expect( page.locator( '#now-title .mq span' ) ).toHaveCount( 2 );
+	} );
+
 	test( 'an empty set says so on home and on its page', async ( {
 		page,
 	} ) => {

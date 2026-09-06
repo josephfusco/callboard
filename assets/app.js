@@ -779,13 +779,6 @@ ${ footer( s ) }
 		}
 		if ( dx > 0 ) {
 			edge.main.style.transform = `translateX(${ dx.toFixed( 0 ) }px)`;
-			if (
-				dx > Math.min( 120, window.innerWidth / 3 ) &&
-				! edge.detent
-			) {
-				edge.detent = true;
-				haptic();
-			}
 		}
 	} );
 	const edgeEnd = ( e ) => {
@@ -797,6 +790,7 @@ ${ footer( s ) }
 		edge = null;
 		main.style.transition = '';
 		if ( dx > Math.min( 120, window.innerWidth / 3 ) ) {
+			haptic(); // inside the pointerup, which counts as an activation
 			main.animate(
 				[
 					{ transform: main.style.transform },
@@ -1869,7 +1863,6 @@ ${ footer( s ) }
 				return;
 			}
 			offBtn.dataset.confirm = '1';
-			haptic();
 			offBtn.textContent = T.remove_confirm;
 			setTimeout( () => {
 				if ( offBtn.dataset.confirm ) {
@@ -1883,6 +1876,9 @@ ${ footer( s ) }
 		offBtn.onpointerdown = () => {
 			clearTimeout( hold );
 			held = false;
+			if ( offBtn.dataset.some && ! offBtn.dataset.confirm ) {
+				haptic(); // the press that starts the hold; the arm itself runs from a timer
+			}
 			hold = setTimeout( () => {
 				held = true;
 				arm();

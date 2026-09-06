@@ -66,12 +66,11 @@ final class Pwa {
 		}
 		$loc  = self::splash_location();
 		$name = callboard_site_name();
-		$key  = md5( $name . CALLBOARD_VERSION );
+		$key  = md5( $name . CALLBOARD_VERSION . '2' );
 		if ( get_option( 'callboard_splash_key' ) === $key && is_dir( $loc['dir'] ) ) {
 			return;
 		}
 		wp_mkdir_p( $loc['dir'] );
-		$icon    = @imagecreatefrompng( CALLBOARD_DIR . 'assets/icon-512.png' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 		$font    = CALLBOARD_DIR . 'assets/fonts/Poppins-SemiBold.ttf';
 		$schemes = array(
 			'light' => array( array( 236, 234, 229 ), array( 30, 28, 26 ) ),
@@ -81,21 +80,25 @@ final class Pwa {
 			foreach ( self::splash_sizes() as $dims ) {
 				list( $w, $h, $dpr ) = $dims;
 				$im                  = imagecreatetruecolor( $w, $h );
-				imagefill( $im, 0, 0, imagecolorallocate( $im, ...$colors[0] ) );
-				$size = (int) round( $w * 0.22 );
-				if ( $icon ) {
-					imagecopyresampled( $im, $icon, (int) ( ( $w - $size ) / 2 ), (int) ( $h / 2 - $size * 0.85 ), 0, 0, $size, $size, imagesx( $icon ), imagesy( $icon ) );
-				}
-				$pt  = (int) round( 14 * $dpr );
+				$ink                 = imagecolorallocate( $im, ...$colors[1] );
+				$bg                  = imagecolorallocate( $im, ...$colors[0] );
+				imagefill( $im, 0, 0, $bg );
+				// The mark, drawn rather than pasted: a disc, a play triangle, the accent dot.
+				$r  = (int) round( $w * 0.09 );
+				$cx = (int) ( $w / 2 );
+				$cy = (int) ( $h / 2 - $r * 0.6 );
+				imagefilledellipse( $im, $cx, $cy, $r * 2, $r * 2, $ink );
+				$t = $r * 0.42;
+				imagefilledpolygon( $im, array( (int) ( $cx - $t * 0.65 ), (int) ( $cy - $t ), (int) ( $cx - $t * 0.65 ), (int) ( $cy + $t ), (int) ( $cx + $t * 1.05 ), $cy ), $bg );
+				$d = (int) round( $r * 0.16 );
+				imagefilledellipse( $im, (int) ( $cx + $r * 0.95 ), (int) ( $cy - $r * 0.95 ), $d * 2, $d * 2, imagecolorallocate( $im, 232, 84, 30 ) );
+				$pt  = (int) round( 13 * $dpr );
 				$box = imagettfbbox( $pt, 0, $font, $name );
 				$tw  = $box ? $box[2] - $box[0] : 0;
-				imagettftext( $im, $pt, 0, (int) ( ( $w - $tw ) / 2 ), (int) ( $h / 2 + $size * 0.45 ), imagecolorallocate( $im, ...$colors[1] ), $font, $name );
+				imagettftext( $im, $pt, 0, (int) ( ( $w - $tw ) / 2 ), (int) ( $cy + $r + $pt * 2.2 ), $ink, $font, $name );
 				imagepng( $im, sprintf( '%s/%s-%dx%d.png', $loc['dir'], $scheme, $w, $h ), 6 );
 				imagedestroy( $im );
 			}
-		}
-		if ( $icon ) {
-			imagedestroy( $icon );
 		}
 		update_option( 'callboard_splash_key', $key, false );
 	}

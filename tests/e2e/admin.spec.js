@@ -26,9 +26,9 @@ test.describe( 'Admin', () => {
 		await page.goto( '/demo-set/' );
 		await expect( page.locator( '.track .hh' ).first() ).toHaveText( '★' );
 		await page.goto( '/' );
-		await expect( page.locator( '.masthead .label' ) ).toHaveText(
-			'Practice tracks'
-		);
+		await expect(
+			page.locator( 'meta[property="og:description"]' )
+		).toHaveAttribute( 'content', /Practice tracks/ );
 	} );
 
 	test( 'a set has a tracks meta box with reorderable, retitlable rows', async ( {

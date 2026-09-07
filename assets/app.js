@@ -634,12 +634,77 @@ ${ footer( s ) }
 			seek.value = step; // the control repaints on a value change, so only when the value changes
 		}
 		seekFill.style.transform = `scaleX(${ ratio })`;
+		if ( wavePlayed ) {
+			wavePlayed.style.clipPath = `inset(0 ${ (
+				( 1 - ratio ) *
+				100
+			).toFixed( 2 ) }% 0 0)`;
+		}
 		if ( seekKnob ) {
 			seekKnob.style.transform = `translateX(${ (
 				ratio * seekWidth
 			).toFixed( 1 ) }px)`;
 		}
 	};
+	// ---- Waveform: where the import measured levels, the seek line becomes the track's shape. Two canvases,
+	// base and played, drawn once per track and resize; progress only moves a clip-path on the played copy.
+	const waveBase = $( 'wave-base' ),
+		wavePlayed = $( 'wave-played' );
+	function drawWave() {
+		if ( ! waveBase || ! wavePlayed ) {
+			return;
+		}
+		const lv = queue?.tracks[ i ]?.levels || '';
+		const has = lv.length > 1;
+		deck.classList.toggle( 'has-wave', has );
+		const w = waveBase.parentElement.clientWidth,
+			h = waveBase.clientHeight;
+		if ( ! has || ! w || ! h ) {
+			return;
+		}
+		const dpr = window.devicePixelRatio || 1,
+			css = getComputedStyle( deck ),
+			colors = [
+				css.getPropertyValue( '--line-strong' ).trim(),
+				css.getPropertyValue( '--accent' ).trim(),
+			],
+			bar = 2,
+			gap = 1,
+			n = Math.max( 8, Math.floor( ( w + gap ) / ( bar + gap ) ) );
+		[ waveBase, wavePlayed ].forEach( ( cv, k ) => {
+			cv.width = Math.round( w * dpr );
+			cv.height = Math.round( h * dpr );
+			const ctx = cv.getContext( '2d' );
+			ctx.scale( dpr, dpr );
+			ctx.fillStyle = colors[ k ];
+			for ( let b = 0; b < n; b++ ) {
+				const from = Math.floor( ( b / n ) * lv.length ),
+					to = Math.max(
+						from + 1,
+						Math.floor( ( ( b + 1 ) / n ) * lv.length )
+					);
+				let peak = 0;
+				for ( let x = from; x < to; x++ ) {
+					peak = Math.max( peak, +lv[ x ] || 0 );
+				}
+				const bh = Math.max( 2, Math.round( ( peak / 9 ) * h ) ),
+					x = b * ( bar + gap ),
+					y = Math.round( ( h - bh ) / 2 );
+				if ( ctx.roundRect ) {
+					ctx.beginPath();
+					ctx.roundRect( x, y, bar, bh, 1 );
+					ctx.fill();
+				} else {
+					ctx.fillRect( x, y, bar, bh );
+				}
+			}
+		} );
+	}
+	window.addEventListener( 'resize', drawWave );
+	window
+		.matchMedia( '(prefers-color-scheme: dark)' )
+		.addEventListener( 'change', drawWave );
+
 	// The seek line follows the audio every frame while it plays (compositor transforms only); nothing trails.
 	let progressRaf = 0;
 	const follow = () => {
@@ -742,6 +807,7 @@ ${ footer( s ) }
 		paint( true );
 		renderSheet( t.id );
 		paintMarks( t );
+		drawWave();
 		syncRows();
 		document.dispatchEvent(
 			new CustomEvent( 'callboard:track', {

@@ -4,7 +4,7 @@
   --bg:#eceae5; --surface:#f6f5f2; --surface-2:#e2e0da; --line:#d3d1cb; --line-strong:#b8b6b0;
   --ink:#1c1c1c; --ink-2:#55544f; --ink-3:#6f6e69; --accent:#e8541e; --accent-text:#c2401a; --accent-ink:#fff;
   --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06);
-  --ease:cubic-bezier(.2,.8,.2,1); --ease-spring:cubic-bezier(.34,1.4,.64,1); --t-fast:.12s; --t:.2s; --t-slow:.36s; --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:128px; --deck-bg:rgba(246,245,242,.94);
+  --ease:cubic-bezier(.2,.8,.2,1); --ease-spring:cubic-bezier(.34,1.4,.64,1); --t-fast:.12s; --t:.2s; --t-slow:.36s; --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:146px; --deck-bg:rgba(246,245,242,.94);
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#161616; --surface:#1f1f1f; --surface-2:#292929; --line:#2e2e2e; --line-strong:#444;
@@ -104,7 +104,15 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 @supports not (backdrop-filter:blur(1px)){.deck,.topbar{background:var(--deck)}}
 .deck{will-change:transform;position:fixed;left:0;right:0;bottom:-120px;z-index:20;border-top:1px solid var(--line);padding-bottom:calc(var(--safe-b) + 120px)} /* runs past the viewport edge so the browser's bottom bar sits on deck color, not page color */
 .deck-inner{max-width:640px;margin:0 auto;padding:10px 20px 12px}
-.seek-wrap{position:relative;height:36px;display:flex;align-items:center}
+.seek-wrap{position:relative;height:40px;display:flex;align-items:center}
+/* waveform: the track's shape from the levels the import measured (ten a second), two bars per three pixels; the
+   accent copy is clipped to the played part. Tracks without levels keep the plain line. */
+.wave{position:absolute;left:0;top:4px;width:100%;height:32px;pointer-events:none;display:none}
+.deck.has-wave .wave{display:block}
+.wave-played{clip-path:inset(0 100% 0 0)}
+.deck.has-wave .seek-line{top:0;height:100%;margin-top:0;background:transparent;border-radius:0}
+.deck.has-wave .seek-fill,.deck.has-wave .seek-knob{display:none}
+.deck.has-wave .loop-band.on{opacity:.14}
 .seek-line{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:var(--line-strong);overflow:hidden;pointer-events:none}
 .seek-fill{position:absolute;inset:0;background:var(--accent);transform-origin:0 50%;transform:scaleX(0);will-change:transform}
 .seek-knob{position:absolute;left:0;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:var(--ink);transform:translateX(0);pointer-events:none;will-change:transform;z-index:1}
@@ -153,7 +161,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-text{padding:6px 0;min-width:0;display:flex;flex-direction:column;gap:3px}
 .deck-open{appearance:none;background:transparent;border:0;padding:0;text-align:left;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:3px;cursor:pointer;color:inherit;border-radius:8px}
 .deck-open:active .deck-title{opacity:.6}
-.deck-open[data-sheet]::after{content:attr(data-sheet);color:var(--ink-3);font-size:.8125rem}
+.deck-open::after{content:attr(data-sheet);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* reserved even when empty: the deck never changes height, so the controls stay where thumbs expect them */
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
 .deck-time{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:hidden;padding:3px;margin:-3px} /* clipped, never under the controls; the padding keeps focus rings inside the clip */
 /* the time row is a container: when the chips would not fit beside the total, the total goes; the track list still shows it.
@@ -243,7 +251,7 @@ body:not(.has-deck) .update{bottom:calc(var(--safe-b) + 12px)}
 
 @media (max-width:639px){.deck-controls .ctl.skip{width:50px}} /* phones: the time row needs the width more than the skip targets do */
 @media (min-width:640px){
-  :root{--deck-h:112px}
+  :root{--deck-h:140px}
   .app{padding-top:48px}
   .deck-inner{padding-top:6px;padding-bottom:10px}
   .ctl.play{width:60px;height:60px}

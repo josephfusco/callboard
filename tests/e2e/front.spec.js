@@ -285,6 +285,35 @@ test.describe( 'Front end', () => {
 		await expect( chip ).toHaveText( '1×' );
 	} );
 
+	test( 'the deck draws the waveform and keeps one height with or without lyrics', async ( {
+		page,
+	} ) => {
+		await page.goto( '/long-set/' );
+		await page.locator( '.track' ).first().click(); // Overture: levels and lyrics
+		await expect( page.locator( '#deck' ) ).toHaveClass( /has-wave/ );
+		expect(
+			await page.locator( '#wave-base' ).evaluate( ( c ) => c.width )
+		).toBeGreaterThan( 0 );
+		const withLyrics = (
+			await page.locator( '#deck .deck-inner' ).boundingBox()
+		).height;
+		await page.locator( '#seek' ).evaluate( ( el ) => {
+			// drag to the middle: headless Chromium cannot decode the mp3, so drive the control, not the media
+			el.value = 500;
+			el.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+		} );
+		await expect( page.locator( '#wave-played' ) ).toHaveAttribute(
+			'style',
+			/inset\(0(px)? 50(\.\d+)?% 0(px)? 0(px)?\)/ // the browser serializes 0 as 0px
+		); // the played copy is clipped to the left half
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click(); // levels, no lyrics or notes
+		const without = (
+			await page.locator( '#deck .deck-inner' ).boundingBox()
+		).height;
+		expect( Math.abs( withLyrics - without ) ).toBeLessThan( 1 );
+	} );
+
 	test( 'a track with a tempo counts in before it plays', async ( {
 		page,
 	} ) => {

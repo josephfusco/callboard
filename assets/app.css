@@ -52,7 +52,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 18px;font-weight:600;font-size:.9375rem;cursor:pointer;height:46px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
 #play-all{min-width:104px} /* the label changes with the set's state; the button never resizes */
 .btn-small{height:34px;padding:0 14px;font-size:.8125rem}
-.btn-icon{width:46px;padding:0;flex:none;margin-left:auto} /* share sits at the right edge of the row */
+.btn-icon{width:46px;padding:0;flex:none;margin-left:auto;background:color-mix(in srgb,var(--surface-2) 55%,transparent);color:var(--ink-2)} /* share sits at the right edge of the row, in the quiet capsule */
 .btn-icon svg{width:20px;height:20px;fill:none;stroke:currentColor}
 .btn-icon.is-done{width:auto;padding:0 14px} /* "Link copied" borrows the button for a moment */
 .btn:active{transform:scale(.98)}
@@ -61,8 +61,9 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 
 /* home: sets */
 .sets{list-style:none;margin:0;padding:0}
-.sets li{border-bottom:1px solid var(--line)}
-.sets li:last-child{border-bottom:0}
+.sets li{position:relative}
+.sets li::after{content:"";position:absolute;left:70px;right:0;bottom:0;height:1px;background:var(--line)} /* from the text, not under the art */
+.sets li:last-child::after{display:none}
 .set{display:grid;grid-template-columns:56px 1fr auto auto;align-items:center;gap:14px;padding:12px 16px;margin:0 -16px;width:calc(100% + 32px);border-radius:10px;transition:background var(--t-fast),transform var(--t-fast);text-decoration:none;min-height:72px}
 .set:active{background:var(--surface-2);transform:scale(.995)}
 .set-mark,.set-art{width:56px;height:56px;border-radius:10px;flex:none}
@@ -77,7 +78,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 /* tracks */
 .tracks{list-style:none;margin:0;padding:0}
 .tracks li{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;margin:0 -16px;padding:0 16px;border-radius:10px;transition:background var(--t-fast)}
-.tracks li::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:1px;background:var(--line)}
+.tracks li::after{content:"";position:absolute;left:62px;right:16px;bottom:0;height:1px;background:var(--line)} /* the rule starts with the title; the number column breathes */
 .tracks li:has(.track:active){background:var(--surface-2)}
 .tracks li:last-child::after{display:none}
 .track{appearance:none;width:100%;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;text-align:left;background:transparent;border:0;padding:15px 0;min-height:56px;cursor:pointer;border-radius:0}
@@ -130,10 +131,10 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
    pale yellow-white at the peaks) and opacity; the layers below take the color from it. It fades toward the
    posts at either end, blooms into the glass around it and throws a reflection down the panel. */
 .deck-glow,.deck-glow-hot,.deck-glow-halo,.deck-glow-reflect{position:absolute;left:0;right:0;top:0;opacity:0;will-change:opacity;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
-.deck-glow{height:2px;color:var(--accent);background:currentColor;box-shadow:0 0 6px 1px currentColor} /* the wire and its bloom */
-.deck-glow-hot{height:2px;background:linear-gradient(90deg,transparent,#ffd2a8 30%,#fff1dc 50%,#ffd2a8 70%,transparent);box-shadow:0 0 10px 2px rgba(255,232,200,.6)} /* the white heart of the coil */
-.deck-glow-halo{height:14px;color:var(--accent);background:linear-gradient(180deg,currentColor,transparent);filter:blur(6px);transform:translateZ(0)}
-.deck-glow-reflect{top:2px;height:130px;color:var(--accent);background:linear-gradient(180deg,currentColor,transparent 85%);filter:blur(14px);transform:translateZ(0)} /* light down the whole pane, so the glass controls have colour behind them to lift */
+.deck-glow{top:3px;height:2px;color:var(--accent);background:currentColor;box-shadow:0 0 9px 2px currentColor} /* the wire, a hair inside the edge, and its bloom */
+.deck-glow-hot{top:3px;height:2px;background:linear-gradient(90deg,transparent,#ffd2a8 30%,#fff1dc 50%,#ffd2a8 70%,transparent);box-shadow:0 0 10px 2px rgba(255,232,200,.6)} /* the white heart of the coil */
+.deck-glow-halo{top:3px;height:16px;color:var(--accent);background:linear-gradient(180deg,currentColor,transparent);filter:blur(6px);transform:translateZ(0)}
+.deck-glow-reflect{top:4px;height:130px;color:var(--accent);background:linear-gradient(180deg,currentColor,transparent 85%);filter:blur(14px);transform:translateZ(0)} /* light down the whole pane, so the glass controls have colour behind them to lift */
 @media (prefers-reduced-transparency:reduce){.deck-glow-reflect,.deck-glow-halo{display:none}.deck-glow{box-shadow:none}}
 /* marks on the seek line: ticks above it where singing resumes, pins for notes */
 .seek-marks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
@@ -144,7 +145,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* A-B loop: a band on the line, a quiet chip that clears it */
 .loop-band{position:absolute;inset:0;background:var(--ink);opacity:0;transform-origin:0 50%;transform:scaleX(0);transition:opacity var(--t)}
 .loop-band.on{opacity:.4}
-.loop-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:999px;height:24px;padding:0 7px;margin-left:-4px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:color var(--t),border-color var(--t)}
+.loop-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);border-radius:999px;height:24px;padding:0 8px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:color var(--t),border-color var(--t)}
 .loop-chip[data-state="armed"]{color:var(--ink-2)}
 .loop-chip[data-state="armed"]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .loop-chip[data-state="on"]{color:var(--ink-2);border-color:var(--line-strong)}
@@ -153,7 +154,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .track .bpm{font-size:.8125rem;color:var(--ink-3);margin-right:4px}
 .loop-chip:active{background:var(--surface-2)}
 /* speed: the pitch stays put, so a slow pass through a hard passage still sits in the singer's key */
-.rate-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:999px;height:24px;padding:0 7px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;transition:color var(--t),border-color var(--t)}
+.rate-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);border-radius:999px;height:24px;padding:0 8px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;transition:color var(--t),border-color var(--t)}
 .rate-chip[data-state="on"]{color:var(--accent-text);border-color:var(--line-strong)}
 .rate-chip:active{background:var(--surface-2)}
 /* notes and the count-in on the title line */
@@ -167,7 +168,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-text{padding:6px 0;min-width:0;display:flex;flex-direction:column;gap:3px}
 .deck-open{appearance:none;background:transparent;border:0;padding:0;text-align:left;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:3px;cursor:pointer;color:inherit;border-radius:8px}
 .deck-open:active .deck-title{opacity:.6}
-.deck-open::after{content:attr(data-sheet);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* reserved even when empty: the deck never changes height, so the controls stay where thumbs expect them */
+.deck-open::after{content:attr(data-line);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* the sheet's name, or the set's: never blank, so the deck's constant height is honest */
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
 .deck-time{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:hidden} /* clipped, never under the controls */
 .deck-time :focus-visible{outline-offset:-2px} /* rings stay inside the clip */
@@ -176,7 +177,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-text{container-type:inline-size}
 @container (max-width:150px){.deck-time .sep,.deck-time #dur{display:none}}
 @container (max-width:200px){
-  .deck-time:has(.remote-chip:not([hidden])) .sep,.deck-time:has(.remote-chip:not([hidden])) #dur,.deck-time:has(.loop-chip:not([data-state=""])) .sep,.deck-time:has(.loop-chip:not([data-state=""])) #dur,.deck-time:has(.rate-chip[data-state="on"]) .sep,.deck-time:has(.rate-chip[data-state="on"]) #dur{display:none} /* any chip carrying state costs the total */
+  .deck-time:has(.loop-chip:not([data-state=""])) .sep,.deck-time:has(.loop-chip:not([data-state=""])) #dur,.deck-time:has(.rate-chip[data-state="on"]) .sep,.deck-time:has(.rate-chip[data-state="on"]) #dur{display:none} /* any chip carrying state costs the total */
   .deck-time:has(.loop-chip:not([data-state=""])) .remote-chip{display:none} /* a loop is a moment; the speaker picker waits for it */
   .deck-time .loop-chip:not([data-state=""]) .loop-word{display:none} /* the band on the line and the accent already say "loop"; the times are what matter */
 }
@@ -194,13 +195,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 @keyframes swap{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
 .deck-time{color:var(--ink-3);font-size:.8125rem}
 /* AirPlay in Safari, Cast in Chrome: an icon chip that only appears while a device is in reach */
-.remote-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
+.remote-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .remote-chip svg{width:16px;height:16px;fill:currentColor}
 .remote-chip:not([data-state=""]){color:var(--accent-text);border-color:var(--line-strong)}
+.remote-chip.is-away{visibility:hidden} /* keeps its slot */
 .remote-chip[data-state="connecting"]{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.4}}
 .remote-chip:active{background:var(--surface-2)}
-.deck-controls{display:flex;align-items:center;gap:2px;margin-top:-14px;position:relative;z-index:2} /* lifted onto the waveform's baseline: the bars pass under the glass as the track plays */
+.deck-controls{display:flex;align-items:center;gap:2px;position:relative;z-index:2}
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:30px;height:30px;fill:currentColor}
 .deck-controls .ctl.skip{width:56px;height:56px}
@@ -208,15 +210,15 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .ctl.play{width:66px;height:66px;color:var(--ink);margin:0 4px;position:relative;isolation:isolate;
   background:linear-gradient(165deg,var(--glass-hi),var(--glass-lo) 62%),var(--glass);
   -webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);
-  box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 -1px 0 rgba(255,255,255,.08),inset 0 0 0 .5px rgba(255,255,255,.22),0 0 0 .5px var(--glass-edge),0 12px 32px -14px var(--glass-shadow),0 1px 2px rgba(0,0,0,.1);
+  box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px -14px var(--glass-shadow),0 1px 2px rgba(0,0,0,.1);
   transition:transform var(--t-fast),box-shadow var(--t-fast),background var(--t-fast)} /* glass, the way the system draws it: the deck showing through a heavy blur, a hairline of light along the top, soft depth under it */
-.ctl.play .gloss{position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;background:conic-gradient(from 215deg,rgba(255,255,255,.9) 0deg,rgba(255,255,255,0) 80deg,rgba(255,255,255,0) 190deg,rgba(255,255,255,.4) 260deg,rgba(255,255,255,.9) 360deg);-webkit-mask:radial-gradient(circle,transparent 61%,#000 65%,#000 70%,transparent 74%);mask:radial-gradient(circle,transparent 61%,#000 65%,#000 70%,transparent 74%);opacity:.85;transition:opacity var(--t-fast)} /* the lensed rim: brightest toward the light, a faint return on the far edge */
+.ctl.play .gloss{position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;background:conic-gradient(from 225deg,rgba(255,255,255,.95) 0deg,rgba(255,255,255,.1) 70deg,rgba(255,255,255,0) 120deg,rgba(255,255,255,0) 215deg,rgba(255,255,255,.18) 290deg,rgba(255,255,255,.95) 360deg);-webkit-mask:radial-gradient(circle,transparent 62%,#000 66%,#000 69.5%,transparent 73%);mask:radial-gradient(circle,transparent 62%,#000 66%,#000 69.5%,transparent 73%);opacity:.9;transition:opacity var(--t-fast)} /* the lensed rim: brightest toward the light, a faint return on the far edge */
 .ctl.play .well{display:none}
-.ctl.play:active{transform:scale(.96);background:linear-gradient(165deg,var(--glass-lo),var(--glass-lo)),var(--glass);box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 2px 8px rgba(0,0,0,.18),0 0 0 .5px var(--glass-edge),0 4px 12px -8px var(--glass-shadow)}
+.ctl.play:active{transform:scale(.96);background:linear-gradient(165deg,var(--glass-lo),var(--glass-lo)),var(--glass);box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 2px 8px rgba(0,0,0,.18),0 4px 12px -8px var(--glass-shadow)}
 .ctl.play:active .gloss{opacity:.5}
 /* play ⇄ pause: the glyph not in use sinks out of sight; the one called for rises through the glass into place a
    beat later, and the button gives one short wobble. */
-.ctl.play .pp{position:absolute;inset:0;margin:auto;width:26px;height:26px;fill:currentColor;will-change:transform,opacity;z-index:2}
+.ctl.play .pp{position:absolute;inset:0;margin:auto;width:28px;height:28px;fill:currentColor;will-change:transform,opacity;z-index:2}
 .ctl.play .pp{opacity:0;transform:translateY(12px) scale(.35);transition:opacity .2s var(--ease),transform .2s var(--ease)} /* sunk, quickly */
 .ctl.play[data-state="play"] .pp-play,.ctl.play[data-state="pause"] .pp-pause{opacity:1;transform:none;transition:opacity .32s var(--ease) .16s,transform .5s var(--ease-spring) .16s} /* risen, a beat later */
 .ctl.play.shake{animation:shake .6s var(--ease-spring)}
@@ -384,8 +386,7 @@ body:not(.has-deck) .a2hs{bottom:calc(var(--safe-b) + 12px)}
 .set-off[data-state="saved"] .dl-track{opacity:1;fill:var(--ink-3);stroke:var(--ink-3)}
 .set-off[data-state="saved"] .dl-check{opacity:1;stroke:var(--bg);stroke-width:2.6}
 /* the set-level control is secondary: quiet text, no chrome */
-#offline,#notify{border-color:transparent;color:var(--ink-3);padding-left:8px;padding-right:8px}
-#notify,.actions>#offline:first-child{margin-left:-8px} /* quiet text sits on the title's left edge when it leads the row */
+#offline,#notify{border-color:var(--line);background:color-mix(in srgb,var(--surface-2) 55%,transparent);color:var(--ink-2);padding-left:14px;padding-right:14px} /* the quiet capsule: the same construction as Share, one rank below Play */
 #notify.is-done{color:var(--ink-2);pointer-events:auto}
 body.view-home .actions{margin-top:6px}
 #offline:hover,#offline:focus-visible,#notify:hover,#notify:focus-visible{color:var(--ink)}

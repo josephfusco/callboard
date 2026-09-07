@@ -2,249 +2,249 @@
 	"name": "Long Set",
 	"slug": "long-set",
 	"order": 1,
-	"playlist_url": "https://www.youtube.com/playlist?list=demo2",
-	"curator": "Demo Curator",
-	"curator_url": "https://www.youtube.com/@demo",
+	"playlist_url": "https://great78.archive.org/",
+	"curator": "Great 78 Project",
+	"curator_url": "https://archive.org/details/georgeblood",
 	"tracks": [
 		{
 			"index": 1,
 			"id": "long01",
 			"title": "1. Overture (Demo OBC)",
 			"file": "01 - Overture [long01].mp3",
-			"duration": 10.0,
-			"url": "https://www.youtube.com/watch?v=long01",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_tea-for-two-no-no-nanette_frederick-bishop-vincent-youmans_gbia3037992b",
+			"uploader": "Frederick Bishop",
+			"uploader_url": "https://archive.org/details/78_tea-for-two-no-no-nanette_frederick-bishop-vincent-youmans_gbia3037992b"
 		},
 		{
 			"index": 2,
 			"id": "long02",
 			"title": "2. Opening Number (Demo OBC)",
 			"file": "02 - Opening Number [long02].mp3",
-			"duration": 3.0,
-			"url": "https://www.youtube.com/watch?v=long02",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_fascinating-rhythm_cliff-edwards-ukelele-ike-gershwin_gbia0341984b",
+			"uploader": "Cliff Edwards (Ukelele Ike)",
+			"uploader_url": "https://archive.org/details/78_fascinating-rhythm_cliff-edwards-ukelele-ike-gershwin_gbia0341984b"
 		},
 		{
 			"index": 3,
 			"id": "long03",
 			"title": "3. The Wish (Demo OBC)",
 			"file": "03 - The Wish [long03].mp3",
-			"duration": 1.0,
-			"url": "https://www.youtube.com/watch?v=long03",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_oh-lady-be-good_ben-bernie-his-hotel-roosevelt-orch-gershwin_gbia3018889b",
+			"uploader": "BEN Bernie & HIS Hotel Roosevelt Orch.",
+			"uploader_url": "https://archive.org/details/78_oh-lady-be-good_ben-bernie-his-hotel-roosevelt-orch-gershwin_gbia3018889b"
 		},
 		{
 			"index": 4,
 			"id": "long04",
 			"title": "4. Village Square (Demo OBC)",
 			"file": "04 - Village Square [long04].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=long04",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_look-for-the-silver-lining_betsy-lane-shepherd-and-lewis-james-jerome-kern_gbia0088693a",
+			"uploader": "Betsy Lane Shepherd and Lewis James",
+			"uploader_url": "https://archive.org/details/78_look-for-the-silver-lining_betsy-lane-shepherd-and-lewis-james-jerome-kern_gbia0088693a"
 		},
 		{
 			"index": 5,
 			"id": "long05",
 			"title": "5. Something's Coming (Demo OBC)",
 			"file": "05 - Something's Coming [long05].mp3",
-			"duration": 3.0,
-			"url": "https://www.youtube.com/watch?v=long05",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_im-just-wild-about-harry_vincent-and-his-hotel-pennsylvania-orchestra-noble-sissle_gbia0130106a",
+			"uploader": "Vincent and his Hotel Pennsylvania Orchestra",
+			"uploader_url": "https://archive.org/details/78_im-just-wild-about-harry_vincent-and-his-hotel-pennsylvania-orchestra-noble-sissle_gbia0130106a"
 		},
 		{
 			"index": 6,
 			"id": "long06",
 			"title": "6. Ballad (Demo OBC)",
 			"file": "06 - Ballad [long06].mp3",
-			"duration": 1.0,
-			"url": "https://www.youtube.com/watch?v=long06",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_april-showers_metropolitan-dance-players-louis-silvers_gbia0095724a",
+			"uploader": "Metropolitan Dance Players",
+			"uploader_url": "https://archive.org/details/78_april-showers_metropolitan-dance-players-louis-silvers_gbia0095724a"
 		},
 		{
 			"index": 7,
 			"id": "long07",
 			"title": "7. Act One Finale (Demo OBC)",
 			"file": "07 - Act One Finale [long07].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=long07",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_toot-toot-tootsie_arthur-fields-gus-kahn-ernie-erdman-dan-russo_gbia0015127a",
+			"uploader": "Arthur Fields",
+			"uploader_url": "https://archive.org/details/78_toot-toot-tootsie_arthur-fields-gus-kahn-ernie-erdman-dan-russo_gbia0015127a"
 		},
 		{
 			"index": 8,
 			"id": "long08",
 			"title": "8. Entr'acte (Demo OBC)",
 			"file": "08 - Entr'acte [long08].mp3",
-			"duration": 3.0,
-			"url": "https://www.youtube.com/watch?v=long08",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_manhattan_imperial-dance-orchestra-hart-rodgers_gbia0117730a",
+			"uploader": "Imperial Dance Orchestra",
+			"uploader_url": "https://archive.org/details/78_manhattan_imperial-dance-orchestra-hart-rodgers_gbia0117730a"
 		},
 		{
 			"index": 9,
 			"id": "long09",
 			"title": "9. Reprise (Demo OBC)",
 			"file": "09 - Reprise [long09].mp3",
-			"duration": 1.0,
-			"url": "https://www.youtube.com/watch?v=long09",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_second-hand-rose_rich-tone-quartette-clarke-hanley_gbia0401453a",
+			"uploader": "Rich-Tone Quartette",
+			"uploader_url": "https://archive.org/details/78_second-hand-rose_rich-tone-quartette-clarke-hanley_gbia0401453a"
 		},
 		{
 			"index": 10,
 			"id": "long10",
 			"title": "10. The Duet (Demo OBC)",
 			"file": "10 - The Duet [long10].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=long10",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_somebody-loves-me_cliff-edwards-ukelele-ike-gershwin_gbia0005212a",
+			"uploader": "Cliff Edwards (Ukelele Ike)",
+			"uploader_url": "https://archive.org/details/78_somebody-loves-me_cliff-edwards-ukelele-ike-gershwin_gbia0005212a"
 		},
 		{
 			"index": 11,
 			"id": "long11",
 			"title": "11. Chase Scene (Demo OBC)",
 			"file": "11 - Chase Scene [long11].mp3",
-			"duration": 3.0,
-			"url": "https://www.youtube.com/watch?v=long11",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_tea-for-two-no-no-nanette_frederick-bishop-vincent-youmans_gbia3037992b",
+			"uploader": "Frederick Bishop",
+			"uploader_url": "https://archive.org/details/78_tea-for-two-no-no-nanette_frederick-bishop-vincent-youmans_gbia3037992b"
 		},
 		{
 			"index": 12,
 			"id": "long12",
 			"title": "12. Lullaby (Demo OBC)",
 			"file": "12 - Lullaby [long12].mp3",
-			"duration": 1.0,
-			"url": "https://www.youtube.com/watch?v=long12",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_fascinating-rhythm_cliff-edwards-ukelele-ike-gershwin_gbia0341984b",
+			"uploader": "Cliff Edwards (Ukelele Ike)",
+			"uploader_url": "https://archive.org/details/78_fascinating-rhythm_cliff-edwards-ukelele-ike-gershwin_gbia0341984b"
 		},
 		{
 			"index": 13,
 			"id": "long13",
 			"title": "13. Comic Number (Demo OBC)",
 			"file": "13 - Comic Number [long13].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=long13",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_oh-lady-be-good_ben-bernie-his-hotel-roosevelt-orch-gershwin_gbia3018889b",
+			"uploader": "BEN Bernie & HIS Hotel Roosevelt Orch.",
+			"uploader_url": "https://archive.org/details/78_oh-lady-be-good_ben-bernie-his-hotel-roosevelt-orch-gershwin_gbia3018889b"
 		},
 		{
 			"index": 14,
 			"id": "long14",
 			"title": "14. Eleven O'Clock Number (Demo OBC)",
 			"file": "14 - Eleven O'Clock Number [long14].mp3",
-			"duration": 3.0,
-			"url": "https://www.youtube.com/watch?v=long14",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_look-for-the-silver-lining_betsy-lane-shepherd-and-lewis-james-jerome-kern_gbia0088693a",
+			"uploader": "Betsy Lane Shepherd and Lewis James",
+			"uploader_url": "https://archive.org/details/78_look-for-the-silver-lining_betsy-lane-shepherd-and-lewis-james-jerome-kern_gbia0088693a"
 		},
 		{
 			"index": 15,
 			"id": "long15",
 			"title": "15. Confrontation (Demo OBC)",
 			"file": "15 - Confrontation [long15].mp3",
-			"duration": 1.0,
-			"url": "https://www.youtube.com/watch?v=long15",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_im-just-wild-about-harry_vincent-and-his-hotel-pennsylvania-orchestra-noble-sissle_gbia0130106a",
+			"uploader": "Vincent and his Hotel Pennsylvania Orchestra",
+			"uploader_url": "https://archive.org/details/78_im-just-wild-about-harry_vincent-and-his-hotel-pennsylvania-orchestra-noble-sissle_gbia0130106a"
 		},
 		{
 			"index": 16,
 			"id": "long16",
 			"title": "16. Transformation (Demo OBC)",
 			"file": "16 - Transformation [long16].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=long16",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_april-showers_metropolitan-dance-players-louis-silvers_gbia0095724a",
+			"uploader": "Metropolitan Dance Players",
+			"uploader_url": "https://archive.org/details/78_april-showers_metropolitan-dance-players-louis-silvers_gbia0095724a"
 		},
 		{
 			"index": 17,
 			"id": "long17",
 			"title": "17. Finale Ultimo (Demo OBC)",
 			"file": "17 - Finale Ultimo [long17].mp3",
-			"duration": 3.0,
-			"url": "https://www.youtube.com/watch?v=long17",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_toot-toot-tootsie_arthur-fields-gus-kahn-ernie-erdman-dan-russo_gbia0015127a",
+			"uploader": "Arthur Fields",
+			"uploader_url": "https://archive.org/details/78_toot-toot-tootsie_arthur-fields-gus-kahn-ernie-erdman-dan-russo_gbia0015127a"
 		},
 		{
 			"index": 18,
 			"id": "long18",
 			"title": "18. Bows (Demo OBC)",
 			"file": "18 - Bows [long18].mp3",
-			"duration": 1.0,
-			"url": "https://www.youtube.com/watch?v=long18",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_manhattan_imperial-dance-orchestra-hart-rodgers_gbia0117730a",
+			"uploader": "Imperial Dance Orchestra",
+			"uploader_url": "https://archive.org/details/78_manhattan_imperial-dance-orchestra-hart-rodgers_gbia0117730a"
 		},
 		{
 			"index": 19,
 			"id": "long19",
 			"title": "19. Exit Music (Demo OBC)",
 			"file": "19 - Exit Music [long19].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=long19",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_second-hand-rose_rich-tone-quartette-clarke-hanley_gbia0401453a",
+			"uploader": "Rich-Tone Quartette",
+			"uploader_url": "https://archive.org/details/78_second-hand-rose_rich-tone-quartette-clarke-hanley_gbia0401453a"
 		},
 		{
 			"index": 20,
 			"id": "long20",
 			"title": "20. Cut Song ⧸ Bonus (Demo OBC)",
 			"file": "20 - Cut Song ⧸ Bonus [long20].mp3",
-			"duration": 3.0,
-			"url": "https://www.youtube.com/watch?v=long20",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_somebody-loves-me_cliff-edwards-ukelele-ike-gershwin_gbia0005212a",
+			"uploader": "Cliff Edwards (Ukelele Ike)",
+			"uploader_url": "https://archive.org/details/78_somebody-loves-me_cliff-edwards-ukelele-ike-gershwin_gbia0005212a"
 		},
 		{
 			"index": 21,
 			"id": "long21",
 			"title": "21. Underscore A (Demo OBC)",
 			"file": "21 - Underscore A [long21].mp3",
-			"duration": 1.0,
-			"url": "https://www.youtube.com/watch?v=long21",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_tea-for-two-no-no-nanette_frederick-bishop-vincent-youmans_gbia3037992b",
+			"uploader": "Frederick Bishop",
+			"uploader_url": "https://archive.org/details/78_tea-for-two-no-no-nanette_frederick-bishop-vincent-youmans_gbia3037992b"
 		},
 		{
 			"index": 22,
 			"id": "long22",
 			"title": "22. Underscore B (Demo OBC)",
 			"file": "22 - Underscore B [long22].mp3",
-			"duration": 2.0,
-			"url": "https://www.youtube.com/watch?v=long22",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_fascinating-rhythm_cliff-edwards-ukelele-ike-gershwin_gbia0341984b",
+			"uploader": "Cliff Edwards (Ukelele Ike)",
+			"uploader_url": "https://archive.org/details/78_fascinating-rhythm_cliff-edwards-ukelele-ike-gershwin_gbia0341984b"
 		},
 		{
 			"index": 23,
 			"id": "long23",
 			"title": "23. Curtain Call (Demo OBC)",
 			"file": "23 - Curtain Call [long23].mp3",
-			"duration": 3.0,
-			"url": "https://www.youtube.com/watch?v=long23",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_oh-lady-be-good_ben-bernie-his-hotel-roosevelt-orch-gershwin_gbia3018889b",
+			"uploader": "BEN Bernie & HIS Hotel Roosevelt Orch.",
+			"uploader_url": "https://archive.org/details/78_oh-lady-be-good_ben-bernie-his-hotel-roosevelt-orch-gershwin_gbia3018889b"
 		},
 		{
 			"index": 24,
 			"id": "long24",
 			"title": "24. Playoff (Demo OBC)",
 			"file": "24 - Playoff [long24].mp3",
-			"duration": 1.0,
-			"url": "https://www.youtube.com/watch?v=long24",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"duration": 20,
+			"url": "https://archive.org/details/78_look-for-the-silver-lining_betsy-lane-shepherd-and-lewis-james-jerome-kern_gbia0088693a",
+			"uploader": "Betsy Lane Shepherd and Lewis James",
+			"uploader_url": "https://archive.org/details/78_look-for-the-silver-lining_betsy-lane-shepherd-and-lewis-james-jerome-kern_gbia0088693a"
 		}
 	]
 }

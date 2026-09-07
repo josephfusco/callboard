@@ -1,19 +1,126 @@
 {
 	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
-	"preferredVersions": { "php": "8.3", "wp": "latest" },
+	"preferredVersions": {
+		"php": "8.3",
+		"wp": "latest"
+	},
 	"landingPage": "/",
 	"login": true,
 	"steps": [
-		{ "step": "setSiteOptions", "options": { "blogname": "Callboard Demo", "permalink_structure": "/%postname%/" } },
+		{
+			"step": "setSiteOptions",
+			"options": {
+				"blogname": "Callboard Demo",
+				"permalink_structure": "/%postname%/"
+			}
+		},
 		{
 			"step": "installPlugin",
-			"pluginData": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/preview-main/callboard.zip" }
+			"pluginData": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/preview-main/callboard.zip"
+			}
 		},
-		{ "step": "mkdir", "path": "/wordpress/wp-content/uploads/callboard/demo-set" },
-		{ "step": "writeFile", "path": "/wordpress/wp-content/uploads/callboard/demo-set/manifest.json", "data": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/manifest.json" } },
-		{ "step": "writeFile", "path": "/wordpress/wp-content/uploads/callboard/demo-set/cover.png", "data": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/cover.png" } },
-		{ "step": "writeFile", "path": "/wordpress/wp-content/uploads/callboard/demo-set/01 - Tone 1 [tone01].mp3", "data": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/01%20-%20Tone%201%20%5Btone01%5D.mp3" } },
-		{ "step": "writeFile", "path": "/wordpress/wp-content/uploads/callboard/demo-set/02 - Tone 2 [tone02].mp3", "data": { "resource": "url", "url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/02%20-%20Tone%202%20%5Btone02%5D.mp3" } },
+		{
+			"step": "mkdir",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set"
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/manifest.json",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/manifest.json"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/cover.png",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/cover.png"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/01 - Tea for Two [gbia3037992b].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/01%20-%20Tea%20for%20Two%20%5Bgbia3037992b%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/02 - Fascinating Rhythm [gbia0341984b].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/02%20-%20Fascinating%20Rhythm%20%5Bgbia0341984b%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/03 - Oh, Lady Be Good! [gbia3018889b].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/03%20-%20Oh%2C%20Lady%20Be%20Good%21%20%5Bgbia3018889b%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/04 - Look for the Silver Lining [gbia0088693a].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/04%20-%20Look%20for%20the%20Silver%20Lining%20%5Bgbia0088693a%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/05 - I'm Just Wild About Harry [gbia0130106a].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/05%20-%20I%27m%20Just%20Wild%20About%20Harry%20%5Bgbia0130106a%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/06 - April Showers [gbia0095724a].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/06%20-%20April%20Showers%20%5Bgbia0095724a%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/07 - Toot, Toot, Tootsie! [gbia0015127a].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/07%20-%20Toot%2C%20Toot%2C%20Tootsie%21%20%5Bgbia0015127a%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/08 - Manhattan [gbia0117730a].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/08%20-%20Manhattan%20%5Bgbia0117730a%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/09 - Second Hand Rose [gbia0401453a].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/09%20-%20Second%20Hand%20Rose%20%5Bgbia0401453a%5D.mp3"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/uploads/callboard/demo-set/10 - Somebody Loves Me [gbia0005212a].mp3",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/josephfusco/callboard/main/tests/fixtures/callboard/demo-set/10%20-%20Somebody%20Loves%20Me%20%5Bgbia0005212a%5D.mp3"
+			}
+		},
 		{
 			"step": "runPHP",
 			"code": "<?php require '/wordpress/wp-load.php'; update_option( 'callboard_settings', array( 'tagline' => 'Rehearsal tracks', 'footer_note' => 'For rehearsal use only.', 'badge' => '★', 'confetti' => '22', 'hearts' => true, 'show_hint' => false, 'offline' => true, 'push' => false, 'notify_new_sets' => false ) ); Callboard\\Importer::import_all(); flush_rewrite_rules(); ?>"

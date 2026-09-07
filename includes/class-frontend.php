@@ -89,7 +89,7 @@ final class Frontend {
 			'loop'           => __( 'Loop', 'callboard' ),
 			'loop_clear'     => __( 'Clear loop', 'callboard' ),
 			'loop_set'       => __( 'Set a loop: tap at the start, then at the end', 'callboard' ),
-			'loop_from'      => __( 'Loop from', 'callboard' ),
+			'loop_from'      => __( 'From', 'callboard' ),
 			'loop_end'       => __( 'Tap at the end of the loop', 'callboard' ),
 			/* translators: %s: playback speed such as 0.75×. */
 			'rate_label'     => __( 'Playback speed %s, tap to slow down', 'callboard' ),
@@ -106,6 +106,8 @@ final class Frontend {
 			/* translators: %s: track title. */
 			'saved_track'    => __( '%s is saved offline', 'callboard' ),
 			'remove_confirm' => __( 'Remove offline copies? Tap again', 'callboard' ),
+			/* translators: %s: free space such as 40 MB. */
+			'no_space'       => __( 'Not enough space, %s free', 'callboard' ),
 			/* translators: %s: track title. */
 			'saving_track'   => __( 'Saving %s, tap to cancel', 'callboard' ),
 			'notify'         => __( 'Notify me about new sets', 'callboard' ),

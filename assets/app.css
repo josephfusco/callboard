@@ -155,11 +155,16 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-open:active .deck-title{opacity:.6}
 .deck-open[data-sheet]::after{content:attr(data-sheet);color:var(--ink-3);font-size:.8125rem}
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
-.deck-time{display:inline-flex;align-items:center;gap:8px}
-/* the time row is a container: when the chips would not fit beside the total, the total goes; the track list still shows it */
+.deck-time{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:hidden;padding:3px;margin:-3px} /* clipped, never under the controls; the padding keeps focus rings inside the clip */
+/* the time row is a container: when the chips would not fit beside the total, the total goes; the track list still shows it.
+   Safari always shows the AirPlay chip (no availability watcher for audio) and an armed or set loop reads wider than "Loop". */
 .deck-text{container-type:inline-size}
 @container (max-width:150px){.deck-time .sep,.deck-time #dur{display:none}}
-@container (max-width:189px){.deck-time:has(.remote-chip:not([hidden])) .sep,.deck-time:has(.remote-chip:not([hidden])) #dur{display:none}}
+@container (max-width:200px){
+  .deck-time:has(.remote-chip:not([hidden])) .sep,.deck-time:has(.remote-chip:not([hidden])) #dur,.deck-time:has(.loop-chip:not([data-state=""])) .sep,.deck-time:has(.loop-chip:not([data-state=""])) #dur{display:none}
+  .deck-time:has(.loop-chip:not([data-state=""])) .remote-chip{display:none} /* a loop is a moment; the speaker picker waits for it */
+  .deck-time .loop-chip:not([data-state=""]) .loop-word{display:none} /* the band on the line and the accent already say "loop"; the times are what matter */
+}
 .deck-title{position:relative;font-size:1rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;max-width:100%;display:block}
 .deck-title .mq{display:inline-flex;gap:2.5em}
 .deck-title:not(.marquee) .mq{display:block;overflow:hidden;text-overflow:ellipsis}

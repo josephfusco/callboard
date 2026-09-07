@@ -84,6 +84,69 @@ test.describe( 'Front end', () => {
 		);
 	} );
 
+	test( 'saving stops with a message when the browser has no room', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			navigator.storage.estimate = () =>
+				Promise.resolve( { quota: 1024 * 1024, usage: 1024 * 1000 } ); // 24 KB free
+		} );
+		await page.goto( '/demo-set/' );
+		await page.waitForTimeout( 900 );
+		await page.locator( '#offline' ).click();
+		await expect( page.locator( '#offline' ) ).toHaveText(
+			/Not enough space, 24 KB free/
+		);
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			0
+		);
+		await expect( page.locator( '#offline' ) ).toContainText(
+			/Save offline/,
+			{ timeout: 5000 }
+		); // the button comes back
+	} );
+
+	test( 'a saved copy whose size no longer matches is not counted as saved', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.waitForTimeout( 900 );
+		await page.locator( '#offline' ).click(); // per-track controls are hidden until hover on touch, so save the set
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			10,
+			{ timeout: 30000 }
+		);
+		await page.evaluate( async () => {
+			// stand in for a track replaced on the server: same URL, a different file
+			const url = document.getElementById( 'audio' ).src;
+			const c = await caches.open( 'callboard-audio-v1' );
+			const keys = await c.keys();
+			await c.put(
+				keys[ 0 ],
+				new Response( 'x', {
+					headers: {
+						'Content-Type': 'audio/mpeg',
+						'Content-Length': '1',
+					},
+				} )
+			);
+			return url;
+		} );
+		await page.reload();
+		await page.waitForTimeout( 1200 );
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			9
+		); // the replaced one is offered again
+		await expect( page.locator( '#offline' ) ).toContainText( /9 of 10/ );
+		await page.evaluate( async () => {
+			for ( const k of await (
+				await caches.open( 'callboard-audio-v1' )
+			).keys() ) {
+				await ( await caches.open( 'callboard-audio-v1' ) ).delete( k );
+			}
+		} );
+	} );
+
 	test( 'a set shows its tracks, credits and no personal chrome', async ( {
 		page,
 	} ) => {
@@ -174,7 +237,7 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
 		// and from the control alone: start, end, clear
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( /Loop from 0:0\d/ );
+		await expect( page.locator( '#loop' ) ).toHaveText( /From 0:0\d/ );
 		await page.evaluate( () => {
 			document.getElementById( 'audio' ).currentTime = 8;
 		} );

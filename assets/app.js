@@ -1147,6 +1147,28 @@ ${ footer( s ) }
 			path.setAttribute( 'd', toShape );
 		}
 	};
+	// ---- One player per site. Playing takes a lock; a tab that starts playing steals it and the loser pauses.
+	let releaseLock = null;
+	audio.addEventListener( 'play', () => {
+		if ( ! navigator.locks ) {
+			return;
+		}
+		navigator.locks
+			.request(
+				'callboard:player',
+				{ steal: true },
+				() => new Promise( ( done ) => ( releaseLock = done ) )
+			)
+			.catch( () => {
+				// stolen by another tab: it is the player now
+				releaseLock = null;
+				audio.pause();
+			} );
+	} );
+	audio.addEventListener( 'pause', () => {
+		releaseLock?.();
+		releaseLock = null;
+	} );
 	audio.addEventListener( 'play', () => {
 		played = true;
 		cancelAnimationFrame( progressRaf );
@@ -1463,8 +1485,43 @@ ${ footer( s ) }
 		}
 	} );
 
-	// ---- Lyrics (only where a set has approved lyrics); otherwise the deck title finds the playing track
+	// ---- Lyrics (only where a set has approved lyrics); otherwise the deck title finds the playing track.
+	// The cues also live on the media element as a metadata text track, so the browser fires cuechange for
+	// them, on time even when the tab is throttled, and a seek lands on the right line without a scan.
 	let sheetKind = '';
+	const lyricTrack =
+		'VTTCue' in window && audio.addTextTrack
+			? audio.addTextTrack( 'metadata', 'Lyrics' )
+			: null;
+	if ( lyricTrack ) {
+		lyricTrack.mode = 'hidden';
+		lyricTrack.addEventListener( 'cuechange', () => {
+			const active = lyricTrack.activeCues;
+			if ( active && active.length ) {
+				markCue( Number( active[ active.length - 1 ].id ) );
+			}
+		} );
+	}
+	function loadCues() {
+		if ( ! lyricTrack ) {
+			return;
+		}
+		Array.from( lyricTrack.cues || [] ).forEach( ( c ) =>
+			lyricTrack.removeCue( c )
+		);
+		// each cue runs until the next begins, so exactly one is active and the last line holds to the end
+		cues.forEach( ( [ start, , text ], k ) => {
+			const end =
+				k + 1 < cues.length
+					? cues[ k + 1 ][ 0 ]
+					: trackDur() || start + 3600;
+			if ( end > start ) {
+				const cue = new VTTCue( start, end, text );
+				cue.id = String( k );
+				lyricTrack.addCue( cue );
+			}
+		} );
+	}
 	function renderSheet( id ) {
 		cues = ( queue?.lyrics && queue.lyrics[ id ] ) || [];
 		const notes = queue?.tracks[ i ]?.notes || [];
@@ -1511,6 +1568,7 @@ ${ footer( s ) }
 		cueEls = cues.length
 			? cues.map( ( [ s, , text ] ) => item( s, text ) )
 			: notes.map( ( n ) => item( n.t, n.text, fmtDate( n.date ) ) );
+		loadCues();
 	}
 	function syncLyrics( t ) {
 		if ( ! cues.length ) {
@@ -1524,6 +1582,9 @@ ${ footer( s ) }
 				break;
 			}
 		}
+		markCue( n );
+	}
+	function markCue( n ) {
 		if ( n === cueIdx ) {
 			return;
 		}

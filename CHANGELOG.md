@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/josephfusco/callboard/compare/v1.4.0...v1.4.1) (2026-09-07)
+
+
+### Dependencies
+
+* **deps-dev:** bump @wordpress/scripts to 34 and @wordpress/env to 11 ([#13](https://github.com/josephfusco/callboard/issues/13)) ([98ac56a](https://github.com/josephfusco/callboard/commit/98ac56a16d54b0703c40401ea78e34b7e04d4457))
+
 ## [1.4.0](https://github.com/josephfusco/callboard/compare/v1.3.2...v1.4.0) (2026-09-07)
 
 

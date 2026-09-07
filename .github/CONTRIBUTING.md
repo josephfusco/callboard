@@ -32,7 +32,7 @@ The Playwright suite runs **before every commit**, from the hook in `.githooks` 
 The repository is meant to be left alone for long stretches, so the routine work is automated and gated on the same checks a pull request gets:
 
 - **Dependencies.** Dependabot opens one grouped pull request per ecosystem each month for minor and patch bumps, and `dependabot-auto-merge.yml` merges it once every required check is green. Major bumps open on their own and wait for a person. Security updates arrive as soon as an advisory does.
-- **Required checks.** `main` is protected behind the single `CI status` check: PHPCS, ESLint and the spell check. The Playwright suite and Plugin Check run locally before each commit instead, so nothing reaches a commit red either.
+- **Required checks.** `main` is protected behind the single `CI status` check: PHPCS, ESLint and the spell check. The Playwright suite runs locally before each commit instead, so nothing reaches a commit red either. Plugin Check runs by hand from its workflow page, and its findings are folded into the release pull request.
 - **Weekly run.** CI runs the full suite every Monday against current WordPress core, so a core release that breaks something shows up as a failed run in your inbox rather than in production. The release and Playground workflows run weekly too, because a commit produced by a self-merging Dependabot pull request does not start push workflows on its own.
 - **Version strings.** `scripts/sync-versions.sh` writes the version everywhere WordPress reads it and sets `Tested up to` from the core version the suite just ran against, so neither goes stale.
 

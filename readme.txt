@@ -24,7 +24,7 @@ Drop a folder into `wp-content/uploads/callboard/<slug>/` containing audio files
 
 = Settings =
 
-Site title is the app name. Sets → Settings holds the tagline, the home page footer note, an optional emoji badge on the playing track, and the confetti text released by triple-tapping a title.
+Site title is the app name. The Settings screen under Sets holds the tagline, the home page footer note, an optional emoji badge on the playing track, the confetti text (and optional hearts) released by triple-tapping a title, the iPhone install hint, and switches for offline saving, notifications, new-set notices, and a count-in on tracks with a tempo.
 
 == Changelog ==
 

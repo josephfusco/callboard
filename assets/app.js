@@ -1230,7 +1230,9 @@ ${ footer( s ) }
 		loopBand.classList.add( 'on' );
 		loopChip.dataset.state = 'on';
 		requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
-		loopChip.textContent = `${ T.loop } ${ fmt( a ) }–${ fmt( b ) }`;
+		loopChip.innerHTML = `<span class="loop-word">${ esc(
+			T.loop
+		) }</span> ${ fmt( a ) }–${ fmt( b ) }`;
 		loopChip.setAttribute(
 			'aria-label',
 			`${ T.loop_clear }: ${ fmt( a ) }–${ fmt( b ) }`
@@ -1264,7 +1266,9 @@ ${ footer( s ) }
 			haptic();
 			loopFrom = audio.currentTime;
 			loopChip.dataset.state = 'armed';
-			loopChip.textContent = `${ T.loop_from } ${ fmt( loopFrom ) }`;
+			loopChip.innerHTML = `<span class="loop-word">${ esc(
+				T.loop_from
+			) }</span> ${ fmt( loopFrom ) }`;
 			loopChip.setAttribute( 'aria-label', T.loop_end );
 			return;
 		}
@@ -1885,14 +1889,35 @@ ${ footer( s ) }
 		);
 		b.disabled = state === 'saved'; // a saved mark is information, not a control; removal is deliberate, from the set button
 	};
+	// A copy counts as saved only if it is the file the set describes now: same URL and, when both are
+	// known, the same size. A track replaced under the same name gets saved again instead of playing stale.
 	async function savedSet( tracks ) {
 		const c = await caches.open( CACHE );
 		const have = new Set( ( await c.keys() ).map( ( r ) => r.url ) );
-		return new Set(
-			tracks
-				.filter( ( t ) => have.has( norm( t.url ) ) )
-				.map( ( t ) => t.url )
-		);
+		const saved = new Set();
+		for ( const t of tracks ) {
+			if ( ! have.has( norm( t.url ) ) ) {
+				continue;
+			}
+			const res = await c.match( norm( t.url ) );
+			const len = Number( res?.headers.get( 'Content-Length' ) ) || 0;
+			if ( t.bytes && len && len !== t.bytes ) {
+				continue;
+			}
+			saved.add( t.url );
+		}
+		return saved;
+	}
+	// How much the browser will still let this origin store. Unknown counts as plenty.
+	async function freeSpace() {
+		try {
+			const e = await navigator.storage?.estimate?.();
+			return e && e.quota
+				? Math.max( 0, e.quota - ( e.usage || 0 ) )
+				: Infinity;
+		} catch {
+			return Infinity;
+		}
 	}
 	async function saveTrack( t, retry = true ) {
 		if ( dlAborts.has( t.url ) ) {
@@ -1915,39 +1940,48 @@ ${ footer( s ) }
 			}
 			const total =
 				Number( r.headers.get( 'Content-Length' ) ) || t.bytes || 0;
-			const chunks = [];
-			let got = 0;
-			if ( r.body && total ) {
-				const reader = r.body.getReader();
-				while ( true ) {
-					const { done, value } = await reader.read();
-					if ( done ) {
-						break;
-					}
-					chunks.push( value );
-					got += value.byteLength;
-					paintDl( t, 'saving', Math.min( got / total, 0.99 ) );
-				}
+			const type = r.headers.get( 'Content-Type' ) || 'audio/mpeg';
+			const headers = { 'Content-Type': type };
+			if ( total ) {
+				headers[ 'Content-Length' ] = String( total );
 			}
-			const body = chunks.length
-				? new Blob( chunks, {
-						type: r.headers.get( 'Content-Type' ) || 'audio/mpeg',
-				  } )
-				: await r.blob();
 			const c = await caches.open( CACHE );
-			await c.put(
-				norm( t.url ),
-				new Response( body, {
-					headers: {
-						'Content-Type': body.type,
-						'Content-Length': String( body.size ),
-					},
-				} )
-			);
+			if ( r.body && total ) {
+				// One branch streams straight into the cache, the other only counts bytes for the ring:
+				// the file is never held whole in memory.
+				const [ toCache, toCount ] = r.body.tee();
+				const count = ( async () => {
+					const reader = toCount.getReader();
+					let got = 0;
+					while ( true ) {
+						const { done, value } = await reader.read();
+						if ( done ) {
+							break;
+						}
+						got += value.byteLength;
+						paintDl( t, 'saving', Math.min( got / total, 0.99 ) );
+					}
+				} )();
+				await Promise.all( [
+					c.put(
+						norm( t.url ),
+						new Response( toCache, { headers } )
+					),
+					count,
+				] );
+			} else {
+				const body = await r.blob();
+				headers[ 'Content-Length' ] = String( body.size );
+				await c.put( norm( t.url ), new Response( body, { headers } ) );
+			}
 			paintDl( t, 'saved', 1 );
+			return 'saved';
 		} catch ( err ) {
 			paintDl( t, '', 0 );
 			dlAborts.delete( t.url );
+			if ( err?.name === 'QuotaExceededError' ) {
+				return 'quota'; // no retry will help; the caller says so
+			}
 			if ( retry && err?.name !== 'AbortError' && navigator.onLine ) {
 				await new Promise( ( r ) => setTimeout( r, 1500 ) );
 				return saveTrack( t, false ); // one more try; a dropped connection should not leave a hole
@@ -2082,15 +2116,41 @@ ${ footer( s ) }
 				return; // a plain tap on "Saved offline" does nothing
 			}
 			const todo = tracks.filter( ( t ) => ! have.has( t.url ) );
+			const need = todo.reduce( ( a, t ) => a + ( t.bytes || 0 ), 0 );
+			const free = await freeSpace();
+			if ( need && free < need * 1.1 ) {
+				return noSpace( free );
+			}
+			let full = false;
 			const worker = async () => {
 				while ( todo.length ) {
-					await saveTrack( todo.shift() );
+					if ( ( await saveTrack( todo.shift() ) ) === 'quota' ) {
+						todo.length = 0;
+						full = true;
+					}
 					await paintAll();
 				}
 			};
 			await Promise.all( [ worker(), worker() ] );
+			if ( full ) {
+				return noSpace( await freeSpace() );
+			}
 			paintAll();
 		};
+		// The button carries the message for a moment, then goes back to being the button.
+		let spaceTimer = 0;
+		function noSpace( free ) {
+			offBtn.textContent = tpl(
+				T.no_space,
+				sizeLabel( isFinite( free ) ? free : 0 )
+			);
+			offBtn.classList.add( 'is-busy' );
+			clearTimeout( spaceTimer );
+			spaceTimer = setTimeout( () => {
+				offBtn.classList.remove( 'is-busy' );
+				paintAll();
+			}, 3500 );
+		}
 		document.querySelectorAll( '.dl' ).forEach( ( b ) => {
 			b.onclick = async () => {
 				haptic();
@@ -2098,7 +2158,9 @@ ${ footer( s ) }
 				if ( dlAborts.has( t.url ) ) {
 					dlAborts.get( t.url ).abort();
 				} else if ( b.dataset.state !== 'saved' ) {
-					await saveTrack( t );
+					if ( ( await saveTrack( t ) ) === 'quota' ) {
+						return noSpace( await freeSpace() );
+					}
 				}
 				paintAll();
 			};

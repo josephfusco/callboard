@@ -5,6 +5,7 @@
   "license": "GPL-2.0-or-later",
   "private": true,
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "env:start": "wp-env start",
     "env:stop": "wp-env stop",
     "env:clean": "wp-env clean all",

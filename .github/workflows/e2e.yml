@@ -2,6 +2,7 @@ name: E2E
 
 on:
   workflow_call:
+  workflow_dispatch: # by hand only; the pre-commit hook runs this locally
 
 permissions:
   contents: read

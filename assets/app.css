@@ -3,14 +3,14 @@
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .16 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); --warmth:rgba(214,184,150,.18);
   --bg:#eceae5; --surface:#f6f5f2; --surface-2:#e2e0da; --line:#d3d1cb; --line-strong:#b8b6b0;
   --ink:#1c1c1c; --ink-2:#55544f; --ink-3:#6f6e69; --accent:#e8541e; --accent-text:#c2401a; --accent-ink:#fff;
-  --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06);
+  --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06); --deck-hi:rgba(255,255,255,.72); --gloss:rgba(255,255,255,.85); --play-hi:#565554; --play-rim:rgba(255,255,255,.22); --play-shadow:rgba(0,0,0,.42); --dish:rgba(0,0,0,.08);
   --ease:cubic-bezier(.2,.8,.2,1); --ease-spring:cubic-bezier(.34,1.4,.64,1); --t-fast:.12s; --t:.2s; --t-slow:.36s; --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:146px; --deck-bg:rgba(246,245,242,.94);
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#161616; --surface:#1f1f1f; --surface-2:#292929; --line:#2e2e2e; --line-strong:#444;
   --ink:#f2f1ee; --ink-2:#b3b2ae; --ink-3:#95948f; --accent:#ff6a2e; --accent-text:#ff7d47; --accent-ink:#161616;
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .22 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); --warmth:rgba(120,92,68,.1);
-  --deck:#1f1f1f; --deck-bg:rgba(28,28,28,.94); --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.5);
+  --deck:#1f1f1f; --deck-bg:rgba(28,28,28,.94); --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.5); --deck-hi:rgba(44,44,44,.94); --gloss:rgba(255,255,255,.08); --play-hi:#ffffff; --play-rim:rgba(255,255,255,.95); --play-shadow:rgba(0,0,0,.7); --dish:rgba(0,0,0,.35);
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
@@ -102,20 +102,21 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 /* deck (bottom player) */
 .deck,.topbar{background:var(--deck-bg);-webkit-backdrop-filter:saturate(150%) blur(10px);backdrop-filter:saturate(150%) blur(10px);contain:layout paint}
 @supports not (backdrop-filter:blur(1px)){.deck,.topbar{background:var(--deck)}}
-.deck{will-change:transform;position:fixed;left:0;right:0;bottom:-120px;z-index:20;border-top:1px solid var(--line);padding-bottom:calc(var(--safe-b) + 120px)} /* runs past the viewport edge so the browser's bottom bar sits on deck color, not page color */
+.deck{will-change:transform;position:fixed;left:0;right:0;bottom:-120px;z-index:20;border-top:1px solid var(--line);padding-bottom:calc(var(--safe-b) + 120px);background-image:linear-gradient(180deg,var(--deck-hi),var(--deck-bg) 56px);box-shadow:inset 0 1px 0 var(--gloss)} /* a pane of glass: light catches the top edge, the panel deepens toward the controls */ /* runs past the viewport edge so the browser's bottom bar sits on deck color, not page color */
 .deck-inner{max-width:640px;margin:0 auto;padding:10px 20px 12px}
 .seek-wrap{position:relative;height:40px;display:flex;align-items:center}
 /* waveform: the track's shape from the levels the import measured (ten a second), two bars per three pixels; the
    accent copy is clipped to the played part. Tracks without levels keep the plain line. */
 .wave{position:absolute;left:0;top:4px;width:100%;height:32px;pointer-events:none;display:none}
 .deck.has-wave .wave{display:block}
-.wave-played{clip-path:inset(0 100% 0 0)}
+.wave-played{clip-path:inset(0 100% 0 0);filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 45%,transparent))}
+@media (prefers-reduced-transparency:reduce){.wave-played{filter:none}.deck{background-image:none;box-shadow:none}}
 .deck.has-wave .seek-line{top:0;height:100%;margin-top:0;background:transparent;border-radius:0}
 .deck.has-wave .seek-fill,.deck.has-wave .seek-knob{display:none}
 .deck.has-wave .loop-band.on{opacity:.14}
 .seek-line{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:var(--line-strong);overflow:hidden;pointer-events:none}
 .seek-fill{position:absolute;inset:0;background:var(--accent);transform-origin:0 50%;transform:scaleX(0);will-change:transform}
-.seek-knob{position:absolute;left:0;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:var(--ink);transform:translateX(0);pointer-events:none;will-change:transform;z-index:1}
+.seek-knob{position:absolute;left:0;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 50% 28%,var(--play-hi),var(--ink) 65%);box-shadow:0 2px 5px rgba(0,0,0,.35),inset 0 1px 0 var(--play-rim);transform:translateX(0);pointer-events:none;will-change:transform;z-index:1}
 @media (pointer:fine){.seek-knob{width:12px;height:12px;margin-top:-6px}}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:36px;background:transparent;margin:0;cursor:pointer;touch-action:none;position:relative}
 input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:transparent}
@@ -143,6 +144,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .loop-chip[data-state="armed"]{color:var(--ink-2)}
 .loop-chip[data-state="armed"]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .loop-chip[data-state="on"]{color:var(--ink-2);border-color:var(--line-strong)}
+.loop-chip:not([data-state=""]),.rate-chip[data-state="on"],.remote-chip:not([data-state=""]){background:linear-gradient(180deg,var(--surface),var(--surface-2));box-shadow:inset 0 1px 0 var(--gloss),0 1px 1px rgba(0,0,0,.08)} /* a chip with state is a small glass pill */
 .loop-chip[data-state="on"]::after{content:"×";font-size:.9rem;color:var(--ink-3)}
 .track .bpm{font-size:.8125rem;color:var(--ink-3);margin-right:4px}
 .loop-chip:active{background:var(--surface-2)}
@@ -163,13 +165,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-open:active .deck-title{opacity:.6}
 .deck-open::after{content:attr(data-sheet);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* reserved even when empty: the deck never changes height, so the controls stay where thumbs expect them */
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
-.deck-time{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:hidden;padding:3px;margin:-3px} /* clipped, never under the controls; the padding keeps focus rings inside the clip */
+.deck-time{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:hidden} /* clipped, never under the controls */
+.deck-time :focus-visible{outline-offset:-2px} /* rings stay inside the clip */
 /* the time row is a container: when the chips would not fit beside the total, the total goes; the track list still shows it.
    Safari always shows the AirPlay chip (no availability watcher for audio) and an armed or set loop reads wider than "Loop". */
 .deck-text{container-type:inline-size}
 @container (max-width:150px){.deck-time .sep,.deck-time #dur{display:none}}
 @container (max-width:200px){
-  .deck-time:has(.remote-chip:not([hidden])) .sep,.deck-time:has(.remote-chip:not([hidden])) #dur,.deck-time:has(.loop-chip:not([data-state=""])) .sep,.deck-time:has(.loop-chip:not([data-state=""])) #dur{display:none}
+  .deck-time:has(.remote-chip:not([hidden])) .sep,.deck-time:has(.remote-chip:not([hidden])) #dur,.deck-time:has(.loop-chip:not([data-state=""])) .sep,.deck-time:has(.loop-chip:not([data-state=""])) #dur,.deck-time:has(.rate-chip[data-state="on"]) .sep,.deck-time:has(.rate-chip[data-state="on"]) #dur{display:none} /* any chip carrying state costs the total */
   .deck-time:has(.loop-chip:not([data-state=""])) .remote-chip{display:none} /* a loop is a moment; the speaker picker waits for it */
   .deck-time .loop-chip:not([data-state=""]) .loop-word{display:none} /* the band on the line and the accent already say "loop"; the times are what matter */
 }
@@ -197,10 +200,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:30px;height:30px;fill:currentColor}
 .deck-controls .ctl.skip{width:56px;height:56px}
-.ctl:active{background:var(--surface-2)}
-.ctl.play{width:66px;height:66px;background:var(--ink);color:var(--bg);margin:0 4px}
-.ctl.play:active{transform:scale(.96);background:var(--ink)}
-.ctl.play{position:relative;isolation:isolate}
+.ctl:active{background:radial-gradient(circle at 50% 42%,var(--surface-2),var(--surface));box-shadow:inset 0 2px 5px var(--dish)} /* pressed: a shallow dish */
+.ctl.play{width:66px;height:66px;color:var(--bg);margin:0 4px;position:relative;isolation:isolate;background:radial-gradient(120% 95% at 50% -12%,var(--play-hi) 0%,var(--ink) 62%);box-shadow:0 10px 22px -8px var(--play-shadow),0 1px 2px rgba(0,0,0,.25),inset 0 1px 0 var(--play-rim),inset 0 -2px 4px rgba(0,0,0,.28);transition:transform var(--t-fast),box-shadow var(--t-fast)}
+.ctl.play .gloss{position:absolute;left:14%;right:14%;top:7%;height:42%;border-radius:100% 100% 80% 80% / 100% 100% 60% 60%;background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0));pointer-events:none;z-index:1} /* the highlight a domed button catches from above */
+.ctl.play .pp{position:relative;z-index:2}
+.ctl.play:active{transform:scale(.96);box-shadow:0 4px 10px -6px var(--play-shadow),inset 0 3px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06)}
+.ctl.play:active .gloss{opacity:.4}
 /* play ⇄ pause: one SVG path morphing between two shapes with the same vertex count (SMIL: smooth in Safari, no repaints of the deck) */
 .pp{display:block;width:30px;height:30px;fill:currentColor}
 /* soft ring when playback begins */

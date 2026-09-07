@@ -687,15 +687,25 @@ ${ footer( s ) }
 				for ( let x = from; x < to; x++ ) {
 					peak = Math.max( peak, +lv[ x ] || 0 );
 				}
-				const bh = Math.max( 2, Math.round( ( peak / 9 ) * h ) ),
+				// SoundCloud's form: the bar stands on a line two-thirds down, and a fainter reflection hangs below it
+				const full = Math.max( 2, ( peak / 9 ) * h ),
+					up = Math.max( 1, Math.round( full * 0.64 ) ),
+					down = Math.max( 1, Math.round( full * 0.36 ) - 1 ),
 					x = b * ( bar + gap ),
-					y = Math.round( ( h - bh ) / 2 );
+					base = Math.round( h * 0.66 );
+				ctx.globalAlpha = 1;
 				if ( ctx.roundRect ) {
 					ctx.beginPath();
-					ctx.roundRect( x, y, bar, bh, 1 );
+					ctx.roundRect( x, base - up, bar, up, 1 );
+					ctx.fill();
+					ctx.globalAlpha = 0.42;
+					ctx.beginPath();
+					ctx.roundRect( x, base + 1, bar, down, 1 );
 					ctx.fill();
 				} else {
-					ctx.fillRect( x, y, bar, bh );
+					ctx.fillRect( x, base - up, bar, up );
+					ctx.globalAlpha = 0.42;
+					ctx.fillRect( x, base + 1, bar, down );
 				}
 			}
 		} );

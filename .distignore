@@ -3,7 +3,8 @@
 .gitignore
 .gitattributes
 .editorconfig
-.eslintrc.js
+eslint.config.js
+.prettierignore
 .wp-env.json
 .wp-env.override.json
 .phpcs.cache

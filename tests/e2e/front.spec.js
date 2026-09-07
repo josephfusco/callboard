@@ -240,6 +240,53 @@ test.describe( 'Front end', () => {
 		);
 	} );
 
+	test( 'the deck offers AirPlay or Cast only while a device is in reach', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			// stand in for a speaker on the network: Chromium's own remote never finds one in CI
+			if ( ! ( 'remote' in HTMLMediaElement.prototype ) ) {
+				return;
+			}
+			window.__remote = { prompted: 0 };
+			Object.defineProperty( HTMLMediaElement.prototype, 'remote', {
+				get() {
+					return {
+						state: 'disconnected',
+						watchAvailability: ( cb ) => {
+							cb( true );
+							return Promise.resolve( 1 );
+						},
+						cancelWatchAvailability: () => Promise.resolve(),
+						prompt: () => {
+							window.__remote.prompted++;
+							return Promise.resolve();
+						},
+						addEventListener: () => {},
+					};
+				},
+			} );
+		} );
+		await page.goto( '/demo-set/' );
+		test.skip(
+			! ( await page.evaluate(
+				() => 'remote' in HTMLMediaElement.prototype
+			) ),
+			'no Remote Playback API in this browser'
+		);
+		await page.locator( '.track' ).first().click();
+		const chip = page.locator( '#remote' );
+		await expect( chip ).toBeVisible();
+		await expect( chip ).toHaveAttribute(
+			'aria-label',
+			'Play on another device'
+		);
+		await chip.click();
+		expect( await page.evaluate( () => window.__remote.prompted ) ).toBe(
+			1
+		);
+	} );
+
 	test( 'a long title scrolls in the deck instead of truncating', async ( {
 		page,
 	}, testInfo ) => {

@@ -1115,6 +1115,36 @@ ${ footer( s ) }
 		paint( true );
 		positionState();
 	} );
+	// ---- Remote playback: AirPlay in Safari, Cast in Chrome. The chip shows while a device is in reach and
+	// the picker is the browser's own. Safari has no availability watcher for audio; there the chip stays
+	// and the picker says what it finds.
+	const remoteBtn = $( 'remote' );
+	if ( remoteBtn && audio.remote ) {
+		const paintRemote = () => {
+			const state = audio.remote.state || 'disconnected';
+			remoteBtn.dataset.state = state === 'disconnected' ? '' : state;
+			deck.classList.toggle( 'remote', state !== 'disconnected' );
+			remoteBtn.setAttribute(
+				'aria-label',
+				state === 'disconnected' ? T.remote : T.remote_on
+			);
+		};
+		audio.remote
+			.watchAvailability( ( ok ) => {
+				remoteBtn.hidden = ! ok;
+			} )
+			.catch( () => {
+				remoteBtn.hidden = false;
+			} );
+		[ 'connecting', 'connect', 'disconnect' ].forEach( ( ev ) =>
+			audio.remote.addEventListener( ev, paintRemote )
+		);
+		remoteBtn.addEventListener( 'click', () => {
+			haptic();
+			audio.remote.prompt().catch( () => {} ); // cancelled, or nothing in reach: the picker already said so
+		} );
+	}
+
 	// ---- Marks on the seek line: ticks where singing resumes after a rest (from the lyrics), pins for director notes
 	const marks = $( 'seek-marks' );
 	let ticks = [];

@@ -3,14 +3,14 @@
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .16 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); --warmth:rgba(214,184,150,.18);
   --bg:#eceae5; --surface:#f6f5f2; --surface-2:#e2e0da; --line:#d3d1cb; --line-strong:#b8b6b0;
   --ink:#1c1c1c; --ink-2:#55544f; --ink-3:#6f6e69; --accent:#e8541e; --accent-text:#c2401a; --accent-ink:#fff;
-  --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06); --deck-hi:rgba(255,255,255,.72); --gloss:rgba(255,255,255,.85); --play-hi:#565554; --play-rim:rgba(255,255,255,.22); --play-shadow:rgba(0,0,0,.42); --dish:rgba(0,0,0,.08); --sphere-core:rgba(72,80,98,.92); --sphere-body:rgba(22,26,34,.9); --sphere-edge:rgba(3,4,8,.98); --sphere-rim:rgba(255,255,255,.34);
+  --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06); --deck-hi:rgba(255,255,255,.72); --gloss:rgba(255,255,255,.85); --play-hi:#565554; --play-rim:rgba(255,255,255,.22); --play-shadow:rgba(0,0,0,.42); --dish:rgba(0,0,0,.08); --glass:rgba(255,255,255,.3); --glass-hi:rgba(255,255,255,.5); --glass-lo:rgba(255,255,255,.06); --glass-rim:rgba(255,255,255,.95); --glass-edge:rgba(0,0,0,.12); --glass-shadow:rgba(0,0,0,.22);
   --ease:cubic-bezier(.2,.8,.2,1); --ease-spring:cubic-bezier(.34,1.4,.64,1); --t-fast:.12s; --t:.2s; --t-slow:.36s; --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:146px; --deck-bg:rgba(246,245,242,.94);
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#161616; --surface:#1f1f1f; --surface-2:#292929; --line:#2e2e2e; --line-strong:#444;
   --ink:#f2f1ee; --ink-2:#b3b2ae; --ink-3:#95948f; --accent:#ff6a2e; --accent-text:#ff7d47; --accent-ink:#161616;
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .22 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); --warmth:rgba(120,92,68,.1);
-  --deck:#1f1f1f; --deck-bg:rgba(28,28,28,.94); --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.5); --deck-hi:rgba(44,44,44,.94); --gloss:rgba(255,255,255,.08); --play-hi:#ffffff; --play-rim:rgba(255,255,255,.95); --play-shadow:rgba(0,0,0,.7); --dish:rgba(0,0,0,.35); --sphere-core:rgba(88,98,120,.9); --sphere-body:rgba(26,30,40,.9); --sphere-edge:rgba(4,5,10,.98); --sphere-rim:rgba(255,255,255,.42);
+  --deck:#1f1f1f; --deck-bg:rgba(28,28,28,.94); --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.5); --deck-hi:rgba(44,44,44,.94); --gloss:rgba(255,255,255,.08); --play-hi:#ffffff; --play-rim:rgba(255,255,255,.95); --play-shadow:rgba(0,0,0,.7); --dish:rgba(0,0,0,.35); --glass:rgba(255,255,255,.11); --glass-hi:rgba(255,255,255,.22); --glass-lo:rgba(255,255,255,.03); --glass-rim:rgba(255,255,255,.55); --glass-edge:rgba(0,0,0,.35); --glass-shadow:rgba(0,0,0,.5);
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
@@ -205,18 +205,18 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .ctl svg{width:30px;height:30px;fill:currentColor}
 .deck-controls .ctl.skip{width:56px;height:56px}
 .ctl:active{background:radial-gradient(circle at 50% 42%,var(--surface-2),var(--surface));box-shadow:inset 0 2px 5px var(--dish)} /* pressed: a shallow dish */
-.ctl.play{width:66px;height:66px;color:#f6f5f2;margin:0 4px;position:relative;isolation:isolate;
-  background:radial-gradient(circle at 50% 118%,rgba(255,255,255,.3),rgba(255,255,255,0) 42%),radial-gradient(circle at 42% 38%,var(--sphere-core) 0%,var(--sphere-body) 48%,var(--sphere-edge) 100%);
-  -webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4);
-  box-shadow:inset 0 0 0 1px var(--sphere-rim),inset 0 -12px 18px -10px rgba(255,255,255,.45),inset 0 12px 16px -8px rgba(0,0,0,.5),0 16px 28px -12px rgba(0,0,0,.7),0 2px 4px rgba(0,0,0,.35);
-  transition:transform var(--t-fast),box-shadow var(--t-fast)} /* a glass sphere: tinted body dark toward the edge, light through the bottom rim, the deck refracted behind it */
-.ctl.play .gloss{position:absolute;left:17%;top:7%;width:48%;height:34%;border-radius:50%;background:radial-gradient(ellipse at 50% 38%,rgba(255,255,255,.92),rgba(255,255,255,.3) 42%,rgba(255,255,255,0) 72%);pointer-events:none;z-index:3;transition:opacity var(--t-fast)} /* the specular, from the lamp above and to the left */
-.ctl.play .well{position:absolute;right:15%;bottom:13%;width:24%;height:13%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.4),rgba(255,255,255,0) 70%);transform:rotate(-32deg);pointer-events:none;z-index:1} /* the smaller catchlight, low on the far side */
-.ctl.play:active{transform:scale(.96);box-shadow:inset 0 0 0 1px var(--sphere-rim),inset 0 -8px 14px -10px rgba(255,255,255,.3),inset 0 4px 12px rgba(0,0,0,.6),0 6px 12px -8px rgba(0,0,0,.6)}
-.ctl.play:active .gloss{opacity:.55}
-/* play ⇄ pause: the glyph is suspended inside the sphere. The one not in use has sunk out of sight; the one
-   called for rises through the glass into place a beat later, and the whole sphere gives one short wobble. */
-.ctl.play .pp{position:absolute;inset:0;margin:auto;width:24px;height:24px;fill:#ffffff;color:#ffffff;will-change:transform,opacity;z-index:2;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
+.ctl.play{width:66px;height:66px;color:var(--ink);margin:0 4px;position:relative;isolation:isolate;
+  background:linear-gradient(165deg,var(--glass-hi),var(--glass-lo) 62%),var(--glass);
+  -webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);
+  box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 -1px 0 rgba(255,255,255,.08),inset 0 0 0 .5px rgba(255,255,255,.22),0 0 0 .5px var(--glass-edge),0 12px 32px -14px var(--glass-shadow),0 1px 2px rgba(0,0,0,.1);
+  transition:transform var(--t-fast),box-shadow var(--t-fast),background var(--t-fast)} /* glass, the way the system draws it: the deck showing through a heavy blur, a hairline of light along the top, soft depth under it */
+.ctl.play .gloss{position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;background:conic-gradient(from 215deg,rgba(255,255,255,.9) 0deg,rgba(255,255,255,0) 80deg,rgba(255,255,255,0) 190deg,rgba(255,255,255,.4) 260deg,rgba(255,255,255,.9) 360deg);-webkit-mask:radial-gradient(circle,transparent 61%,#000 65%,#000 70%,transparent 74%);mask:radial-gradient(circle,transparent 61%,#000 65%,#000 70%,transparent 74%);opacity:.85;transition:opacity var(--t-fast)} /* the lensed rim: brightest toward the light, a faint return on the far edge */
+.ctl.play .well{display:none}
+.ctl.play:active{transform:scale(.96);background:linear-gradient(165deg,var(--glass-lo),var(--glass-lo)),var(--glass);box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 2px 8px rgba(0,0,0,.18),0 0 0 .5px var(--glass-edge),0 4px 12px -8px var(--glass-shadow)}
+.ctl.play:active .gloss{opacity:.5}
+/* play ⇄ pause: the glyph not in use sinks out of sight; the one called for rises through the glass into place a
+   beat later, and the button gives one short wobble. */
+.ctl.play .pp{position:absolute;inset:0;margin:auto;width:26px;height:26px;fill:currentColor;will-change:transform,opacity;z-index:2}
 .ctl.play .pp{opacity:0;transform:translateY(12px) scale(.35);transition:opacity .2s var(--ease),transform .2s var(--ease)} /* sunk, quickly */
 .ctl.play[data-state="play"] .pp-play,.ctl.play[data-state="pause"] .pp-pause{opacity:1;transform:none;transition:opacity .32s var(--ease) .16s,transform .5s var(--ease-spring) .16s} /* risen, a beat later */
 .ctl.play.shake{animation:shake .6s var(--ease-spring)}

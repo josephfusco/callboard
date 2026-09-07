@@ -49,7 +49,7 @@
 	const hasLyrics = ( set, id ) => !! ( set.lyrics && set.lyrics[ id ] );
 	// Inline icons the client renderer needs; the same paths callboard_icon() ships.
 	const ICONS = {
-		share: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v12m0-12L8 7m4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+		share: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v12m0-12L8 7m4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 	};
 
 	( window.requestIdleCallback || ( ( f ) => setTimeout( f, 1000 ) ) )(
@@ -503,7 +503,7 @@ ${ footer( s ) }
 			glowHalo.style.opacity = ( 0.45 * b * b ).toFixed( 3 );
 		}
 		if ( glowReflect ) {
-			glowReflect.style.opacity = ( 0.28 * b * b ).toFixed( 3 );
+			glowReflect.style.opacity = ( 0.42 * b * b ).toFixed( 3 );
 		}
 	};
 	// Cut the current and a filament does not go dark; it cools. Pause fades it out over a second and a half.
@@ -703,10 +703,13 @@ ${ footer( s ) }
 		}
 		seekFill.style.transform = `scaleX(${ ratio })`;
 		if ( wavePlayed ) {
-			wavePlayed.style.clipPath = `inset(0 ${ (
-				( 1 - ratio ) *
-				100
-			).toFixed( 2 ) }% 0 0)`;
+			const pct = ( ratio * 100 ).toFixed( 2 );
+			wavePlayed.style.clipPath = `inset(0 ${ ( 100 - pct ).toFixed(
+				2
+			) }% 0 0)`;
+			// the playhead is the lamp: bars beside it burn, bars behind it cool toward ember
+			wavePlayed.style.maskImage = `linear-gradient(90deg, rgba(0,0,0,.42), #000 ${ pct }%)`;
+			wavePlayed.style.webkitMaskImage = wavePlayed.style.maskImage;
 		}
 		if ( seekKnob ) {
 			seekKnob.style.transform = `translateX(${ (
@@ -1319,10 +1322,10 @@ ${ footer( s ) }
 		};
 		audio.remote
 			.watchAvailability( ( ok ) => {
-				remoteBtn.hidden = ! ok;
+				remoteBtn.classList.toggle( 'is-away', ! ok ); // hides in its slot; the row never shifts
 			} )
 			.catch( () => {
-				remoteBtn.hidden = false;
+				remoteBtn.classList.remove( 'is-away' );
 			} );
 		[ 'connecting', 'connect', 'disconnect' ].forEach( ( ev ) =>
 			audio.remote.addEventListener( ev, paintRemote )
@@ -1717,6 +1720,7 @@ ${ footer( s ) }
 		} else {
 			delete openLyrics.dataset.sheet;
 		}
+		openLyrics.dataset.line = openLyrics.dataset.sheet || queue?.name || ''; // the line under the title is never blank
 		openLyrics.setAttribute(
 			'aria-label',
 			sheetKind === 'lyrics'

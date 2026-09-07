@@ -17,6 +17,13 @@ const { execFileSync } = require( 'child_process' );
 
 const ROOT = path.join( __dirname, 'callboard' );
 const START = 3; // seconds in: past the needle drop
+/* Restoration for acoustic-era transfers: rumble out below 100 Hz, clicks repaired, hiss reduced with a spectral
+   denoiser, nothing above 4.8 kHz (a 1920s horn recorded nothing there; what is there is noise), then evened out.
+   Pass --raw to hear the transfer as archived. */
+const RAW = process.argv.includes( '--raw' );
+const RESTORE = RAW
+	? ''
+	: 'highpass=f=100,adeclick=w=55:o=75:a=2:t=2:b=2,afftdn=nr=20:nf=-32:tn=1,lowpass=f=4800,dynaudnorm=f=400:g=21:p=0.85:m=8,';
 
 /* Item identifiers on archive.org; the title is the song as a cast would call it, the show is for the credits. */
 const SOURCES = [
@@ -143,10 +150,9 @@ function levels( file ) {
 const tidyName = ( performer ) =>
 	performer
 		.replace( /\s+/g, ' ' )
-		.replace( /\b\w+/g, ( w ) =>
-			w.length > 3 && w === w.toUpperCase()
-				? w[ 0 ] + w.slice( 1 ).toLowerCase()
-				: w
+		.replace(
+			/\b[A-Z][A-Z'.]+\b/g,
+			( w ) => w[ 0 ] + w.slice( 1 ).toLowerCase()
 		);
 
 /* Cut one excerpt: mono 32 kHz at the given bitrate, faded in and out, tagged. Returns the rounded duration. */
@@ -162,7 +168,7 @@ function cut( src, out, offset, length, bitrate, title, artist ) {
 		'-i',
 		src,
 		'-af',
-		`afade=t=in:d=0.6,afade=t=out:st=${ length - 1.2 }:d=1.2`,
+		`${ RESTORE }afade=t=in:d=0.6,afade=t=out:st=${ length - 1.2 }:d=1.2`,
 		'-ac',
 		'1',
 		'-ar',

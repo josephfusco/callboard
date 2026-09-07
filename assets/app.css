@@ -170,6 +170,13 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-title.swap{animation:swap var(--t-slow) var(--ease)}
 @keyframes swap{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
 .deck-time{color:var(--ink-3);font-size:.8125rem}
+/* AirPlay in Safari, Cast in Chrome: an icon chip that only appears while a device is in reach */
+.remote-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
+.remote-chip svg{width:16px;height:16px;fill:currentColor}
+.remote-chip:not([data-state=""]){color:var(--accent-text);border-color:var(--line-strong)}
+.remote-chip[data-state="connecting"]{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4}}
+.remote-chip:active{background:var(--surface-2)}
 .deck-controls{display:flex;align-items:center;gap:2px}
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:30px;height:30px;fill:currentColor}

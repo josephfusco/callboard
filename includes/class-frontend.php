@@ -99,6 +99,8 @@ final class Frontend {
 			'show_lyrics'    => __( 'Show lyrics', 'callboard' ),
 			'hide_lyrics'    => __( 'Hide lyrics', 'callboard' ),
 			'show_track'     => __( 'Show current track', 'callboard' ),
+			'remote'         => __( 'Play on another device', 'callboard' ),
+			'remote_on'      => __( 'Playing on another device, tap to change', 'callboard' ),
 			/* translators: %s: track title. */
 			'save_track'     => __( 'Save %s offline', 'callboard' ),
 			/* translators: %s: track title. */

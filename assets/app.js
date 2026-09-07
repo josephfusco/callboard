@@ -83,26 +83,28 @@
 		window.matchMedia( '(display-mode: standalone)' ).matches ||
 		navigator.standalone === true;
 	document.documentElement.classList.toggle( 'is-standalone', standalone );
-	// Haptics: iOS 17.4+ clicks a switch control with a haptic, and it is the only route the web has.
-	// It fires only inside a user activation (a tap, a touch end, a click), never from a timer or a move.
-	let hapticLabel = null;
-	const haptic = () => {
-		if ( ! isIOS ) {
+	// Haptics. iOS has no Vibration API; since iOS 18 a switch control toggled inside a user gesture clicks
+	// with a haptic, and a label click forwards to it, so a fresh label and switch are made for every call
+	// and thrown away. Everywhere else navigator.vibrate does the same job. Both fire only synchronously
+	// inside a tap or a release: never from a timer, and never after an await.
+	const haptic = ( ms = 10 ) => {
+		if ( isIOS ) {
+			try {
+				const label = document.createElement( 'label' );
+				label.setAttribute( 'aria-hidden', 'true' );
+				label.style.display = 'none';
+				const sw = document.createElement( 'input' );
+				sw.type = 'checkbox';
+				sw.setAttribute( 'switch', '' );
+				label.appendChild( sw );
+				document.head.appendChild( label );
+				label.click();
+				label.remove();
+			} catch {}
 			return;
 		}
-		if ( ! hapticLabel ) {
-			hapticLabel = document.createElement( 'label' );
-			hapticLabel.setAttribute( 'aria-hidden', 'true' );
-			hapticLabel.style.display = 'none';
-			const sw = document.createElement( 'input' );
-			sw.type = 'checkbox';
-			sw.setAttribute( 'switch', '' );
-			sw.tabIndex = -1;
-			hapticLabel.appendChild( sw );
-			document.head.appendChild( hapticLabel );
-		}
 		try {
-			hapticLabel.click();
+			navigator.vibrate?.( ms );
 		} catch {}
 	};
 	// In-app browsers (Instagram, Facebook, TikTok, Snapchat, Messenger) hide Add to Home Screen; Safari has it.
@@ -910,14 +912,17 @@ ${ footer( s ) }
 	}
 
 	$( 'prev' ).addEventListener( 'click', () => {
+		haptic();
 		retrigger( $( 'prev' ), 'kick-l' );
 		prev();
 	} );
 	$( 'next' ).addEventListener( 'click', () => {
+		haptic();
 		retrigger( $( 'next' ), 'kick-r' );
 		load( i < 0 ? 0 : i + 1 );
 	} );
 	toggle.addEventListener( 'click', () => {
+		haptic();
 		if ( countStop() ) {
 			morph( 'pause' );
 			return audio.play().catch( () => {} );
@@ -984,8 +989,7 @@ ${ footer( s ) }
 									( _, n ) => n + 1
 								).join( '   ' )
 							); // the count accumulates: 1, 1 2, 1 2 3, 1 2 3 4
-							click( k === 1 );
-							haptic();
+							click( k === 1 ); // the beat is audible only: a timer is not a gesture, so no haptic can ride on it
 							if ( ! reduce() ) {
 								retrigger( toggle, 'beat' );
 							}
@@ -1174,6 +1178,7 @@ ${ footer( s ) }
 			return clearLoop();
 		}
 		if ( loopFrom === null ) {
+			haptic();
 			loopFrom = audio.currentTime;
 			loopChip.dataset.state = 'armed';
 			loopChip.textContent = `${ T.loop_from } ${ fmt( loopFrom ) }`;
@@ -1423,6 +1428,7 @@ ${ footer( s ) }
 		if ( i < 0 ) {
 			return;
 		}
+		haptic();
 		if ( sheetKind ) {
 			return lyricsSheet.hidden ? showLyrics() : hideLyrics();
 		}
@@ -1432,7 +1438,10 @@ ${ footer( s ) }
 		rows[ i ]?.scrollIntoView( { block: 'center', behavior: 'smooth' } );
 		rows[ i ]?.focus( { preventScroll: true } );
 	} );
-	$( 'close-lyrics' ).addEventListener( 'click', hideLyrics );
+	$( 'close-lyrics' ).addEventListener( 'click', () => {
+		haptic();
+		hideLyrics();
+	} );
 
 	document
 		.querySelector( '.skip-link' )
@@ -1456,6 +1465,7 @@ ${ footer( s ) }
 			if ( ! set ) {
 				return;
 			}
+			haptic();
 			if ( onQueuePage() && n === i ) {
 				audio.paused ? audio.play() : audio.pause();
 			} else {
@@ -1588,6 +1598,7 @@ ${ footer( s ) }
 		};
 		paintBtn();
 		btn.onclick = async () => {
+			haptic(); // now, while this is still the tap; nothing after the awaits below can
 			btn.disabled = true;
 			try {
 				if ( sub ) {
@@ -1624,7 +1635,6 @@ ${ footer( s ) }
 				}
 			} catch {}
 			btn.disabled = false;
-			haptic();
 			paintBtn();
 		};
 	}
@@ -1692,6 +1702,7 @@ ${ footer( s ) }
 				} );
 			}
 			$( 'play-all' )?.addEventListener( 'click', () => {
+				haptic();
 				if ( played && onQueuePage() && i >= 0 ) {
 					audio.paused ? audio.play() : audio.pause();
 				} else {
@@ -1919,6 +1930,7 @@ ${ footer( s ) }
 		};
 		offBtn.onclick = async () => {
 			if ( tracks.some( ( t ) => dlAborts.has( t.url ) ) ) {
+				haptic();
 				dlAborts.forEach( ( ctl ) => ctl.abort() );
 				return;
 			}
@@ -1926,11 +1938,11 @@ ${ footer( s ) }
 				held = false;
 				return;
 			}
+			haptic(); // the tap itself; the completion below comes long after the gesture
 			const have = await savedSet( tracks );
 			if ( offBtn.dataset.confirm ) {
 				delete offBtn.dataset.confirm;
 				await Promise.all( tracks.map( removeTrack ) );
-				haptic();
 				return paintAll();
 			}
 			if ( have.size === tracks.length ) {
@@ -1944,13 +1956,11 @@ ${ footer( s ) }
 				}
 			};
 			await Promise.all( [ worker(), worker() ] );
-			if ( ( await savedSet( tracks ) ).size === tracks.length ) {
-				haptic();
-			}
 			paintAll();
 		};
 		document.querySelectorAll( '.dl' ).forEach( ( b ) => {
 			b.onclick = async () => {
+				haptic();
 				const t = tracks[ +b.dataset.i ];
 				if ( dlAborts.has( t.url ) ) {
 					dlAborts.get( t.url ).abort();

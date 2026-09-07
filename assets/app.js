@@ -458,8 +458,7 @@ ${ footer( s ) }
 		return a + ( b - a ) * ( x - k );
 	};
 	const glowHot = $( 'deck-glow-hot' ),
-		glowHalo = $( 'deck-glow-halo' ),
-		glowReflect = $( 'deck-glow-reflect' );
+		glowHalo = $( 'deck-glow-halo' );
 	// A filament's color follows its heat: near-black red when barely lit, through orange, to a pale yellow-white
 	// at full current. Four stops, interpolated; the accent sits at the middle so the brand color is the working
 	// temperature of the wire.
@@ -481,19 +480,11 @@ ${ footer( s ) }
 			.map( ( v, n ) => Math.round( v + ( c1[ n ] - v ) * f ) )
 			.join( ' ' ) })`;
 	};
-	let glowColorKey = -1;
 	const paintGlow = ( b ) => {
-		const heat = Math.round( b * 40 );
-		if ( heat !== glowColorKey ) {
-			glowColorKey = heat;
-			const c = heatColor( b );
-			glow.style.color = c;
-			if ( glowHalo ) {
-				glowHalo.style.color = c;
-			}
-			if ( glowReflect ) {
-				glowReflect.style.color = c;
-			}
+		const c = heatColor( b ); // continuous: no steps in the colour, so nothing to read as a flicker
+		glow.style.color = c;
+		if ( glowHalo ) {
+			glowHalo.style.color = c;
 		}
 		glow.style.opacity = ( 0.25 + 0.75 * b ).toFixed( 3 );
 		if ( glowHot ) {
@@ -501,9 +492,6 @@ ${ footer( s ) }
 		}
 		if ( glowHalo ) {
 			glowHalo.style.opacity = ( 0.45 * b * b ).toFixed( 3 );
-		}
-		if ( glowReflect ) {
-			glowReflect.style.opacity = ( 0.42 * b * b ).toFixed( 3 );
 		}
 	};
 	// Cut the current and a filament does not go dark; it cools. Pause fades it out over a second and a half.
@@ -605,19 +593,15 @@ ${ footer( s ) }
 				).toFixed( 2 ) })`;
 			} );
 			if ( glow ) {
-				// a filament: it lights in ~40 ms and cools over ~350 ms, so peaks flare and settle; a second,
-				// slower store (~1.4 s) holds the residual heat, so it never goes black between phrases; and a
-				// hot wire moves a little, so at the peaks the light carries a trace of flicker
+				// a filament: it lights in ~90 ms and cools over ~400 ms, so peaks swell and settle rather than
+				// twitch; a second, slower store (~1.4 s) holds the residual heat, so it never goes black
+				// between phrases
 				const target =
 					levels[ 0 ] * 0.5 + levels[ 1 ] * 0.3 + levels[ 2 ] * 0.2;
-				const tau = target > bright ? 0.04 : 0.35;
+				const tau = target > bright ? 0.09 : 0.4;
 				bright += ( target - bright ) * ( 1 - Math.exp( -dt / tau ) );
 				ember += ( bright - ember ) * ( 1 - Math.exp( -dt / 1.4 ) );
-				const flicker =
-					bright > 0.6
-						? 1 + ( Math.random() - 0.5 ) * 0.04 * bright
-						: 1;
-				lastBright = Math.max( bright, ember * 0.45 ) * flicker;
+				lastBright = Math.max( bright, ember * 0.45 );
 				paintGlow( Math.min( 1, lastBright ) );
 			}
 			eqRaf = requestAnimationFrame( tick );

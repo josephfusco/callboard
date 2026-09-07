@@ -898,8 +898,9 @@ ${ footer( s ) }
 		);
 		if ( play ) {
 			ensureAnalyser();
-			morph( t.bpm && ! at ? 'play' : 'pause' );
-			if ( ! at && t.bpm ) {
+			const countin = S.count_in && t.bpm && ! at;
+			morph( countin ? 'play' : 'pause' );
+			if ( countin ) {
 				countIn( t.bpm ).then(
 					( ok ) => ok && audio.play().catch( () => {} )
 				);
@@ -1220,11 +1221,15 @@ ${ footer( s ) }
 		}
 	};
 	// ---- One player per site. Playing takes a lock; a tab that starts playing steals it and the loser pauses.
-	let releaseLock = null;
+	// A new track in this same tab also steals from its own earlier request, so a request only pauses the
+	// element when it is still the latest one: that is a theft by another tab, not by ourselves.
+	let releaseLock = null,
+		lockTicket = 0;
 	audio.addEventListener( 'play', () => {
 		if ( ! navigator.locks ) {
 			return;
 		}
+		const ticket = ++lockTicket;
 		navigator.locks
 			.request(
 				'callboard:player',
@@ -1232,9 +1237,10 @@ ${ footer( s ) }
 				() => new Promise( ( done ) => ( releaseLock = done ) )
 			)
 			.catch( () => {
-				// stolen by another tab: it is the player now
-				releaseLock = null;
-				audio.pause();
+				if ( ticket === lockTicket ) {
+					releaseLock = null;
+					audio.pause(); // stolen by another tab: it is the player now
+				}
 			} );
 	} );
 	audio.addEventListener( 'pause', () => {

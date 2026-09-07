@@ -1441,7 +1441,8 @@ ${ footer( s ) }
 			looper !== ticket ||
 			! loop ||
 			audio.paused ||
-			! canLoopGapless()
+			! canLoopGapless() ||
+			looperCtx.state !== 'running' // autoplay policy kept the context shut: never mute the element for a silent looper
 		) {
 			looper = null;
 			return;

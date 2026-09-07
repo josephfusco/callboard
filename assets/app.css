@@ -6,7 +6,7 @@
   --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06);
   --ease:cubic-bezier(.2,.8,.2,1); --ease-spring:cubic-bezier(.34,1.4,.64,1); --t-fast:.12s; --t:.2s; --t-slow:.36s; --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:128px; --deck-bg:rgba(246,245,242,.94);
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+@media (prefers-color-scheme:dark){:root{
   --bg:#161616; --surface:#1f1f1f; --surface-2:#292929; --line:#2e2e2e; --line-strong:#444;
   --ink:#f2f1ee; --ink-2:#b3b2ae; --ink-3:#95948f; --accent:#ff6a2e; --accent-text:#ff7d47; --accent-ink:#161616;
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .22 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); --warmth:rgba(120,92,68,.1);
@@ -52,6 +52,9 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 18px;font-weight:600;font-size:.9375rem;cursor:pointer;height:46px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
 #play-all{min-width:104px} /* the label changes with the set's state; the button never resizes */
 .btn-small{height:34px;padding:0 14px;font-size:.8125rem}
+.btn-icon{width:46px;padding:0;flex:none}
+.btn-icon svg{width:20px;height:20px;fill:none;stroke:currentColor}
+.btn-icon.is-done{width:auto;padding:0 14px} /* "Link copied" borrows the button for a moment */
 .btn:active{transform:scale(.98)}
 .btn-quiet{background:transparent;color:var(--ink);border-color:var(--line-strong)}
 .note{color:var(--ink-2);padding:20px 0}
@@ -60,7 +63,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .sets{list-style:none;margin:0;padding:0}
 .sets li{border-bottom:1px solid var(--line)}
 .sets li:last-child{border-bottom:0}
-.set{display:grid;grid-template-columns:56px 1fr auto auto;align-items:center;gap:14px;padding:12px 16px;margin:0 -16px;width:calc(100% + 32px);border-radius:10px;transition:background var(--t-fast),transform var(--t-fast);text-decoration:none;min-height:72px;transition:background var(--t-fast)}
+.set{display:grid;grid-template-columns:56px 1fr auto auto;align-items:center;gap:14px;padding:12px 16px;margin:0 -16px;width:calc(100% + 32px);border-radius:10px;transition:background var(--t-fast),transform var(--t-fast);text-decoration:none;min-height:72px}
 .set:active{background:var(--surface-2);transform:scale(.995)}
 .set-mark,.set-art{width:56px;height:56px;border-radius:10px;flex:none}
 .set-mark{background:var(--surface-2);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:600;letter-spacing:-.02em}
@@ -153,14 +156,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-open[data-sheet]::after{content:attr(data-sheet);color:var(--ink-3);font-size:.8125rem}
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
 .deck-time{display:inline-flex;align-items:center;gap:8px}
-/* the time row is a container: on a narrow phone the chips outrank the total, which the track list shows anyway */
+/* the time row is a container: when the chips would not fit beside the total, the total goes; the track list still shows it */
 .deck-text{container-type:inline-size}
-@container (max-width:189px){.deck-time .sep,.deck-time #dur{display:none}}
-.deck-title{font-size:1rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;max-width:100%;display:block}
+@container (max-width:150px){.deck-time .sep,.deck-time #dur{display:none}}
+@container (max-width:189px){.deck-time:has(.remote-chip:not([hidden])) .sep,.deck-time:has(.remote-chip:not([hidden])) #dur{display:none}}
+.deck-title{position:relative;font-size:1rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;max-width:100%;display:block}
 .deck-title .mq{display:inline-flex;gap:2.5em}
 .deck-title:not(.marquee) .mq{display:block;overflow:hidden;text-overflow:ellipsis}
 .deck-title:not(.marquee) .mq span+span{display:none}
-.deck-title{position:relative}
 .deck-title.marquee::before,.deck-title.marquee::after{content:"";position:absolute;top:0;bottom:0;width:14px;z-index:1;pointer-events:none}
 .deck-title.marquee::before{left:0;background:linear-gradient(90deg,var(--deck),transparent)}
 .deck-title.marquee::after{right:0;background:linear-gradient(270deg,var(--deck),transparent)}
@@ -255,7 +258,7 @@ input[type=range]:focus-visible{outline-offset:0}
 @media (prefers-contrast:more){:root{--line:#8a8884;--line-strong:#55544f;--ink-3:#4a4945}.ctl.play{outline:2px solid var(--ink)}}
 @media (forced-colors:active){.set-mark,.ctl.play{forced-color-adjust:none;background:CanvasText;color:Canvas}.track.active .title{text-decoration:underline}}
 
-/* 22 */
+/* the lucky second: when the clock reads the confetti number, it lights */
 .deck-time #cur{transition:color var(--t)}
 .deck-time #cur.is-lucky{color:var(--accent-text)}
 .tt{position:fixed;bottom:-2rem;z-index:60;color:var(--accent);font-weight:800;letter-spacing:-.04em;pointer-events:none;user-select:none;opacity:0;will-change:transform,opacity}

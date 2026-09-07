@@ -334,12 +334,15 @@ test.describe( 'Front end', () => {
 		} );
 		await page.goto( '/demo-set/' );
 		const btn = page.locator( '#share' );
+		await expect( btn ).toHaveAttribute( 'aria-label', /Share a link/ );
 		await btn.click();
 		await expect( btn ).toHaveText( 'Link copied' );
 		expect( await page.evaluate( () => window.__copied ) ).toMatch(
 			/\/demo-set\/$/
 		);
-		await expect( btn ).toHaveText( 'Share', { timeout: 3000 } );
+		await expect( btn.locator( 'svg' ) ).toHaveCount( 1, {
+			timeout: 3000,
+		} ); // the icon is back
 	} );
 
 	test( 'an empty set says so on home and on its page', async ( {

@@ -35,7 +35,7 @@ Everything below is in use today. Web platform links go to the specification, Wo
 - [x] [Remote Playback API](https://www.w3.org/TR/remote-playback/) for AirPlay and Cast from the deck
 - [x] [Web Share](https://www.w3.org/TR/web-share/) to hand a set link to the system sheet, with the [Clipboard API](https://www.w3.org/TR/clipboard-apis/) as the fallback
 - [x] [Vibration API](https://www.w3.org/TR/vibration/) for haptics where it exists
-- [x] [Web Audio API](https://www.w3.org/TR/webaudio/) for the level meter
+- [x] [Web Audio API](https://www.w3.org/TR/webaudio/) for the level meter, the count-in click, and a sample-accurate A/B loop while the page is in front
 - [x] [Audio Session API](https://w3c.github.io/audio-session/) to declare playback so iOS treats it like a music app
 - [x] [Screen Wake Lock API](https://www.w3.org/TR/screen-wake-lock/) while a set plays
 - [x] [Badging API](https://www.w3.org/TR/badging/) to clear the icon badge on open
@@ -116,7 +116,6 @@ A running log of browser and WordPress capabilities and what each would do for a
 <summary>Ready to adopt</summary>
 
 - [ ] A gated front end with [WebAuthn passkeys](https://www.w3.org/TR/webauthn-3/). The site is visible to anyone with the URL today; a cast app should not be. Passkeys stored in iCloud Keychain or Google Password Manager give a one-tap, Face ID sign-in with no third party, on every platform, in the self-hosted spirit. Pair with invite links from the director.
-- [ ] [Web Audio `AudioBufferSourceNode` looping](https://www.w3.org/TR/webaudio/#AudioBufferSourceNode) for a gapless A/B loop. Resetting `currentTime` leaves an audible seam; `loopStart` and `loopEnd` are sample-accurate. Needs the track decoded once, so pair it with the saved-offline copy.
 - [ ] [AudioWorklet](https://www.w3.org/TR/webaudio/#AudioWorklet) for transposing a track without changing tempo. The one feature choir directors ask for most, and the largest item here: a worklet plus a pitch-shift kernel.
 - [ ] [Media Capabilities](https://www.w3.org/TR/media-capabilities/) so the client picks the format it decodes best when the importer kept m4a as well as mp3.
 - [ ] [Navigation API](https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api) to replace the hand-rolled `pushState` routing and integrate with view transitions directly. Safari 18.4 and later.

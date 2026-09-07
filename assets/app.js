@@ -345,6 +345,9 @@ ${ footer( s ) }
 		return;
 	}
 
+	let looper = null, // the gapless loop, when one is running (see the A-B loop section)
+		looperCtx = null,
+		looperBuf = null; // { url, buffer }
 	let played = false; // true once this session has played anything; before that the set button reads "Play all"
 	let queue = null,
 		i = -1,
@@ -374,6 +377,7 @@ ${ footer( s ) }
 		} catch {}
 		audio.defaultPlaybackRate = r; // a new src resets playbackRate to this
 		audio.playbackRate = r;
+		looperStop(); // Web Audio has no preservesPitch; the element's loop takes over
 		if ( rateChip ) {
 			rateChip.textContent = rateText( r );
 			rateChip.dataset.state = r === 1 ? '' : 'on';
@@ -720,26 +724,30 @@ ${ footer( s ) }
 	const follow = () => {
 		const d = audio.duration || queue?.tracks[ i ]?.duration;
 		if ( ! seeking && d ) {
-			setProgress( Math.min( audio.currentTime / d, 1 ) );
+			setProgress( Math.min( playhead() / d, 1 ) );
+		}
+		if ( looper && ! audio.paused ) {
+			paint(); // the element's clock is not the ear's while the looper runs
 		}
 		progressRaf = audio.paused ? 0 : requestAnimationFrame( follow );
 	};
 	function paint( force = false ) {
-		const d = audio.duration || queue?.tracks[ i ]?.duration,
-			sec = Math.floor( audio.currentTime );
+		const now = playhead(),
+			d = audio.duration || queue?.tracks[ i ]?.duration,
+			sec = Math.floor( now );
 		if ( ! seeking && d && ! progressRaf ) {
-			setProgress( Math.min( audio.currentTime / d, 1 ) );
+			setProgress( Math.min( now / d, 1 ) );
 		}
 		if ( sec === lastSec && ! force ) {
 			return;
 		}
 		lastSec = sec;
 		if ( ! seeking ) {
-			cur.textContent = fmt( audio.currentTime );
+			cur.textContent = fmt( now );
 			if ( d ) {
 				seek.setAttribute(
 					'aria-valuetext',
-					`${ fmt( audio.currentTime ) } / ${ fmt( d ) }`
+					`${ fmt( now ) } / ${ fmt( d ) }`
 				);
 			}
 		}
@@ -749,8 +757,8 @@ ${ footer( s ) }
 				sec % 60 === Number( S.confetti ) % 60
 			);
 		}
-		syncLyrics( audio.currentTime );
-		syncNotes( audio.currentTime );
+		syncLyrics( now );
+		syncNotes( now );
 	}
 	let noteShown = null;
 	const fmtDate = ( d ) =>
@@ -789,7 +797,7 @@ ${ footer( s ) }
 			navigator.mediaSession.setPositionState( {
 				duration: d,
 				playbackRate: audio.playbackRate || 1,
-				position: Math.min( audio.currentTime, d ),
+				position: Math.min( playhead(), d ),
 			} );
 		} catch {}
 	}
@@ -1168,6 +1176,12 @@ ${ footer( s ) }
 	audio.addEventListener( 'pause', () => {
 		releaseLock?.();
 		releaseLock = null;
+		looperStop();
+	} );
+	audio.addEventListener( 'play', () => {
+		if ( loop ) {
+			looperStart();
+		}
 	} );
 	audio.addEventListener( 'play', () => {
 		played = true;
@@ -1310,6 +1324,98 @@ ${ footer( s ) }
 	// ---- A-B loop: hold two fingers on the seek line; on a keyboard [ and ] set the ends, \ clears
 	let loop = null,
 		loopGesture = false;
+	// ---- Gapless loop. Resetting currentTime leaves a seam at the join; an AudioBufferSourceNode loops
+	// sample-accurately. It runs only while the page is visible and at full speed (Web Audio has no
+	// preservesPitch). The element keeps playing muted underneath, so the media session, lock-screen controls
+	// and background play are exactly what they were; when the tab hides, the speed changes or the loop
+	// clears, the element takes the sound back at the looper's position.
+	const canLoopGapless = () =>
+		'AudioContext' in window &&
+		rate === 1 &&
+		document.visibilityState === 'visible';
+	const playhead = () => {
+		if ( ! looper || ! loop ) {
+			return audio.currentTime;
+		}
+		const len = loop.b - loop.a,
+			t =
+				looper.offset -
+				loop.a +
+				( looper.ctx.currentTime - looper.startedAt );
+		return loop.a + ( ( ( t % len ) + len ) % len );
+	};
+	async function looperStart() {
+		if ( ! loop || looper || ! canLoopGapless() || audio.paused ) {
+			return;
+		}
+		const url = audio.currentSrc || audio.src;
+		const ticket = { pending: true };
+		looper = ticket;
+		try {
+			looperCtx = looperCtx || new AudioContext();
+			if ( looperCtx.state === 'suspended' ) {
+				await looperCtx.resume();
+			}
+			if ( looperBuf?.url !== url ) {
+				const bytes = await ( await fetch( url ) ).arrayBuffer();
+				looperBuf = {
+					url,
+					buffer: await looperCtx.decodeAudioData( bytes ),
+				};
+			}
+		} catch {
+			looper = null; // no decode here: the element's own loop stands
+			return;
+		}
+		if (
+			looper !== ticket ||
+			! loop ||
+			audio.paused ||
+			! canLoopGapless()
+		) {
+			looper = null;
+			return;
+		}
+		const src = looperCtx.createBufferSource();
+		src.buffer = looperBuf.buffer;
+		src.loop = true;
+		src.loopStart = loop.a;
+		src.loopEnd = Math.min( loop.b, looperBuf.buffer.duration );
+		src.connect( analyser || looperCtx.destination );
+		const from = Math.min(
+			Math.max( audio.currentTime, loop.a ),
+			src.loopEnd - 0.05
+		);
+		src.start( 0, from );
+		audio.muted = true;
+		looper = {
+			ctx: looperCtx,
+			src,
+			startedAt: looperCtx.currentTime,
+			offset: from,
+		};
+	}
+	function looperStop() {
+		if ( ! looper ) {
+			return;
+		}
+		const pos = looper.src ? playhead() : null;
+		try {
+			looper.src?.stop();
+		} catch {}
+		looper = null;
+		audio.muted = false;
+		if ( pos !== null && loop ) {
+			audio.currentTime = pos; // the element picks up where the ear left off
+		}
+	}
+	document.addEventListener( 'visibilitychange', () => {
+		if ( document.visibilityState === 'visible' ) {
+			looperStart();
+		} else {
+			looperStop();
+		}
+	} );
 	const loopBand = $( 'loop-band' ),
 		loopChip = $( 'loop' );
 	const trackDur = () => audio.duration || queue?.tracks[ i ]?.duration || 0;
@@ -1338,12 +1444,19 @@ ${ footer( s ) }
 		if ( audio.currentTime < a || audio.currentTime > b ) {
 			audio.currentTime = a;
 		}
+		looperStop();
 		audio.play().catch( () => {} );
+		looperStart();
+		keepAwake(); // a loop means the phone is on the stand
 	}
 	let loopFrom = null;
 	function clearLoop() {
 		if ( loop ) {
 			haptic();
+		}
+		looperStop();
+		if ( lyricsSheet.hidden ) {
+			letSleep();
 		}
 		loop = null;
 		loopFrom = null;

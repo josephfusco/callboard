@@ -1203,21 +1203,20 @@ ${ footer( s ) }
 			timers.push( setTimeout( () => done( true ), 4 * beat ) );
 		} );
 	}
+	// The play button is a Magic 8-Ball: the answer you are not looking at sits down in the dark, and the
+	// one you are rises through it into focus. A state on the button drives the two glyphs; the wobble is
+	// the shake.
 	const morph = ( to ) => {
-		const path = $( 'pp-path' ),
-			anim = $( 'pp-anim' );
-		if ( ! path || path.dataset.state === to ) {
+		if ( toggle.dataset.state === to ) {
 			return;
 		}
-		const fromShape = path.dataset[ path.dataset.state || 'play' ],
-			toShape = path.dataset[ to ];
-		path.dataset.state = to;
-		if ( anim && anim.beginElement ) {
-			anim.setAttribute( 'from', fromShape );
-			anim.setAttribute( 'to', toShape );
-			anim.beginElement();
-		} else {
-			path.setAttribute( 'd', toShape );
+		toggle.dataset.state = to;
+		toggle.setAttribute(
+			'aria-label',
+			to === 'pause' ? T.pause : T.resume
+		);
+		if ( ! reduce() ) {
+			retrigger( toggle, 'shake' );
 		}
 	};
 	// ---- One player per site. Playing takes a lock; a tab that starts playing steals it and the loser pauses.

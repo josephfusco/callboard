@@ -207,11 +207,16 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .ctl:active{background:radial-gradient(circle at 50% 42%,var(--surface-2),var(--surface));box-shadow:inset 0 2px 5px var(--dish)} /* pressed: a shallow dish */
 .ctl.play{width:66px;height:66px;color:var(--bg);margin:0 4px;position:relative;isolation:isolate;background:radial-gradient(120% 95% at 50% -12%,var(--play-hi) 0%,var(--ink) 62%);box-shadow:0 10px 22px -8px var(--play-shadow),0 1px 2px rgba(0,0,0,.25),inset 0 1px 0 var(--play-rim),inset 0 -2px 4px rgba(0,0,0,.28);transition:transform var(--t-fast),box-shadow var(--t-fast)}
 .ctl.play .gloss{position:absolute;left:14%;right:14%;top:7%;height:42%;border-radius:100% 100% 80% 80% / 100% 100% 60% 60%;background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0));pointer-events:none;z-index:1} /* the highlight a domed button catches from above */
-.ctl.play .pp{position:relative;z-index:2}
 .ctl.play:active{transform:scale(.96);box-shadow:0 4px 10px -6px var(--play-shadow),inset 0 3px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06)}
 .ctl.play:active .gloss{opacity:.4}
-/* play ⇄ pause: one SVG path morphing between two shapes with the same vertex count (SMIL: smooth in Safari, no repaints of the deck) */
-.pp{display:block;width:30px;height:30px;fill:currentColor}
+/* play ⇄ pause: a Magic 8-Ball. Under the glass dome a dark well; the glyph not in use sits sunk and blurred in
+   it, and the one called for rises through the murk into focus. The shake is a short wobble of the whole ball. */
+.pp{position:absolute;inset:0;margin:auto;width:30px;height:30px;fill:currentColor;transition:opacity var(--t-slow) var(--ease),transform .5s var(--ease-spring),filter var(--t-slow) var(--ease);will-change:transform,opacity,filter;z-index:2}
+.ctl.play .pp{opacity:0;transform:translateY(9px) scale(.55);filter:blur(5px)} /* sunk */
+.ctl.play[data-state="play"] .pp-play,.ctl.play[data-state="pause"] .pp-pause{opacity:1;transform:none;filter:blur(0)} /* risen */
+.ctl.play .well{position:absolute;inset:16%;border-radius:50%;background:radial-gradient(circle at 50% 68%,rgba(0,0,0,.42),rgba(0,0,0,0) 72%);pointer-events:none;z-index:1} /* the dark liquid */
+.ctl.play.shake{animation:shake .55s var(--ease-spring)}
+@keyframes shake{20%{transform:rotate(-4deg) scale(1.03)}45%{transform:rotate(3deg)}70%{transform:rotate(-1.5deg)}100%{transform:none}}
 /* soft ring when playback begins */
 .ctl.play::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--accent);opacity:0;pointer-events:none;z-index:-1}
 .ctl.play.ring::after{animation:ring .6s var(--ease) forwards}

@@ -29,7 +29,7 @@ Everything below is in use today. Web platform links go to the specification, Wo
 - [x] [Cache API](https://w3c.github.io/ServiceWorker/#cache-interface) for the shell and user-saved tracks
 - [x] [Fetch](https://fetch.spec.whatwg.org/) and [HTTP range requests](https://www.rfc-editor.org/rfc/rfc9110.html#name-range-requests), so cached audio still seeks
 - [x] [Web App Manifest](https://www.w3.org/TR/appmanifest/), written to the site root by the plugin
-- [x] [Push API](https://www.w3.org/TR/push-api/) and [Notifications API](https://notifications.spec.whatwg.org/) for notices
+- [x] [Push API](https://www.w3.org/TR/push-api/) and [Notifications API](https://notifications.spec.whatwg.org/) for notices, with declarative payloads and a `pushsubscriptionchange` handler that re-registers a rotated endpoint
 - [x] [Media Session API](https://www.w3.org/TR/mediasession/) for lock-screen artwork and controls
 - [x] [HTML media element](https://html.spec.whatwg.org/multipage/media.html) as the player itself, with [preservesPitch](https://html.spec.whatwg.org/multipage/media.html#dom-media-preservespitch) behind the speed chip
 - [x] [Remote Playback API](https://www.w3.org/TR/remote-playback/) for AirPlay and Cast from the deck
@@ -39,7 +39,11 @@ Everything below is in use today. Web platform links go to the specification, Wo
 - [x] [Audio Session API](https://w3c.github.io/audio-session/) to declare playback so iOS treats it like a music app
 - [x] [Screen Wake Lock API](https://www.w3.org/TR/screen-wake-lock/) while a set plays
 - [x] [Badging API](https://www.w3.org/TR/badging/) to clear the icon badge on open
-- [x] [Storage API](https://storage.spec.whatwg.org/) to ask for persistent storage before saving audio
+- [x] [Storage API](https://storage.spec.whatwg.org/) to ask for persistent storage before saving audio, and to check there is room before a save starts
+- [x] [Streams API](https://streams.spec.whatwg.org/) to save a track into the cache while a `tee()` branch counts bytes for the progress ring
+- [x] [Canvas 2D](https://html.spec.whatwg.org/multipage/canvas.html) to draw the waveform from the levels the import measured
+- [x] [TextTrack API](https://html.spec.whatwg.org/multipage/media.html#text-track-api) for the lyric cues, so `cuechange` keeps them in time when the tab is throttled
+- [x] [Web Locks](https://www.w3.org/TR/web-locks/) so only one tab plays at a time
 - [x] [Web Storage](https://html.spec.whatwg.org/multipage/webstorage.html) for small player state
 - [x] [History API](https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-history-interface) for in-app navigation
 - [x] [Online and offline events](https://html.spec.whatwg.org/multipage/system-state.html#navigator.online) for the offline banner
@@ -61,7 +65,10 @@ Everything below is in use today. Web platform links go to the specification, Wo
 - [x] [@starting-style](https://www.w3.org/TR/css-transitions-2/#defining-before-change-style) for enter animations
 - [x] [Scroll-driven animations](https://www.w3.org/TR/scroll-animations-1/) behind `@supports`
 - [x] [User preference media features](https://www.w3.org/TR/mediaqueries-5/#mf-user-preferences): color scheme, reduced motion, reduced transparency, contrast
-- [x] [:has()](https://www.w3.org/TR/selectors-4/#relational), [touch-action](https://www.w3.org/TR/pointerevents/#the-touch-action-css-property), [overscroll-behavior](https://www.w3.org/TR/css-overscroll-1/), [text-wrap](https://www.w3.org/TR/css-text-4/#text-wrap)
+- [x] [Container queries](https://www.w3.org/TR/css-contain-3/) so the deck's time row drops the total when its chips would not fit
+- [x] [Anchor positioning](https://www.w3.org/TR/css-anchor-position-1/) to sit the install card and update toast on the deck's top edge, with a height token as the fallback
+- [x] [color-mix()](https://www.w3.org/TR/css-color-5/#color-mix) for the waveform glow, [clip-path](https://www.w3.org/TR/css-masking-1/#the-clip-path) for its played half
+- [x] [:has()](https://www.w3.org/TR/selectors-4/#relational), [touch-action](https://www.w3.org/TR/pointerevents/#the-touch-action-css-property), [overscroll-behavior](https://www.w3.org/TR/css-overscroll-1/), [text-wrap](https://www.w3.org/TR/css-text-4/#text-wrap) including `pretty` on lyric lines and titles
 
 </details>
 
@@ -108,14 +115,13 @@ A running log of browser and WordPress capabilities and what each would do for a
 <details>
 <summary>Ready to adopt</summary>
 
+- [ ] A gated front end with [WebAuthn passkeys](https://www.w3.org/TR/webauthn-3/). The site is visible to anyone with the URL today; a cast app should not be. Passkeys stored in iCloud Keychain or Google Password Manager give a one-tap, Face ID sign-in with no third party, on every platform, in the self-hosted spirit. Pair with invite links from the director.
 - [ ] [Web Audio `AudioBufferSourceNode` looping](https://www.w3.org/TR/webaudio/#AudioBufferSourceNode) for a gapless A/B loop. Resetting `currentTime` leaves an audible seam; `loopStart` and `loopEnd` are sample-accurate. Needs the track decoded once, so pair it with the saved-offline copy.
-- [ ] [TextTrack API](https://html.spec.whatwg.org/multipage/media.html#text-track-api) for the lyric cues. They are already timed arrays; as a track on the element the browser fires `cuechange` and keeps sync when the tab is throttled.
 - [ ] [AudioWorklet](https://www.w3.org/TR/webaudio/#AudioWorklet) for transposing a track without changing tempo. The one feature choir directors ask for most, and the largest item here: a worklet plus a pitch-shift kernel.
 - [ ] [Media Capabilities](https://www.w3.org/TR/media-capabilities/) so the client picks the format it decodes best when the importer kept m4a as well as mp3.
-- [ ] [Web Locks](https://www.w3.org/TR/web-locks/) so two open tabs cannot both play.
 - [ ] [Navigation API](https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api) to replace the hand-rolled `pushState` routing and integrate with view transitions directly. Safari 18.4 and later.
 - [ ] [Declarative Web Push `app_badge`](https://www.w3.org/TR/push-api/#declarative-push-message) so a notice sets the icon badge without the worker waking. The payload already carries the field; the count is always 1.
-- [ ] CSS [`light-dark()`](https://www.w3.org/TR/css-color-5/#light-dark) for the color tokens, [`text-box-trim`](https://www.w3.org/TR/css-inline-3/#text-box-trim) to make the vertical rhythm exact, [container queries](https://www.w3.org/TR/css-contain-3/) beyond the deck row, [scroll snap](https://www.w3.org/TR/css-scroll-snap-1/) for swiping between sets.
+- [ ] CSS [`light-dark()`](https://www.w3.org/TR/css-color-5/#light-dark) for the color tokens, [`text-box-trim`](https://www.w3.org/TR/css-inline-3/#text-box-trim) to make the vertical rhythm exact, [scroll snap](https://www.w3.org/TR/css-scroll-snap-1/) for swiping between sets.
 
 </details>
 
@@ -129,6 +135,7 @@ A running log of browser and WordPress capabilities and what each would do for a
 - [ ] [Manifest `shortcuts`](https://www.w3.org/TR/appmanifest/#shortcuts-member) are written; iOS ignores them.
 - [ ] [Remote Playback availability for audio](https://www.w3.org/TR/remote-playback/#dom-htmlmediaelement-remote) in Safari. Until it arrives the AirPlay chip is always shown there.
 - [ ] [Invoker commands](https://open-ui.org/components/invokers.explainer/) (`command`, `commandfor`) to wire the sheet and chips without script. Chrome 135 and later, Safari 26.
+- [ ] [Anchor positioning](https://www.w3.org/TR/css-anchor-position-1/) is in use behind `@supports`; the height-token fallback goes when Safari 26 is the floor.
 
 </details>
 

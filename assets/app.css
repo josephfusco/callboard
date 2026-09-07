@@ -52,7 +52,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 18px;font-weight:600;font-size:.9375rem;cursor:pointer;height:46px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
 #play-all{min-width:104px} /* the label changes with the set's state; the button never resizes */
 .btn-small{height:34px;padding:0 14px;font-size:.8125rem}
-.btn-icon{width:46px;padding:0;flex:none}
+.btn-icon{width:46px;padding:0;flex:none;margin-left:auto} /* share sits at the right edge of the row */
 .btn-icon svg{width:20px;height:20px;fill:none;stroke:currentColor}
 .btn-icon.is-done{width:auto;padding:0 14px} /* "Link copied" borrows the button for a moment */
 .btn:active{transform:scale(.98)}

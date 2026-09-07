@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 	<i class="deck-glow-halo" id="deck-glow-halo" aria-hidden="true"></i><i class="deck-glow" id="deck-glow" aria-hidden="true"></i><i class="deck-glow-hot" id="deck-glow-hot" aria-hidden="true"></i>
 	<div class="deck-inner">
 		<div class="seek-wrap">
-			<canvas class="wave wave-base" id="wave-base" aria-hidden="true"></canvas><canvas class="wave wave-played" id="wave-played" aria-hidden="true"></canvas>
+			<canvas class="wave wave-base" id="wave-base" aria-hidden="true"></canvas><canvas class="wave wave-hover" id="wave-hover" aria-hidden="true"></canvas><canvas class="wave wave-played" id="wave-played" aria-hidden="true"></canvas>
 			<span class="seek-line" aria-hidden="true"><i class="seek-fill" id="seek-fill"></i><i class="loop-band" id="loop-band"></i></span><span class="seek-marks" id="seek-marks" aria-hidden="true"></span><i class="seek-knob" id="seek-knob" aria-hidden="true"></i>
 			<input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="<?php esc_attr_e( 'Seek', 'callboard' ); ?>" aria-valuetext="0:00">
 		</div>
@@ -24,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 			<div class="deck-controls">
 				<button type="button" class="ctl skip" id="prev" aria-label="<?php esc_attr_e( 'Previous', 'callboard' ); ?>"><?php echo callboard_icon( 'prev' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
-				<button type="button" class="ctl play" id="toggle" data-state="play" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><i class="cap" aria-hidden="true"><svg class="pp pp-play" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path d="M 12,26 25,18 12,10 z"/></svg><svg class="pp pp-pause" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path d="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z"/></svg><i class="gloss"></i></i></button>
+				<button type="button" class="ctl play" id="toggle" data-state="play" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><i class="cap" aria-hidden="true"><svg class="pp pp-play" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path d="M 12,26 25,18 12,10 z"/></svg><svg class="pp pp-pause" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path d="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z"/></svg></i></button>
 				<button type="button" class="ctl skip" id="next" aria-label="<?php esc_attr_e( 'Next', 'callboard' ); ?>"><?php echo callboard_icon( 'next' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
 			</div>
 		</div>

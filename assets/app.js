@@ -196,7 +196,7 @@ ${
 							s.meta
 						) }</span></span><span class="set-off" data-slug="${ esc(
 							s.slug
-						) }" data-state="" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span><span class="set-go" aria-hidden="true"></span></a></li>`
+						) }" data-state=""><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span><span class="set-go" aria-hidden="true"></span></a></li>`
 				)
 				.join( '' ) }</ul>`
 		: `<p class="note">${ esc( T.nothing ) }</p>`
@@ -214,13 +214,18 @@ ${
 				T.play_all
 		  ) }</button>${
 				S.offline
-					? `<button type="button" class="btn btn-quiet" id="offline" hidden>${ esc(
-							T.save
+					? `<button type="button" class="btn btn-quiet" id="offline">${ esc(
+							`${ T.save } · ${ sizeLabel(
+								s.tracks.reduce(
+									( a, t ) => a + ( t.bytes || 0 ),
+									0
+								)
+							) }`
 					  ) }</button>`
 					: ''
 		  }<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="${ esc(
 				T.share
-		  ) }" hidden>${ ICONS.share }</button></div>`
+		  ) }">${ ICONS.share }</button></div>`
 		: ''
 }
 </header>
@@ -262,7 +267,7 @@ ${
 							S.offline
 								? `<button type="button" class="dl" data-i="${ i }" data-state="" aria-label="${ esc(
 										tpl( T.save_track, t.title )
-								  ) }" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>`
+								  ) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>`
 								: ''
 						}</li>`
 				)
@@ -704,6 +709,7 @@ ${ footer( s ) }
 	// ---- Waveform: where the import measured levels, the seek line becomes the track's shape. Two canvases,
 	// base and played, drawn once per track and resize; progress only moves a clip-path on the played copy.
 	const waveBase = $( 'wave-base' ),
+		waveHover = $( 'wave-hover' ),
 		wavePlayed = $( 'wave-played' );
 	function drawWave() {
 		if ( ! waveBase || ! wavePlayed ) {
@@ -720,13 +726,17 @@ ${ footer( s ) }
 		const dpr = window.devicePixelRatio || 1,
 			css = getComputedStyle( deck ),
 			colors = [
-				css.getPropertyValue( '--line-strong' ).trim(),
+				css.getPropertyValue( '--wave' ).trim(),
+				css.getPropertyValue( '--wave-hover' ).trim(),
 				css.getPropertyValue( '--accent' ).trim(),
 			],
 			bar = 2,
 			gap = 1,
 			n = Math.max( 8, Math.floor( ( w + gap ) / ( bar + gap ) ) );
-		[ waveBase, wavePlayed ].forEach( ( cv, k ) => {
+		[ waveBase, waveHover, wavePlayed ].forEach( ( cv, k ) => {
+			if ( ! cv ) {
+				return;
+			}
 			cv.width = Math.round( w * dpr );
 			cv.height = Math.round( h * dpr );
 			const ctx = cv.getContext( '2d' );
@@ -1586,6 +1596,17 @@ ${ footer( s ) }
 			}, 50 );
 		}
 	};
+	seekWrap?.addEventListener( 'pointermove', ( e ) => {
+		// the hover preview follows the pointer; a CSS variable, so no repaint of the bars
+		const r = seekWrap.getBoundingClientRect();
+		seekWrap.style.setProperty(
+			'--hx',
+			`${ Math.min(
+				100,
+				Math.max( 0, ( ( e.clientX - r.left ) / r.width ) * 100 )
+			).toFixed( 2 ) }%`
+		);
+	} );
 	seekWrap?.addEventListener( 'pointerup', lift, true );
 	seekWrap?.addEventListener( 'pointercancel', lift, true );
 
@@ -2068,7 +2089,6 @@ ${ footer( s ) }
 				? 'partial'
 				: '';
 			el.dataset.state = state;
-			el.hidden = ! state;
 			if ( state ) {
 				el.style.setProperty(
 					'--p',
@@ -2131,11 +2151,13 @@ ${ footer( s ) }
 	// The link alone is enough; the set's share card rides along as its Open Graph image.
 	function bindShare( set ) {
 		const btn = $( 'share' );
-		const can = !! ( navigator.share || navigator.clipboard?.writeText );
-		if ( ! btn || ! set || ! can ) {
+		if ( ! btn || ! set ) {
 			return;
 		}
-		btn.hidden = false;
+		if ( ! ( navigator.share || navigator.clipboard?.writeText ) ) {
+			btn.hidden = true; // nowhere to send a link: the one case the button leaves
+			return;
+		}
 		btn.addEventListener( 'click', () => {
 			haptic();
 			const url = `${ G.home }${ set.slug }/`;
@@ -2181,7 +2203,6 @@ ${ footer( s ) }
 		if ( ! b ) {
 			return;
 		}
-		b.hidden = false;
 		b.dataset.state = state;
 		b.style.setProperty( '--p', progress.toFixed( 3 ) );
 		b.setAttribute(
@@ -2305,11 +2326,11 @@ ${ footer( s ) }
 	}
 	function bindOffline( set ) {
 		const offBtn = $( 'offline' );
-		if (
-			! offBtn ||
-			! ( 'caches' in window ) ||
-			! ( 'serviceWorker' in navigator )
-		) {
+		if ( ! offBtn ) {
+			return;
+		}
+		if ( ! ( 'caches' in window ) || ! ( 'serviceWorker' in navigator ) ) {
+			offBtn.hidden = true; // no store to save into: the one case the button leaves
 			return;
 		}
 		const tracks = set.tracks.map( ( t, idx ) => ( { ...t, _i: idx } ) );
@@ -2330,7 +2351,6 @@ ${ footer( s ) }
 				)
 			);
 			const busy = tracks.some( ( t ) => dlAborts.has( t.url ) );
-			offBtn.hidden = false;
 			offBtn.classList.toggle( 'is-busy', busy );
 			offBtn.classList.toggle(
 				'is-done',

@@ -68,6 +68,21 @@ function callboard_meta( array $tracks ): string {
 }
 
 /**
+ * "463 KB", "3.1 MB", "74 MB": the same thresholds as sizeLabel() in the front-end script.
+ *
+ * @param int $bytes Bytes.
+ */
+function callboard_size( int $bytes ): string {
+	if ( $bytes < 1048576 ) {
+		return max( 1, (int) round( $bytes / 1024 ) ) . ' KB';
+	}
+	if ( $bytes < 10485760 ) {
+		return number_format( $bytes / 1048576, 1, '.', '' ) . ' MB';
+	}
+	return (int) round( $bytes / 1048576 ) . ' MB';
+}
+
+/**
  * Inline SVG icon markup.
  *
  * @param string $name Icon name.

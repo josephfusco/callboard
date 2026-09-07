@@ -41,7 +41,7 @@ else :
 					<span class="set-name" style="view-transition-name:set-<?php echo esc_attr( $callboard_s['slug'] ); ?>"><?php echo esc_html( $callboard_s['name'] ); ?></span>
 					<span class="set-meta"><?php echo esc_html( $callboard_s['meta'] ); ?></span>
 				</span>
-				<span class="set-off" data-slug="<?php echo esc_attr( $callboard_s['slug'] ); ?>" data-state="" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span>
+				<span class="set-off" data-slug="<?php echo esc_attr( $callboard_s['slug'] ); ?>" data-state=""><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span>
 				<span class="set-go" aria-hidden="true"></span>
 			</a>
 		</li>

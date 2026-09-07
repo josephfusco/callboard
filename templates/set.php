@@ -20,9 +20,9 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 		<div class="actions">
 			<button type="button" class="btn" id="play-all"><?php esc_html_e( 'Play all', 'callboard' ); ?></button>
 			<?php if ( Callboard\Settings::get( 'offline' ) ) : ?>
-			<button type="button" class="btn btn-quiet" id="offline" hidden><?php esc_html_e( 'Save offline', 'callboard' ); ?></button>
+			<button type="button" class="btn btn-quiet" id="offline"><?php echo esc_html( __( 'Save offline', 'callboard' ) . ' · ' . callboard_size( (int) array_sum( array_column( $callboard_set['tracks'], 'bytes' ) ) ) ); ?></button>
 			<?php endif; ?>
-			<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="<?php esc_attr_e( 'Share a link to this set', 'callboard' ); ?>" hidden><?php echo callboard_icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
+			<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="<?php esc_attr_e( 'Share a link to this set', 'callboard' ); ?>"><?php echo callboard_icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
 		</div>
 		<?php endif; ?>
 	</header>
@@ -40,7 +40,7 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 				<span class="len"><?php echo $callboard_badge ? '<span class="hh" aria-hidden="true">' . esc_html( $callboard_badge ) . '</span>' : ''; ?><?php echo ! empty( $callboard_t['bpm'] ) ? '<span class="bpm" aria-label="' . esc_attr( sprintf( /* translators: %d: beats per minute. */ __( '%d beats per minute, counts in', 'callboard' ), $callboard_t['bpm'] ) ) . '">♩ ' . (int) $callboard_t['bpm'] . '</span>' : ''; ?><?php echo esc_html( callboard_fmt( $callboard_t['duration'] ) ); ?></span>
 			</button>
 			<?php if ( Callboard\Settings::get( 'offline' ) ) : ?>
-			<button type="button" class="dl" data-i="<?php echo (int) $callboard_i; ?>" data-state="" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: track title. */ __( 'Save %s offline', 'callboard' ), $callboard_t['title'] ) ); ?>" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>
+			<button type="button" class="dl" data-i="<?php echo (int) $callboard_i; ?>" data-state="" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: track title. */ __( 'Save %s offline', 'callboard' ), $callboard_t['title'] ) ); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>
 			<?php endif; ?>
 		</li>
 		<?php endforeach; ?>

@@ -130,9 +130,15 @@ test.describe( 'Controls', () => {
 		await page.keyboard.press( '[' );
 		await setTime( page, 9 );
 		await page.keyboard.press( ']' );
-		await expect( page.locator( '#loop' ) ).toHaveText( /0:04–0:09/ );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'aria-label',
+			/0:04–0:09/
+		);
 		await page.keyboard.press( '\\' );
-		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'data-state',
+			''
+		);
 		await page.evaluate( () => document.getElementById( 'audio' ).pause() ); // no decode leaves paused unsettled
 		await page.keyboard.press( 'Escape' ); // paused, so Escape dismisses the deck
 		await expect( page.locator( '#deck' ) ).toBeHidden();
@@ -147,7 +153,7 @@ test.describe( 'Controls', () => {
 		await setTime( page, 3 );
 		await chip.click();
 		await expect( chip ).toHaveAttribute( 'data-state', 'armed' );
-		await expect( chip ).toHaveText( /From 0:03/ );
+		await expect( chip ).toHaveAttribute( 'aria-label', /From 0:03/ );
 		await setTime( page, 3 ); // the same spot twice clears the arm
 		await chip.click();
 		await expect( chip ).toHaveAttribute( 'data-state', '' );

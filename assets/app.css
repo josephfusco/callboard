@@ -147,18 +147,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* A-B loop: a band on the line, a quiet chip that clears it */
 .loop-band{position:absolute;inset:0;background:var(--ink);opacity:0;transform-origin:0 50%;transform:scaleX(0);transition:opacity var(--t)}
 .loop-band.on{opacity:.4}
-.loop-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);border-radius:999px;height:24px;padding:0 8px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:color var(--t),border-color var(--t)}
-.loop-chip[data-state="armed"]{color:var(--ink-2)}
-.loop-chip[data-state="armed"]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
-.loop-chip[data-state="on"]{color:var(--ink-2);border-color:var(--line-strong)}
-.loop-chip:not([data-state=""]),.rate-chip[data-state="on"],.remote-chip:not([data-state=""]){background:linear-gradient(180deg,var(--surface),var(--surface-2));box-shadow:inset 0 1px 0 var(--gloss),0 1px 1px rgba(0,0,0,.08)} /* a chip with state is a small glass pill */
-.loop-chip[data-state="on"]::after{content:"×";font-size:.9rem;color:var(--ink-3)}
 .track .bpm{font-size:.8125rem;color:var(--ink-3);margin-right:4px}
-.loop-chip:active{background:var(--surface-2)}
-/* speed: the pitch stays put, so a slow pass through a hard passage still sits in the singer's key */
-.rate-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);border-radius:999px;height:24px;padding:0 8px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;transition:color var(--t),border-color var(--t)}
-.rate-chip[data-state="on"]{color:var(--accent-text);border-color:var(--line-strong)}
-.rate-chip:active{background:var(--surface-2)}
 /* notes and the count-in on the title line */
 .deck-title small{font-size:.8125rem;color:var(--ink-3);margin-left:8px}
 .deck-title.is-note>.mq>span{color:var(--accent-text)}
@@ -177,13 +166,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* the time row is a container: when the chips would not fit beside the total, the total goes; the track list still shows it.
    Safari always shows the AirPlay chip (no availability watcher for audio) and an armed or set loop reads wider than "Loop". */
 .deck-text{container-type:inline-size}
-@container (max-width:150px){.deck-time .sep,.deck-time #dur{display:none}}
-@container (max-width:200px){.deck-time .sep{margin:0 -3px}.deck-time .loop-chip,.deck-time .rate-chip{padding:0 6px}} /* the slash pulls in; the row fits a 390px phone with every chip showing */
-@container (max-width:200px){
-  .deck-time:has(.loop-chip:not([data-state=""])) .sep,.deck-time:has(.loop-chip:not([data-state=""])) #dur,.deck-time:has(.rate-chip[data-state="on"]) .sep,.deck-time:has(.rate-chip[data-state="on"]) #dur{display:none} /* any chip carrying state costs the total */
-  .deck-time:has(.loop-chip:not([data-state=""])) .remote-chip{display:none} /* a loop is a moment; the speaker picker waits for it */
-  .deck-time .loop-chip:not([data-state=""]) .loop-word{display:none} /* the band on the line and the accent already say "loop"; the times are what matter */
-}
+@container (max-width:104px){.deck-time .sep,.deck-time #dur{display:none}}
+@container (max-width:200px){.deck-time .sep{margin:0 -3px}} /* the slash pulls in */
 .deck-title{position:relative;font-size:1rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;max-width:100%;display:block}
 .deck-title .mq{display:inline-flex;gap:2.5em}
 .deck-title:not(.marquee) .mq{display:block;overflow:hidden;text-overflow:ellipsis}
@@ -200,12 +184,17 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* AirPlay in Safari, Cast in Chrome: an icon chip that only appears while a device is in reach */
 .remote-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .remote-chip svg{width:16px;height:16px;fill:currentColor}
-.remote-chip:not([data-state=""]){color:var(--accent-text);border-color:var(--line-strong)}
+.remote-chip:not([data-state=""]){color:var(--accent-text);border-color:var(--line-strong);background:linear-gradient(180deg,var(--surface),var(--surface-2));box-shadow:inset 0 1px 0 var(--gloss),0 1px 1px rgba(0,0,0,.08)}
 .remote-chip.is-away{visibility:hidden} /* keeps its slot */
 .remote-chip[data-state="connecting"]{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.4}}
 .remote-chip:active{background:var(--surface-2)}
 .deck-controls{display:flex;align-items:center;gap:2px;position:relative;z-index:2}
+/* loop and speed: transport controls, the same size as the skips, not chips in the time row */
+.ctl.tool{width:44px;height:44px;color:var(--ink-3);font-size:.875rem;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;position:relative;transition:color var(--t)}
+.ctl.tool svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ctl.tool:not([data-state=""]){color:var(--accent-text)}
+.ctl.tool[data-state="armed"]::after{content:"";position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1s ease-in-out infinite} /* the start is marked; the control waits for the end */
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:30px;height:30px;fill:currentColor}
 .deck-controls .ctl.skip{width:56px;height:56px}
@@ -266,7 +255,7 @@ body:not(.has-deck) .update{bottom:calc(var(--safe-b) + 12px)}
 .a2hs-x{appearance:none;border:0;background:transparent;width:36px;height:36px;border-radius:50%;font-size:1.25rem;line-height:1;color:var(--ink-3);cursor:pointer;display:grid;place-items:center}
 .a2hs-x:active{background:var(--surface-2)}
 
-@media (max-width:639px){.deck-controls .ctl.skip{width:44px}.ctl.play{margin:0}.deck-row{gap:6px}.deck-time{gap:6px}} /* phones: the time row needs the width more than the skip targets do; 44px is still a full tap target */
+@media (max-width:639px){.deck-controls .ctl.skip{width:42px}.deck-controls .ctl.tool{width:40px}.ctl.play{margin:0}.deck-row{gap:6px}.deck-time{gap:6px}.remote-chip{width:28px}} /* phones: the time row needs the width more than the skip targets do; 44px is still a full tap target */
 @media (min-width:640px){
   :root{--deck-h:156px}
   .app{padding-top:48px}

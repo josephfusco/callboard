@@ -266,20 +266,35 @@ test.describe( 'Front end', () => {
 			document.getElementById( 'audio' ).currentTime = 6;
 		} );
 		await page.keyboard.press( ']' );
-		await expect( page.locator( '#loop' ) ).toHaveText( /Loop 0:02–0:06/ );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'aria-label',
+			/0:02–0:06/
+		);
 		await expect( page.locator( '#loop-band' ) ).toHaveClass( /on/ );
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'data-state',
+			''
+		);
 		// and from the control alone: start, end, clear
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( /From 0:0\d/ );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'aria-label',
+			/From 0:0\d/
+		);
 		await page.evaluate( () => {
 			document.getElementById( 'audio' ).currentTime = 8;
 		} );
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( /Loop 0:0\d–0:08/ );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'aria-label',
+			/0:0\d–0:08/
+		);
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'data-state',
+			''
+		);
 	} );
 
 	test( 'the speed chip slows playback and keeps the pitch', async ( {

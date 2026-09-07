@@ -1501,9 +1501,6 @@ ${ footer( s ) }
 		loopBand.classList.add( 'on' );
 		loopChip.dataset.state = 'on';
 		requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
-		loopChip.innerHTML = `<span class="loop-word">${ esc(
-			T.loop
-		) }</span> ${ fmt( a ) }–${ fmt( b ) }`;
 		loopChip.setAttribute(
 			'aria-label',
 			`${ T.loop_clear }: ${ fmt( a ) }–${ fmt( b ) }`
@@ -1530,7 +1527,6 @@ ${ footer( s ) }
 		if ( loopBand ) {
 			loopBand.classList.remove( 'on' );
 			loopChip.dataset.state = '';
-			loopChip.textContent = T.loop;
 			loopChip.setAttribute( 'aria-label', T.loop_set );
 			requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
 		}
@@ -1544,10 +1540,10 @@ ${ footer( s ) }
 			haptic();
 			loopFrom = audio.currentTime;
 			loopChip.dataset.state = 'armed';
-			loopChip.innerHTML = `<span class="loop-word">${ esc(
-				T.loop_from
-			) }</span> ${ fmt( loopFrom ) }`;
-			loopChip.setAttribute( 'aria-label', T.loop_end );
+			loopChip.setAttribute(
+				'aria-label',
+				`${ T.loop_from } ${ fmt( loopFrom ) } · ${ T.loop_end }`
+			);
 			return;
 		}
 		const a = Math.min( loopFrom, audio.currentTime ),

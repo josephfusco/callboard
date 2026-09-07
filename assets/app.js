@@ -438,13 +438,11 @@ ${ footer( s ) }
 		glowAnim?.cancel();
 		glowAnim = null;
 		if ( glow ) {
-			[ glow, glowHot, glowHalo ].forEach( ( el ) => {
-				if ( el ) {
-					el.style.opacity = '';
-				}
-			} );
+			coolDown( lastBright );
+			lastBright = 0;
 		}
 	};
+	let lastBright = 0;
 	// ---- Meter: the light strip on the deck and the bars on the playing row. Sources, in order:
 	// a live analyser (not iOS), the track's measured envelope (ten levels a second, from import), or a slow breath.
 	const glow = $( 'deck-glow' );
@@ -460,15 +458,71 @@ ${ footer( s ) }
 		return a + ( b - a ) * ( x - k );
 	};
 	const glowHot = $( 'deck-glow-hot' ),
-		glowHalo = $( 'deck-glow-halo' );
+		glowHalo = $( 'deck-glow-halo' ),
+		glowReflect = $( 'deck-glow-reflect' );
+	// A filament's color follows its heat: near-black red when barely lit, through orange, to a pale yellow-white
+	// at full current. Four stops, interpolated; the accent sits at the middle so the brand color is the working
+	// temperature of the wire.
+	const KELVIN = [
+		[ 0, [ 74, 16, 0 ] ],
+		[ 0.35, [ 190, 58, 12 ] ],
+		[ 0.7, [ 255, 106, 46 ] ],
+		[ 1, [ 255, 226, 178 ] ],
+	];
+	const heatColor = ( b ) => {
+		let k = 1;
+		while ( k < KELVIN.length - 1 && KELVIN[ k ][ 0 ] < b ) {
+			k++;
+		}
+		const [ t0, c0 ] = KELVIN[ k - 1 ],
+			[ t1, c1 ] = KELVIN[ k ],
+			f = Math.min( 1, Math.max( 0, ( b - t0 ) / ( t1 - t0 ) ) );
+		return `rgb(${ c0
+			.map( ( v, n ) => Math.round( v + ( c1[ n ] - v ) * f ) )
+			.join( ' ' ) })`;
+	};
+	let glowColorKey = -1;
 	const paintGlow = ( b ) => {
-		glow.style.opacity = ( 0.2 + 0.6 * b ).toFixed( 3 );
+		const heat = Math.round( b * 40 );
+		if ( heat !== glowColorKey ) {
+			glowColorKey = heat;
+			const c = heatColor( b );
+			glow.style.color = c;
+			if ( glowHalo ) {
+				glowHalo.style.color = c;
+			}
+			if ( glowReflect ) {
+				glowReflect.style.color = c;
+			}
+		}
+		glow.style.opacity = ( 0.25 + 0.75 * b ).toFixed( 3 );
 		if ( glowHot ) {
-			glowHot.style.opacity = ( 0.5 * b * b * b ).toFixed( 3 ); // the hot centre only shows at the peaks
+			glowHot.style.opacity = ( 0.6 * b * b * b ).toFixed( 3 ); // the white heart only shows at the peaks
 		}
 		if ( glowHalo ) {
-			glowHalo.style.opacity = ( 0.35 * b * b ).toFixed( 3 );
+			glowHalo.style.opacity = ( 0.45 * b * b ).toFixed( 3 );
 		}
+		if ( glowReflect ) {
+			glowReflect.style.opacity = ( 0.28 * b * b ).toFixed( 3 );
+		}
+	};
+	// Cut the current and a filament does not go dark; it cools. Pause fades it out over a second and a half.
+	let coolRaf = 0;
+	const coolDown = ( from ) => {
+		cancelAnimationFrame( coolRaf );
+		if ( reduce() ) {
+			paintGlow( 0 );
+			return;
+		}
+		const t0 = performance.now();
+		const step = ( now ) => {
+			const k = Math.min( 1, ( now - t0 ) / 1500 );
+			paintGlow( from * Math.pow( 1 - k, 2.2 ) ); // fast at first, then the long red tail
+			if ( k < 1 ) {
+				coolRaf = requestAnimationFrame( step );
+			}
+		};
+		coolRaf = requestAnimationFrame( step );
 	};
 	let glowAnim = null;
 	const eqStart = ( row ) => {
@@ -520,7 +574,9 @@ ${ footer( s ) }
 			return;
 		}
 		let bright = 0,
+			ember = 0,
 			last = 0;
+		cancelAnimationFrame( coolRaf ); // power is back on
 		const tick = ( now = 0 ) => {
 			const dt = last ? Math.min( 0.1, ( now - last ) / 1000 ) : 0.016;
 			last = now;
@@ -549,12 +605,20 @@ ${ footer( s ) }
 				).toFixed( 2 ) })`;
 			} );
 			if ( glow ) {
-				// a filament: it lights in ~40 ms and cools over ~350 ms, so peaks flare and settle
+				// a filament: it lights in ~40 ms and cools over ~350 ms, so peaks flare and settle; a second,
+				// slower store (~1.4 s) holds the residual heat, so it never goes black between phrases; and a
+				// hot wire moves a little, so at the peaks the light carries a trace of flicker
 				const target =
 					levels[ 0 ] * 0.5 + levels[ 1 ] * 0.3 + levels[ 2 ] * 0.2;
 				const tau = target > bright ? 0.04 : 0.35;
 				bright += ( target - bright ) * ( 1 - Math.exp( -dt / tau ) );
-				paintGlow( bright );
+				ember += ( bright - ember ) * ( 1 - Math.exp( -dt / 1.4 ) );
+				const flicker =
+					bright > 0.6
+						? 1 + ( Math.random() - 0.5 ) * 0.04 * bright
+						: 1;
+				lastBright = Math.max( bright, ember * 0.45 ) * flicker;
+				paintGlow( Math.min( 1, lastBright ) );
 			}
 			eqRaf = requestAnimationFrame( tick );
 		};

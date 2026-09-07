@@ -107,7 +107,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .seek-wrap{position:relative;height:40px;display:flex;align-items:center}
 /* waveform: the track's shape from the levels the import measured (ten a second), two bars per three pixels; the
    accent copy is clipped to the played part. Tracks without levels keep the plain line. */
-.wave{position:absolute;left:0;top:4px;width:100%;height:32px;pointer-events:none;display:none}
+.wave{position:absolute;left:0;top:4px;width:100%;height:32px;pointer-events:none;display:none;z-index:0}
 .deck.has-wave .wave{display:block}
 .wave-played{clip-path:inset(0 100% 0 0);filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 45%,transparent))}
 @media (prefers-reduced-transparency:reduce){.wave-played{filter:none}.deck{background-image:none;box-shadow:none}}
@@ -133,7 +133,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-glow{height:2px;color:var(--accent);background:currentColor;box-shadow:0 0 6px 1px currentColor} /* the wire and its bloom */
 .deck-glow-hot{height:2px;background:linear-gradient(90deg,transparent,#ffd2a8 30%,#fff1dc 50%,#ffd2a8 70%,transparent);box-shadow:0 0 10px 2px rgba(255,232,200,.6)} /* the white heart of the coil */
 .deck-glow-halo{height:14px;color:var(--accent);background:linear-gradient(180deg,currentColor,transparent);filter:blur(6px);transform:translateZ(0)}
-.deck-glow-reflect{top:2px;height:44px;color:var(--accent);background:linear-gradient(180deg,currentColor,transparent 80%);filter:blur(10px);transform:translateZ(0)} /* light on the glass below */
+.deck-glow-reflect{top:2px;height:130px;color:var(--accent);background:linear-gradient(180deg,currentColor,transparent 85%);filter:blur(14px);transform:translateZ(0)} /* light down the whole pane, so the glass controls have colour behind them to lift */
 @media (prefers-reduced-transparency:reduce){.deck-glow-reflect,.deck-glow-halo{display:none}.deck-glow{box-shadow:none}}
 /* marks on the seek line: ticks above it where singing resumes, pins for notes */
 .seek-marks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
@@ -200,7 +200,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .remote-chip[data-state="connecting"]{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.4}}
 .remote-chip:active{background:var(--surface-2)}
-.deck-controls{display:flex;align-items:center;gap:2px}
+.deck-controls{display:flex;align-items:center;gap:2px;margin-top:-14px;position:relative;z-index:2} /* lifted onto the waveform's baseline: the bars pass under the glass as the track plays */
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:30px;height:30px;fill:currentColor}
 .deck-controls .ctl.skip{width:56px;height:56px}

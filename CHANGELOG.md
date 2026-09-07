@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.0](https://github.com/josephfusco/callboard/compare/v1.4.2...v1.5.0) (2026-09-07)
+
+
+### Features
+
+* a deeper deck, with the controls drawn as things you can press ([#21](https://github.com/josephfusco/callboard/issues/21)) ([604dc52](https://github.com/josephfusco/callboard/commit/604dc52a1fab2512d3555dec8fe90d4d30ec91bc))
+* a gapless A/B loop while the page is in front ([#25](https://github.com/josephfusco/callboard/issues/25)) ([d552105](https://github.com/josephfusco/callboard/commit/d552105bc3efa0a517b442f9ca6053d4ed821a12))
+* lyric cues as a text track, one player per site, push subscriptions that survive rotation ([#23](https://github.com/josephfusco/callboard/issues/23)) ([2e29e6c](https://github.com/josephfusco/callboard/commit/2e29e6c03973f8ff49f0149f33de31b1454b77bc))
+* waveform in the deck, and a deck that keeps one height ([#18](https://github.com/josephfusco/callboard/issues/18)) ([1f85655](https://github.com/josephfusco/callboard/commit/1f8565538f367e91f2e663f634d72b278a98e19a))
+
+
+### Bug Fixes
+
+* the deck row never collides with the controls, and saving knows about space ([#17](https://github.com/josephfusco/callboard/issues/17)) ([ccb3e89](https://github.com/josephfusco/callboard/commit/ccb3e89582aa6b0bcbfa6ba2dd9d5b3584b918b9))
+
 ## [1.4.2](https://github.com/josephfusco/callboard/compare/v1.4.1...v1.4.2) (2026-09-07)
 
 

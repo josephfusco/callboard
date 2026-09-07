@@ -22,6 +22,7 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 			<?php if ( Callboard\Settings::get( 'offline' ) ) : ?>
 			<button type="button" class="btn btn-quiet" id="offline" hidden><?php esc_html_e( 'Save offline', 'callboard' ); ?></button>
 			<?php endif; ?>
+			<button type="button" class="btn btn-quiet" id="share" hidden><?php esc_html_e( 'Share', 'callboard' ); ?></button>
 		</div>
 		<?php endif; ?>
 	</header>

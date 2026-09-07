@@ -214,7 +214,9 @@ ${
 							T.save
 					  ) }</button>`
 					: ''
-		  }</div>`
+		  }<button type="button" class="btn btn-quiet" id="share" hidden>${ esc(
+				T.share
+		  ) }</button></div>`
 		: ''
 }
 </header>
@@ -1711,6 +1713,7 @@ ${ footer( s ) }
 			} );
 			setTimeout( () => bindOffline( set ), 700 );
 		}
+		bindShare( set );
 		paintTip();
 		syncRows();
 		document.dispatchEvent(
@@ -1719,6 +1722,42 @@ ${ footer( s ) }
 			} )
 		);
 	}
+	// ---- Share: the system sheet where there is one (iPhone, Android, Windows), the clipboard elsewhere.
+	// The link alone is enough; the set's share card rides along as its Open Graph image.
+	function bindShare( set ) {
+		const btn = $( 'share' );
+		const can = !! ( navigator.share || navigator.clipboard?.writeText );
+		if ( ! btn || ! set || ! can ) {
+			return;
+		}
+		btn.hidden = false;
+		btn.addEventListener( 'click', () => {
+			haptic();
+			const url = `${ G.home }${ set.slug }/`;
+			if ( navigator.share ) {
+				navigator
+					.share( {
+						title: `${ set.name } · ${ G.site }`,
+						text: set.meta,
+						url,
+					} )
+					.catch( () => {} ); // the sheet was dismissed
+				return;
+			}
+			navigator.clipboard
+				.writeText( url )
+				.then( () => {
+					btn.textContent = T.copied;
+					btn.classList.add( 'is-done' );
+					setTimeout( () => {
+						btn.textContent = T.share;
+						btn.classList.remove( 'is-done' );
+					}, 1600 );
+				} )
+				.catch( () => {} );
+		} );
+	}
+
 	// ---- Offline, per track. Each row has its own control; the set button drives them all.
 	const CACHE = 'callboard-audio-v1';
 	const dlAborts = new Map();

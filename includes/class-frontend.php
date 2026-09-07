@@ -50,6 +50,8 @@ final class Frontend {
 			'footer_note'    => Settings::get( 'footer_note' ),
 			'all_sets'       => __( 'All sets', 'callboard' ),
 			'play_all'       => __( 'Play all', 'callboard' ),
+			'share'          => __( 'Share', 'callboard' ),
+			'copied'         => __( 'Link copied', 'callboard' ),
 			'pause'          => __( 'Pause', 'callboard' ),
 			'resume'         => __( 'Play', 'callboard' ),
 			'install'        => __( 'Add this to your Home Screen to keep it on your phone.', 'callboard' ),

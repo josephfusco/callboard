@@ -212,6 +212,51 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#now-title .mq span' ) ).toHaveCount( 2 );
 	} );
 
+	test( 'Share hands the set link to the system sheet', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			window.__shared = [];
+			navigator.share = ( d ) => {
+				window.__shared.push( d );
+				return Promise.resolve();
+			};
+		} );
+		await page.goto( '/demo-set/' );
+		const btn = page.locator( '#share' );
+		await expect( btn ).toBeVisible();
+		await btn.click();
+		const shared = await page.evaluate( () => window.__shared );
+		expect( shared ).toHaveLength( 1 );
+		expect( shared[ 0 ].url ).toMatch( /\/demo-set\/$/ );
+		expect( shared[ 0 ].title ).toContain( 'Demo Set' );
+		expect( shared[ 0 ].text ).toContain( '10 tracks' );
+	} );
+
+	test( 'without a share sheet, Share copies the link', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			Object.defineProperty( navigator, 'share', {
+				value: undefined,
+				configurable: true,
+			} );
+			window.__copied = '';
+			navigator.clipboard.writeText = ( t ) => {
+				window.__copied = t;
+				return Promise.resolve();
+			};
+		} );
+		await page.goto( '/demo-set/' );
+		const btn = page.locator( '#share' );
+		await btn.click();
+		await expect( btn ).toHaveText( 'Link copied' );
+		expect( await page.evaluate( () => window.__copied ) ).toMatch(
+			/\/demo-set\/$/
+		);
+		await expect( btn ).toHaveText( 'Share', { timeout: 3000 } );
+	} );
+
 	test( 'an empty set says so on home and on its page', async ( {
 		page,
 	} ) => {

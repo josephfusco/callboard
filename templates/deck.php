@@ -8,7 +8,7 @@
 defined( 'ABSPATH' ) || exit;
 ?>
 <section class="deck" id="deck" aria-label="<?php esc_attr_e( 'Player', 'callboard' ); ?>" hidden>
-	<i class="deck-glow-halo" id="deck-glow-halo" aria-hidden="true"></i><i class="deck-glow" id="deck-glow" aria-hidden="true"></i><i class="deck-glow-hot" id="deck-glow-hot" aria-hidden="true"></i>
+	<i class="deck-glow-reflect" id="deck-glow-reflect" aria-hidden="true"></i><i class="deck-glow-halo" id="deck-glow-halo" aria-hidden="true"></i><i class="deck-glow" id="deck-glow" aria-hidden="true"></i><i class="deck-glow-hot" id="deck-glow-hot" aria-hidden="true"></i>
 	<div class="deck-inner">
 		<div class="seek-wrap">
 			<canvas class="wave wave-base" id="wave-base" aria-hidden="true"></canvas><canvas class="wave wave-played" id="wave-played" aria-hidden="true"></canvas>

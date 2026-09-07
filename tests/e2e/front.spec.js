@@ -349,12 +349,38 @@ test.describe( 'Front end', () => {
 		expect( Math.abs( withLyrics - without ) ).toBeLessThan( 1 );
 	} );
 
-	test( 'a track with a tempo counts in before it plays', async ( {
+	test( 'a track with a tempo counts in before it plays, once the setting is on', async ( {
 		page,
+		admin,
 	} ) => {
+		const settings = async ( on ) => {
+			await admin.visitAdminPage(
+				'edit.php',
+				'post_type=callboard_set&page=callboard-settings'
+			);
+			if ( on ) {
+				await page.check( '#callboard-count_in' );
+			} else {
+				await page.uncheck( '#callboard-count_in' );
+			}
+			await page.click( '#submit' );
+			await expect(
+				page
+					.locator(
+						'#setting-error-settings_updated, .notice-success'
+					)
+					.first()
+			).toBeVisible();
+		};
 		await page.goto( '/long-set/' );
 		await expect( page.locator( '.track .bpm' ) ).toHaveText( '♩ 120' );
-		await page.locator( '.track' ).nth( 2 ).click(); // The Wish, 120 BPM
+		await page.locator( '.track' ).nth( 2 ).click(); // The Wish, 120 BPM: off by default, it just plays
+		await expect( page.locator( '#deck' ) ).not.toHaveClass( /counting/ );
+		await settings( true );
+		await page.goto( '/long-set/' );
+		await page.evaluate( () => localStorage.clear() ); // forget the position, or the same row just toggles play
+		await page.reload();
+		await page.locator( '.track' ).nth( 2 ).click();
 		await expect( page.locator( '#deck' ) ).toHaveClass( /counting/ );
 		await expect( page.locator( '#now-title' ) ).toHaveText(
 			/^1(\s+[2-4])*$/
@@ -365,6 +391,7 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#now-title' ) ).toContainText(
 			'The Wish'
 		);
+		await settings( false ); // back off for the other tests
 	} );
 
 	test( 'the deck offers AirPlay or Cast only while a device is in reach', async ( {

@@ -130,7 +130,12 @@ self.addEventListener( 'fetch', ( e ) => {
 	}
 	if ( req.mode === 'navigate' ) {
 		if ( url.pathname.startsWith( '/wp-' ) ) {
-			return;
+			// wp-admin and wp-login are not ours, but with navigation preload on the browser has already sent
+			// the request; hand that response over rather than let a second request follow the first, which
+			// on an options.php redirect loses the "Settings saved" notice.
+			return e.respondWith(
+				( async () => ( await e.preloadResponse ) || fetch( req ) )()
+			);
 		}
 		return e.respondWith( page( req, e ) );
 	}

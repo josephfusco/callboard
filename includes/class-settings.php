@@ -32,6 +32,7 @@ final class Settings {
 			'offline'         => true,
 			'push'            => true,
 			'notify_new_sets' => true,
+			'count_in'        => false,
 		);
 	}
 
@@ -71,6 +72,7 @@ final class Settings {
 			'offline'         => ! empty( $input['offline'] ),
 			'push'            => ! empty( $input['push'] ),
 			'notify_new_sets' => ! empty( $input['notify_new_sets'] ),
+			'count_in'        => ! empty( $input['count_in'] ),
 		);
 	}
 
@@ -88,6 +90,7 @@ final class Settings {
 			'hint'     => (bool) $s['show_hint'],
 			'offline'  => (bool) $s['offline'],
 			'push'     => (bool) $s['push'] && Push::available(),
+			'count_in' => (bool) $s['count_in'],
 		);
 	}
 }

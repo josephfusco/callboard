@@ -30,7 +30,10 @@ Everything below is in use today. Web platform links go to the specification, Wo
 - [x] [Web App Manifest](https://www.w3.org/TR/appmanifest/), written to the site root by the plugin
 - [x] [Push API](https://www.w3.org/TR/push-api/) and [Notifications API](https://notifications.spec.whatwg.org/) for notices
 - [x] [Media Session API](https://www.w3.org/TR/mediasession/) for lock-screen artwork and controls
-- [x] [HTML media element](https://html.spec.whatwg.org/multipage/media.html) as the player itself
+- [x] [HTML media element](https://html.spec.whatwg.org/multipage/media.html) as the player itself, with [preservesPitch](https://html.spec.whatwg.org/multipage/media.html#dom-media-preservespitch) behind the speed chip
+- [x] [Remote Playback API](https://www.w3.org/TR/remote-playback/) for AirPlay and Cast from the deck
+- [x] [Web Share](https://www.w3.org/TR/web-share/) to hand a set link to the system sheet, with the [Clipboard API](https://www.w3.org/TR/clipboard-apis/) as the fallback
+- [x] [Vibration API](https://www.w3.org/TR/vibration/) for haptics where it exists
 - [x] [Web Audio API](https://www.w3.org/TR/webaudio/) for the level meter
 - [x] [Audio Session API](https://w3c.github.io/audio-session/) to declare playback so iOS treats it like a music app
 - [x] [Screen Wake Lock API](https://www.w3.org/TR/screen-wake-lock/) while a set plays
@@ -45,7 +48,7 @@ Everything below is in use today. Web platform links go to the specification, Wo
 - [x] [AbortController](https://dom.spec.whatwg.org/#interface-abortcontroller) to cancel in-flight fetches
 - [x] [display-mode media feature](https://www.w3.org/TR/mediaqueries-5/#display-mode) to detect the installed app
 - [x] [beforeinstallprompt](https://wicg.github.io/manifest-incubations/#installation-prompts) where browsers offer it
-- [x] [Apple web app meta tags](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html) and the [WebKit switch control](https://webkit.org/blog/15054/an-html-switch-control/), the only route to haptics on iPhone
+- [x] [Apple web app meta tags](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html) and the [WebKit switch control](https://webkit.org/blog/15054/an-html-switch-control/), the only route to haptics on iPhone (iOS 18 or later)
 
 ### CSS
 

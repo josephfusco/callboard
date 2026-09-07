@@ -216,7 +216,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .ctl.play .well::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 100%,var(--well-swirl),transparent 60%);opacity:0;transition:opacity .3s var(--ease)} /* the liquid stirs during the swap */
 .ctl.play.shake .well::after{animation:well .6s var(--ease)}
 @keyframes well{30%{opacity:1}100%{opacity:0}}
-.pp{position:absolute;inset:0;margin:auto;width:20px;height:20px;fill:#f6f5f2;will-change:transform,opacity;z-index:2;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+.ctl.play .pp{position:absolute;inset:0;margin:auto;width:20px;height:20px;fill:#f6f5f2;color:#f6f5f2;will-change:transform,opacity;z-index:2;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))} /* light on the ink window in both schemes; outranks .ctl svg */
 .ctl.play .pp{opacity:0;transform:translateY(11px) scale(.35);transition:opacity .2s var(--ease),transform .2s var(--ease)} /* sunk, quickly */
 .ctl.play[data-state="play"] .pp-play,.ctl.play[data-state="pause"] .pp-pause{opacity:1;transform:none;transition:opacity .32s var(--ease) .16s,transform .5s var(--ease-spring) .16s} /* risen, a beat later */
 .ctl.play.shake{animation:shake .6s var(--ease-spring)}

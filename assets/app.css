@@ -87,7 +87,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .track.active .eq{display:flex}
 .track.active .digits{visibility:hidden}
 .track.active:not(.playing) .eq i{background:var(--ink-3)}
-.track .title{font-size:1.0625rem;font-weight:500;letter-spacing:-.01em;line-height:1.3;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.track .title{font-size:1.0625rem;font-weight:500;letter-spacing:-.01em;line-height:1.3;display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-wrap:pretty}
 .track .has-lyrics{font-size:.75rem;font-weight:500;color:var(--ink-3);border:1px solid var(--line-strong);border-radius:4px;padding:0 5px;line-height:1.5}
 .track .len{color:var(--ink-3);font-size:.875rem;display:inline-flex;align-items:center;gap:8px}
 .track .hh{font-size:1.05rem;line-height:1;opacity:0;transition:opacity var(--t-fast)}
@@ -234,7 +234,7 @@ body.sheet-open #main{transform:scale(.96) translateY(6px);opacity:.6}
 body.sheet-open #main,body.sheet-closing #main{will-change:transform,opacity} /* the page settles back while the sheet is up */
 .lyrics-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 20px 8px;border-bottom:1px solid var(--line);max-width:640px;margin:0 auto;width:100%}
 .lyrics-lines{list-style:none;margin:0 auto;padding:24px 20px 40vh;width:100%;max-width:640px;overflow-y:auto;flex:1;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
-.lyrics-lines li{font-size:1.5rem;line-height:1.3;font-weight:600;letter-spacing:-.015em;color:var(--ink-3);padding:8px 0;cursor:pointer;transition:color var(--t)}
+.lyrics-lines li{font-size:1.5rem;line-height:1.3;font-weight:600;letter-spacing:-.015em;color:var(--ink-3);padding:8px 0;cursor:pointer;transition:color var(--t);text-wrap:pretty}
 .lyrics-lines li.past{color:var(--ink-2);opacity:.55}
 .lyrics-lines li.now{color:var(--ink)}
 .lyrics-lines li:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
@@ -316,6 +316,13 @@ html[data-nav="back"]::view-transition-old(root){animation-name:pop-out}
 /* entry transition for things that appear later */
 .a2hs{transition:opacity var(--t-slow),transform var(--t-slow) var(--ease)}
 @starting-style{.a2hs{opacity:0;transform:translateY(6px)}}
+/* anchor positioning (Chrome 125+, Safari 26): the toasts sit on the deck's top edge wherever it is, no shared
+   height token to keep in step; when the deck is hidden the anchor fails and the fallback puts them on the safe area */
+@supports (anchor-name:--a){
+  .deck{anchor-name:--deck}
+  .update,.a2hs{position-anchor:--deck;bottom:anchor(top,var(--safe-b));margin-bottom:12px}
+  body:not(.has-deck) .update,body:not(.has-deck) .a2hs{bottom:var(--safe-b)}
+}
 /* respect reduced transparency: solid surfaces */
 @media (prefers-reduced-transparency:reduce){.deck,.topbar{background:var(--deck);-webkit-backdrop-filter:none;backdrop-filter:none}}
 

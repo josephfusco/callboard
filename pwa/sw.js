@@ -2,6 +2,7 @@
 const VERSION = '__VERSION__';
 const APP = '__APP_VERSION__'; // the plugin version the pages compare against
 const PLUGIN = '__PLUGIN_PATH__';
+const PUSH_API = '__PUSH_API__';
 const ASSETS = __ASSETS__; // eslint-disable-line no-undef -- written by PHP: shell files, versioned the way the page requests them
 const SHELL = `callboard-shell-${ VERSION }`;
 const AUDIO = 'callboard-audio-v1';
@@ -60,6 +61,37 @@ self.addEventListener( 'push', ( e ) => {
 						.catch( () => {} )
 				: Promise.resolve(),
 		] )
+	);
+} );
+/* Browsers rotate push subscriptions. Re-subscribe with the same server key and tell the site, so notices keep arriving without anyone tapping the button again. */
+self.addEventListener( 'pushsubscriptionchange', ( e ) => {
+	e.waitUntil(
+		( async () => {
+			const old = e.oldSubscription;
+			const key =
+				( old && old.options && old.options.applicationServerKey ) ||
+				null;
+			let sub = e.newSubscription || null;
+			if ( ! sub && key ) {
+				sub = await self.registration.pushManager.subscribe( {
+					userVisibleOnly: true,
+					applicationServerKey: key,
+				} );
+			}
+			if ( ! sub || ! PUSH_API ) {
+				return;
+			}
+			const post = ( path, body ) =>
+				fetch( PUSH_API + path, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify( body ),
+				} ).catch( () => {} );
+			await post( 'subscribe', sub.toJSON() );
+			if ( old && old.endpoint !== sub.endpoint ) {
+				await post( 'unsubscribe', { endpoint: old.endpoint } );
+			}
+		} )()
 	);
 } );
 self.addEventListener( 'notificationclick', ( e ) => {

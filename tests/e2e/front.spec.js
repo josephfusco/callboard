@@ -218,6 +218,41 @@ test.describe( 'Front end', () => {
 		).toContainText( 'Curtain up' );
 	} );
 
+	test( 'lyric cues ride on the media element as a metadata text track', async ( {
+		page,
+	} ) => {
+		await page.goto( '/long-set/' );
+		await page.locator( '.track' ).first().click(); // Overture: three cues
+		const track = await page.evaluate( () => {
+			const t = document.getElementById( 'audio' ).textTracks[ 0 ];
+			return t
+				? {
+						kind: t.kind,
+						mode: t.mode,
+						cues: Array.from( t.cues ).map( ( c ) => [
+							c.startTime,
+							c.endTime,
+							c.text,
+						] ),
+				  }
+				: null;
+		} );
+		expect( track.kind ).toBe( 'metadata' );
+		expect( track.mode ).toBe( 'hidden' );
+		expect( track.cues ).toHaveLength( 3 );
+		expect( track.cues[ 0 ][ 2 ] ).toBe( 'Curtain up, the lights come on' );
+		expect( track.cues[ 0 ][ 1 ] ).toBe( track.cues[ 1 ][ 0 ] ); // each cue runs until the next begins
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click(); // a set without lyrics empties the track
+		expect(
+			await page.evaluate(
+				() =>
+					document.getElementById( 'audio' ).textTracks[ 0 ].cues
+						.length
+			)
+		).toBe( 0 );
+	} );
+
 	test( 'an A-B loop from the keyboard shows a chip and clears', async ( {
 		page,
 	} ) => {

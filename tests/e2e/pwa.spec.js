@@ -32,6 +32,12 @@ test.describe( 'PWA and previews', () => {
 		expect( body ).toContain( 'navigationPreload' );
 		expect( body ).toMatch( /const ASSETS = \[.*\/manifest\.json.*\]/ ); // shell precache, versioned
 		expect( body ).toContain( 'd.notification' ); // declarative Web Push payloads
+		expect( body ).toMatch(
+			/addEventListener\(\s*'pushsubscriptionchange'/
+		);
+		expect( body ).toMatch(
+			/const PUSH_API = '[^']*callboard\/v1\/push\/'/
+		); // the worker knows where to re-register
 	} );
 
 	test( 'head carries app meta and Open Graph tags per view', async ( {

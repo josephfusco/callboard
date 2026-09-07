@@ -2,19 +2,19 @@
 	"name": "One Track",
 	"slug": "one-track",
 	"order": 0,
-	"playlist_url": "",
-	"curator": "",
-	"curator_url": "",
+	"playlist_url": "https://great78.archive.org/",
+	"curator": "Great 78 Project",
+	"curator_url": "https://archive.org/details/georgeblood",
 	"tracks": [
 		{
 			"index": 1,
 			"id": "solo01",
-			"title": "1. Vibrato over tremolo, long form (Demo OBC)",
-			"file": "01 - Vibrato over tremolo, long form [solo01].mp3",
+			"title": "1. I'm Just Wild About Harry / Look for the Silver Lining (Act One Finale Medley)",
+			"file": "01 - I'm Just Wild About Harry - Look for the Silver Lining [solo01].mp3",
 			"duration": 24,
-			"url": "https://www.youtube.com/watch?v=solo01",
-			"uploader": "Demo Uploader",
-			"uploader_url": "https://www.youtube.com/@uploader"
+			"url": "https://archive.org/details/78_tea-for-two-no-no-nanette_frederick-bishop-vincent-youmans_gbia3037992b",
+			"uploader": "Frederick Bishop",
+			"uploader_url": "https://archive.org/details/78_tea-for-two-no-no-nanette_frederick-bishop-vincent-youmans_gbia3037992b"
 		}
 	]
 }

@@ -155,9 +155,9 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await expect(
 			page.locator( '.track' ).first().locator( '.title' )
-		).toHaveText( 'Sawtooth, steady' ); // "1. … (Demo OBC)" cleaned on import
+		).toHaveText( 'Tea for Two' ); // the first of ten public-domain Broadway 78s
 		await expect( page.locator( 'footer.colophon' ) ).toContainText(
-			'Audio by Demo Uploader'
+			'Audio by Frederick Bishop'
 		);
 		await expect(
 			page.locator( 'footer.colophon a' ).first()
@@ -171,7 +171,7 @@ test.describe( 'Front end', () => {
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).nth( 1 ).click();
 		const audio = page.locator( '#audio' );
-		await expect( audio ).toHaveAttribute( 'src', /Tremolo/ );
+		await expect( audio ).toHaveAttribute( 'src', /Fascinating/ );
 		await expect( page.locator( '.track' ).nth( 1 ) ).toHaveClass(
 			/active/
 		);
@@ -180,7 +180,7 @@ test.describe( 'Front end', () => {
 			'true'
 		);
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tremolo, 4 Hz'
+			'Fascinating Rhythm'
 		);
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 	} );
@@ -503,12 +503,12 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( 'a.set' ).first() ).toBeVisible();
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Sawtooth, steady'
+			'Tea for Two'
 		);
 		await page.goBack();
 		await expect( page.locator( 'h1' ) ).toHaveText( 'Demo Set' );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Sawtooth, steady'
+			'Tea for Two'
 		); // no reload
 	} );
 

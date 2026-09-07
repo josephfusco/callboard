@@ -128,7 +128,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* A-B loop: a band on the line, a quiet chip that clears it */
 .loop-band{position:absolute;inset:0;background:var(--ink);opacity:0;transform-origin:0 50%;transform:scaleX(0);transition:opacity var(--t)}
 .loop-band.on{opacity:.4}
-.loop-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:999px;height:24px;padding:0 8px;margin-left:-4px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:color var(--t),border-color var(--t)}
+.loop-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:999px;height:24px;padding:0 7px;margin-left:-4px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:color var(--t),border-color var(--t)}
 .loop-chip[data-state="armed"]{color:var(--ink-2)}
 .loop-chip[data-state="armed"]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .loop-chip[data-state="on"]{color:var(--ink-2);border-color:var(--line-strong)}
@@ -136,7 +136,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .track .bpm{font-size:.8125rem;color:var(--ink-3);margin-right:4px}
 .loop-chip:active{background:var(--surface-2)}
 /* speed: the pitch stays put, so a slow pass through a hard passage still sits in the singer's key */
-.rate-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:999px;height:24px;padding:0 8px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;transition:color var(--t),border-color var(--t)}
+.rate-chip{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:999px;height:24px;padding:0 7px;font-size:.75rem;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;transition:color var(--t),border-color var(--t)}
 .rate-chip[data-state="on"]{color:var(--accent-text);border-color:var(--line-strong)}
 .rate-chip:active{background:var(--surface-2)}
 /* notes and the count-in on the title line */
@@ -152,7 +152,10 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-open:active .deck-title{opacity:.6}
 .deck-open[data-sheet]::after{content:attr(data-sheet);color:var(--ink-3);font-size:.8125rem}
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
-.deck-time{display:inline-flex;align-items:center;gap:10px}
+.deck-time{display:inline-flex;align-items:center;gap:8px}
+/* the time row is a container: on a narrow phone the chips outrank the total, which the track list shows anyway */
+.deck-text{container-type:inline-size}
+@container (max-width:189px){.deck-time .sep,.deck-time #dur{display:none}}
 .deck-title{font-size:1rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;max-width:100%;display:block}
 .deck-title .mq{display:inline-flex;gap:2.5em}
 .deck-title:not(.marquee) .mq{display:block;overflow:hidden;text-overflow:ellipsis}
@@ -223,6 +226,7 @@ body:not(.has-deck) .update{bottom:calc(var(--safe-b) + 12px)}
 .a2hs-x{appearance:none;border:0;background:transparent;width:36px;height:36px;border-radius:50%;font-size:1.25rem;line-height:1;color:var(--ink-3);cursor:pointer;display:grid;place-items:center}
 .a2hs-x:active{background:var(--surface-2)}
 
+@media (max-width:639px){.deck-controls .ctl.skip{width:50px}} /* phones: the time row needs the width more than the skip targets do */
 @media (min-width:640px){
   :root{--deck-h:112px}
   .app{padding-top:48px}

@@ -196,7 +196,7 @@ ${
 							s.meta
 						) }</span></span><span class="set-off" data-slug="${ esc(
 							s.slug
-						) }" data-state="" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span><span class="set-go" aria-hidden="true"></span></a></li>`
+						) }" data-state=""><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span><span class="set-go" aria-hidden="true"></span></a></li>`
 				)
 				.join( '' ) }</ul>`
 		: `<p class="note">${ esc( T.nothing ) }</p>`
@@ -214,13 +214,18 @@ ${
 				T.play_all
 		  ) }</button>${
 				S.offline
-					? `<button type="button" class="btn btn-quiet" id="offline" hidden>${ esc(
-							T.save
+					? `<button type="button" class="btn btn-quiet" id="offline">${ esc(
+							`${ T.save } · ${ sizeLabel(
+								s.tracks.reduce(
+									( a, t ) => a + ( t.bytes || 0 ),
+									0
+								)
+							) }`
 					  ) }</button>`
 					: ''
 		  }<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="${ esc(
 				T.share
-		  ) }" hidden>${ ICONS.share }</button></div>`
+		  ) }">${ ICONS.share }</button></div>`
 		: ''
 }
 </header>
@@ -262,7 +267,7 @@ ${
 							S.offline
 								? `<button type="button" class="dl" data-i="${ i }" data-state="" aria-label="${ esc(
 										tpl( T.save_track, t.title )
-								  ) }" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>`
+								  ) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>`
 								: ''
 						}</li>`
 				)
@@ -458,8 +463,7 @@ ${ footer( s ) }
 		return a + ( b - a ) * ( x - k );
 	};
 	const glowHot = $( 'deck-glow-hot' ),
-		glowHalo = $( 'deck-glow-halo' ),
-		glowReflect = $( 'deck-glow-reflect' );
+		glowHalo = $( 'deck-glow-halo' );
 	// A filament's color follows its heat: near-black red when barely lit, through orange, to a pale yellow-white
 	// at full current. Four stops, interpolated; the accent sits at the middle so the brand color is the working
 	// temperature of the wire.
@@ -481,19 +485,11 @@ ${ footer( s ) }
 			.map( ( v, n ) => Math.round( v + ( c1[ n ] - v ) * f ) )
 			.join( ' ' ) })`;
 	};
-	let glowColorKey = -1;
 	const paintGlow = ( b ) => {
-		const heat = Math.round( b * 40 );
-		if ( heat !== glowColorKey ) {
-			glowColorKey = heat;
-			const c = heatColor( b );
-			glow.style.color = c;
-			if ( glowHalo ) {
-				glowHalo.style.color = c;
-			}
-			if ( glowReflect ) {
-				glowReflect.style.color = c;
-			}
+		const c = heatColor( b ); // continuous: no steps in the colour, so nothing to read as a flicker
+		glow.style.color = c;
+		if ( glowHalo ) {
+			glowHalo.style.color = c;
 		}
 		glow.style.opacity = ( 0.25 + 0.75 * b ).toFixed( 3 );
 		if ( glowHot ) {
@@ -501,9 +497,6 @@ ${ footer( s ) }
 		}
 		if ( glowHalo ) {
 			glowHalo.style.opacity = ( 0.45 * b * b ).toFixed( 3 );
-		}
-		if ( glowReflect ) {
-			glowReflect.style.opacity = ( 0.42 * b * b ).toFixed( 3 );
 		}
 	};
 	// Cut the current and a filament does not go dark; it cools. Pause fades it out over a second and a half.
@@ -605,19 +598,15 @@ ${ footer( s ) }
 				).toFixed( 2 ) })`;
 			} );
 			if ( glow ) {
-				// a filament: it lights in ~40 ms and cools over ~350 ms, so peaks flare and settle; a second,
-				// slower store (~1.4 s) holds the residual heat, so it never goes black between phrases; and a
-				// hot wire moves a little, so at the peaks the light carries a trace of flicker
+				// a filament: it lights in ~90 ms and cools over ~400 ms, so peaks swell and settle rather than
+				// twitch; a second, slower store (~1.4 s) holds the residual heat, so it never goes black
+				// between phrases
 				const target =
 					levels[ 0 ] * 0.5 + levels[ 1 ] * 0.3 + levels[ 2 ] * 0.2;
-				const tau = target > bright ? 0.04 : 0.35;
+				const tau = target > bright ? 0.09 : 0.4;
 				bright += ( target - bright ) * ( 1 - Math.exp( -dt / tau ) );
 				ember += ( bright - ember ) * ( 1 - Math.exp( -dt / 1.4 ) );
-				const flicker =
-					bright > 0.6
-						? 1 + ( Math.random() - 0.5 ) * 0.04 * bright
-						: 1;
-				lastBright = Math.max( bright, ember * 0.45 ) * flicker;
+				lastBright = Math.max( bright, ember * 0.45 );
 				paintGlow( Math.min( 1, lastBright ) );
 			}
 			eqRaf = requestAnimationFrame( tick );
@@ -720,6 +709,7 @@ ${ footer( s ) }
 	// ---- Waveform: where the import measured levels, the seek line becomes the track's shape. Two canvases,
 	// base and played, drawn once per track and resize; progress only moves a clip-path on the played copy.
 	const waveBase = $( 'wave-base' ),
+		waveHover = $( 'wave-hover' ),
 		wavePlayed = $( 'wave-played' );
 	function drawWave() {
 		if ( ! waveBase || ! wavePlayed ) {
@@ -736,13 +726,17 @@ ${ footer( s ) }
 		const dpr = window.devicePixelRatio || 1,
 			css = getComputedStyle( deck ),
 			colors = [
-				css.getPropertyValue( '--line-strong' ).trim(),
+				css.getPropertyValue( '--wave' ).trim(),
+				css.getPropertyValue( '--wave-hover' ).trim(),
 				css.getPropertyValue( '--accent' ).trim(),
 			],
 			bar = 2,
 			gap = 1,
 			n = Math.max( 8, Math.floor( ( w + gap ) / ( bar + gap ) ) );
-		[ waveBase, wavePlayed ].forEach( ( cv, k ) => {
+		[ waveBase, waveHover, wavePlayed ].forEach( ( cv, k ) => {
+			if ( ! cv ) {
+				return;
+			}
 			cv.width = Math.round( w * dpr );
 			cv.height = Math.round( h * dpr );
 			const ctx = cv.getContext( '2d' );
@@ -1507,9 +1501,6 @@ ${ footer( s ) }
 		loopBand.classList.add( 'on' );
 		loopChip.dataset.state = 'on';
 		requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
-		loopChip.innerHTML = `<span class="loop-word">${ esc(
-			T.loop
-		) }</span> ${ fmt( a ) }–${ fmt( b ) }`;
 		loopChip.setAttribute(
 			'aria-label',
 			`${ T.loop_clear }: ${ fmt( a ) }–${ fmt( b ) }`
@@ -1536,7 +1527,6 @@ ${ footer( s ) }
 		if ( loopBand ) {
 			loopBand.classList.remove( 'on' );
 			loopChip.dataset.state = '';
-			loopChip.textContent = T.loop;
 			loopChip.setAttribute( 'aria-label', T.loop_set );
 			requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
 		}
@@ -1550,10 +1540,10 @@ ${ footer( s ) }
 			haptic();
 			loopFrom = audio.currentTime;
 			loopChip.dataset.state = 'armed';
-			loopChip.innerHTML = `<span class="loop-word">${ esc(
-				T.loop_from
-			) }</span> ${ fmt( loopFrom ) }`;
-			loopChip.setAttribute( 'aria-label', T.loop_end );
+			loopChip.setAttribute(
+				'aria-label',
+				`${ T.loop_from } ${ fmt( loopFrom ) } · ${ T.loop_end }`
+			);
 			return;
 		}
 		const a = Math.min( loopFrom, audio.currentTime ),
@@ -1602,6 +1592,17 @@ ${ footer( s ) }
 			}, 50 );
 		}
 	};
+	seekWrap?.addEventListener( 'pointermove', ( e ) => {
+		// the hover preview follows the pointer; a CSS variable, so no repaint of the bars
+		const r = seekWrap.getBoundingClientRect();
+		seekWrap.style.setProperty(
+			'--hx',
+			`${ Math.min(
+				100,
+				Math.max( 0, ( ( e.clientX - r.left ) / r.width ) * 100 )
+			).toFixed( 2 ) }%`
+		);
+	} );
 	seekWrap?.addEventListener( 'pointerup', lift, true );
 	seekWrap?.addEventListener( 'pointercancel', lift, true );
 
@@ -2084,7 +2085,6 @@ ${ footer( s ) }
 				? 'partial'
 				: '';
 			el.dataset.state = state;
-			el.hidden = ! state;
 			if ( state ) {
 				el.style.setProperty(
 					'--p',
@@ -2147,11 +2147,13 @@ ${ footer( s ) }
 	// The link alone is enough; the set's share card rides along as its Open Graph image.
 	function bindShare( set ) {
 		const btn = $( 'share' );
-		const can = !! ( navigator.share || navigator.clipboard?.writeText );
-		if ( ! btn || ! set || ! can ) {
+		if ( ! btn || ! set ) {
 			return;
 		}
-		btn.hidden = false;
+		if ( ! ( navigator.share || navigator.clipboard?.writeText ) ) {
+			btn.hidden = true; // nowhere to send a link: the one case the button leaves
+			return;
+		}
 		btn.addEventListener( 'click', () => {
 			haptic();
 			const url = `${ G.home }${ set.slug }/`;
@@ -2197,7 +2199,6 @@ ${ footer( s ) }
 		if ( ! b ) {
 			return;
 		}
-		b.hidden = false;
 		b.dataset.state = state;
 		b.style.setProperty( '--p', progress.toFixed( 3 ) );
 		b.setAttribute(
@@ -2321,11 +2322,11 @@ ${ footer( s ) }
 	}
 	function bindOffline( set ) {
 		const offBtn = $( 'offline' );
-		if (
-			! offBtn ||
-			! ( 'caches' in window ) ||
-			! ( 'serviceWorker' in navigator )
-		) {
+		if ( ! offBtn ) {
+			return;
+		}
+		if ( ! ( 'caches' in window ) || ! ( 'serviceWorker' in navigator ) ) {
+			offBtn.hidden = true; // no store to save into: the one case the button leaves
 			return;
 		}
 		const tracks = set.tracks.map( ( t, idx ) => ( { ...t, _i: idx } ) );
@@ -2346,7 +2347,6 @@ ${ footer( s ) }
 				)
 			);
 			const busy = tracks.some( ( t ) => dlAborts.has( t.url ) );
-			offBtn.hidden = false;
 			offBtn.classList.toggle( 'is-busy', busy );
 			offBtn.classList.toggle(
 				'is-done',

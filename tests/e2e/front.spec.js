@@ -155,9 +155,9 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await expect(
 			page.locator( '.track' ).first().locator( '.title' )
-		).toHaveText( 'Tea for Two' ); // the first of ten public-domain Broadway 78s
+		).toHaveText( 'Ode to Joy' ); // the first of ten public-domain melodies, rendered as chiptunes
 		await expect( page.locator( 'footer.colophon' ) ).toContainText(
-			'Audio by Frederick Bishop'
+			'Audio by Callboard 8-bit'
 		);
 		await expect(
 			page.locator( 'footer.colophon a' ).first()
@@ -171,7 +171,7 @@ test.describe( 'Front end', () => {
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).nth( 1 ).click();
 		const audio = page.locator( '#audio' );
-		await expect( audio ).toHaveAttribute( 'src', /Fascinating/ );
+		await expect( audio ).toHaveAttribute( 'src', /Korobeiniki/ );
 		await expect( page.locator( '.track' ).nth( 1 ) ).toHaveClass(
 			/active/
 		);
@@ -180,7 +180,7 @@ test.describe( 'Front end', () => {
 			'true'
 		);
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Fascinating Rhythm'
+			'Korobeiniki'
 		);
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 	} );
@@ -266,20 +266,35 @@ test.describe( 'Front end', () => {
 			document.getElementById( 'audio' ).currentTime = 6;
 		} );
 		await page.keyboard.press( ']' );
-		await expect( page.locator( '#loop' ) ).toHaveText( /Loop 0:02–0:06/ );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'aria-label',
+			/0:02–0:06/
+		);
 		await expect( page.locator( '#loop-band' ) ).toHaveClass( /on/ );
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'data-state',
+			''
+		);
 		// and from the control alone: start, end, clear
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( /From 0:0\d/ );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'aria-label',
+			/From 0:0\d/
+		);
 		await page.evaluate( () => {
 			document.getElementById( 'audio' ).currentTime = 8;
 		} );
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( /Loop 0:0\d–0:08/ );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'aria-label',
+			/0:0\d–0:08/
+		);
 		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'data-state',
+			''
+		);
 	} );
 
 	test( 'the speed chip slows playback and keeps the pitch', async ( {
@@ -565,12 +580,12 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( 'a.set' ).first() ).toBeVisible();
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tea for Two'
+			'Ode to Joy'
 		);
 		await page.goBack();
 		await expect( page.locator( 'h1' ) ).toHaveText( 'Demo Set' );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tea for Two'
+			'Ode to Joy'
 		); // no reload
 	} );
 

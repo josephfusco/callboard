@@ -62,7 +62,7 @@ test.describe( 'Admin', () => {
 			.locator( '#callboard-tracks li' )
 			.first()
 			.locator( 'input[type=text]' )
-			.fill( 'Tea for Two' );
+			.fill( 'Ode to Joy' );
 		await page.click( '#publish' );
 		void requestUtils;
 	} );

@@ -56,22 +56,22 @@ test.describe( 'Controls', () => {
 		await page.locator( '.track' ).first().click();
 		await page.locator( '#next' ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Fascinating Rhythm'
+			'Korobeiniki'
 		);
 		await expect( page.locator( '.track' ).nth( 1 ) ).toHaveClass(
 			/active/
 		);
 		await page.locator( '#prev' ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tea for Two'
+			'Ode to Joy'
 		);
 		await page.locator( '#prev' ).click(); // from the first track, previous wraps to the last
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Somebody Loves Me'
+			'Toccata in D minor'
 		);
 		await page.locator( '#next' ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tea for Two'
+			'Ode to Joy'
 		);
 	} );
 
@@ -82,7 +82,7 @@ test.describe( 'Controls', () => {
 		await setTime( page, 5 );
 		await page.locator( '#prev' ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Oh, Lady Be Good!'
+			'Für Elise'
 		); // stayed on the track rather than going back one
 		expect( await time( page ) ).toBeLessThan( 5 );
 	} );
@@ -120,19 +120,25 @@ test.describe( 'Controls', () => {
 		expect( await time( page ) ).toBeCloseTo( 10, 0 );
 		await page.keyboard.press( 'Shift+ArrowRight' );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Fascinating Rhythm'
+			'Korobeiniki'
 		);
 		await page.keyboard.press( 'Shift+ArrowLeft' );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Tea for Two'
+			'Ode to Joy'
 		);
 		await setTime( page, 4 );
 		await page.keyboard.press( '[' );
 		await setTime( page, 9 );
 		await page.keyboard.press( ']' );
-		await expect( page.locator( '#loop' ) ).toHaveText( /0:04–0:09/ );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'aria-label',
+			/0:04–0:09/
+		);
 		await page.keyboard.press( '\\' );
-		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
+		await expect( page.locator( '#loop' ) ).toHaveAttribute(
+			'data-state',
+			''
+		);
 		await page.evaluate( () => document.getElementById( 'audio' ).pause() ); // no decode leaves paused unsettled
 		await page.keyboard.press( 'Escape' ); // paused, so Escape dismisses the deck
 		await expect( page.locator( '#deck' ) ).toBeHidden();
@@ -147,7 +153,7 @@ test.describe( 'Controls', () => {
 		await setTime( page, 3 );
 		await chip.click();
 		await expect( chip ).toHaveAttribute( 'data-state', 'armed' );
-		await expect( chip ).toHaveText( /From 0:03/ );
+		await expect( chip ).toHaveAttribute( 'aria-label', /From 0:03/ );
 		await setTime( page, 3 ); // the same spot twice clears the arm
 		await chip.click();
 		await expect( chip ).toHaveAttribute( 'data-state', '' );
@@ -224,7 +230,7 @@ test.describe( 'Controls', () => {
 		expect( await transport( page ) ).toBe( before + 2 );
 		await page.locator( '.track' ).nth( 4 ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			"I'm Just Wild About Harry"
+			'In the Hall of the Mountain King'
 		);
 	} );
 
@@ -249,7 +255,7 @@ test.describe( 'Controls', () => {
 		} );
 		expect( pausedByUs ).toBe( 0 );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Fascinating Rhythm'
+			'Korobeiniki'
 		);
 	} );
 

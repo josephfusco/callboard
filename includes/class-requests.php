@@ -1,6 +1,6 @@
 <?php
 /**
- * Fetch requests: "make a set from this YouTube URL". A runner with yt-dlp drains the queue over REST.
+ * Fetch requests: "make a set from this YouTube URL". `wp callboard run` drains the queue wherever yt-dlp exists.
  *
  * @package Callboard
  */

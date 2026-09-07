@@ -4,7 +4,7 @@
 /site export-ignore
 /.wp-env.json export-ignore
 /.editorconfig export-ignore
-/.eslintrc.js export-ignore
+/eslint.config.js export-ignore
 /.distignore export-ignore
 /.release-please-manifest.json export-ignore
 /release-please-config.json export-ignore
@@ -19,3 +19,4 @@
 *.mp3 binary
 *.png binary
 *.ttf binary
+/.prettierignore export-ignore

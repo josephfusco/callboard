@@ -1,0 +1,2 @@
+# Fixtures are data, not source; the formatter leaves them as imported.
+tests/fixtures/**/*.json

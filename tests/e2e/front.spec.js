@@ -184,6 +184,44 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#loop' ) ).toHaveText( 'Loop' );
 	} );
 
+	test( 'the speed chip slows playback and keeps the pitch', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		const chip = page.locator( '#rate' );
+		await expect( chip ).toHaveText( '1×' );
+		await chip.click();
+		await expect( chip ).toHaveText( '0.85×' );
+		await expect( chip ).toHaveAttribute( 'data-state', 'on' );
+		const state = await page.evaluate( () => {
+			const a = document.getElementById( 'audio' );
+			return {
+				rate: a.playbackRate,
+				def: a.defaultPlaybackRate,
+				pitch: a.preservesPitch,
+			};
+		} );
+		expect( state.rate ).toBeCloseTo( 0.85 );
+		expect( state.def ).toBeCloseTo( 0.85 );
+		expect( state.pitch ).toBe( true );
+		await page.locator( '.track' ).nth( 1 ).click(); // a new track keeps the speed
+		expect(
+			await page.evaluate(
+				() => document.getElementById( 'audio' ).playbackRate
+			)
+		).toBeCloseTo( 0.85 );
+		await page.reload(); // and so does the next visit
+		await expect( chip ).toHaveText( '0.85×' );
+		await page.keyboard.press( '.' ); // faster
+		await expect( chip ).toHaveText( '1×' );
+		await expect( chip ).toHaveAttribute( 'data-state', '' );
+		for ( let k = 0; k < 5; k++ ) {
+			await chip.click(); // round the presets and back to full speed
+		}
+		await expect( chip ).toHaveText( '1×' );
+	} );
+
 	test( 'a track with a tempo counts in before it plays', async ( {
 		page,
 	} ) => {

@@ -89,6 +89,9 @@ final class Frontend {
 			'loop_set'       => __( 'Set a loop: tap at the start, then at the end', 'callboard' ),
 			'loop_from'      => __( 'Loop from', 'callboard' ),
 			'loop_end'       => __( 'Tap at the end of the loop', 'callboard' ),
+			/* translators: %s: playback speed such as 0.75×. */
+			'rate_label'     => __( 'Playback speed %s, tap to slow down', 'callboard' ),
+			'rate_reset'     => __( 'Playback speed 0.5×, tap for full speed', 'callboard' ),
 			/* translators: %d: beats per minute. */
 			'tempo'          => __( '%d beats per minute, counts in', 'callboard' ),
 			'show_lyrics'    => __( 'Show lyrics', 'callboard' ),

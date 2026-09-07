@@ -350,6 +350,49 @@ ${ footer( s ) }
 	const onQueuePage = () => !! queue && view() === queue.slug;
 	const key = () => `callboard:${ queue.slug }`;
 
+	// ---- Speed. HTMLMediaElement.preservesPitch keeps the key while the tempo drops, which is what a
+	// rehearsal wants; the chip steps down through the presets and comes back round to full speed.
+	const RATES = [ 1, 0.85, 0.75, 0.6, 0.5 ];
+	const rateChip = $( 'rate' );
+	let rate = RATES.includes( ls.get( 'callboard:rate' ) )
+		? ls.get( 'callboard:rate' )
+		: 1;
+	const rateText = ( r ) => `${ r }×`;
+	function setRate( r, save = true ) {
+		rate = r;
+		try {
+			audio.preservesPitch = true;
+			audio.webkitPreservesPitch = true;
+		} catch {}
+		audio.defaultPlaybackRate = r; // a new src resets playbackRate to this
+		audio.playbackRate = r;
+		if ( rateChip ) {
+			rateChip.textContent = rateText( r );
+			rateChip.dataset.state = r === 1 ? '' : 'on';
+			rateChip.setAttribute(
+				'aria-label',
+				r === RATES[ RATES.length - 1 ]
+					? T.rate_reset
+					: tpl( T.rate_label, rateText( r ) )
+			);
+		}
+		if ( save ) {
+			ls.set( 'callboard:rate', r );
+		}
+		positionState();
+	}
+	const stepRate = ( dir = 1 ) =>
+		setRate(
+			RATES[
+				( RATES.indexOf( rate ) + dir + RATES.length ) % RATES.length
+			]
+		);
+	rateChip?.addEventListener( 'click', () => {
+		haptic();
+		stepRate( 1 );
+	} );
+	setRate( rate, false ); // the chip reads the remembered speed before anything is loaded
+
 	let analyser = null,
 		eqRaf = 0;
 	const ensureAnalyser = () => {
@@ -674,6 +717,7 @@ ${ footer( s ) }
 		i = ( n + queue.tracks.length ) % queue.tracks.length;
 		const t = queue.tracks[ i ];
 		audio.src = t.url;
+		setRate( rate, false );
 		if ( at ) {
 			audio.currentTime = at;
 		}
@@ -958,7 +1002,7 @@ ${ footer( s ) }
 	}
 	function countIn( bpm ) {
 		countStop();
-		const beat = 60000 / bpm;
+		const beat = 60000 / bpm / rate; // the count-in keeps time with the slowed track
 		return new Promise( ( resolve ) => {
 			const timers = [];
 			deck.classList.add( 'counting' );
@@ -1284,6 +1328,10 @@ ${ footer( s ) }
 			setLoop( loop ? loop.a : 0, audio.currentTime );
 		} else if ( e.key === '\\' ) {
 			clearLoop();
+		} else if ( e.key === ',' ) {
+			stepRate( 1 );
+		} else if ( e.key === '.' ) {
+			stepRate( -1 );
 		} else if ( e.key === 'Escape' && ! lyricsSheet.hidden ) {
 			hideLyrics();
 		} else if ( e.key === 'Escape' && audio.paused && i >= 0 ) {

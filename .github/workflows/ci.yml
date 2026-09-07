@@ -70,15 +70,8 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/phpcs.yml
 
-  e2e:
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    uses: ./.github/workflows/e2e.yml
-
-  plugin-check:
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    uses: ./.github/workflows/plugin-check.yml
+  # The Playwright suite and Plugin Check run locally, from the pre-commit hook in .githooks, not here:
+  # this is a private repository and both need a full WordPress. Their workflows stay for a manual run.
 
   lint-js:
     needs: gate
@@ -96,7 +89,7 @@ jobs:
   # fails on any failure or cancellation.
   status:
     name: CI status
-    needs: [gate, changes, phpcs, e2e, plugin-check, lint-js, typos]
+    needs: [gate, changes, phpcs, lint-js, typos]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

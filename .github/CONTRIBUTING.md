@@ -18,7 +18,7 @@ npm run lint               # PHPCS (WordPress Coding Standards) + ESLint
 npm run test:e2e           # Playwright, desktop + iPhone viewport (wp-env must be running)
 ```
 
-CI runs the same PHPCS and ESLint, the Playwright suite, the WordPress.org Plugin Check against the built zip, a spell check, and lints the workflow files themselves. Docs-only changes skip the wp-env jobs.
+The Playwright suite runs **before every commit**, from the hook in `.githooks` that `npm install` wires up, against your running wp-env. It does not run in GitHub Actions: this is a private repository and the suite needs a full WordPress. Skip it for one commit with `CALLBOARD_SKIP_E2E=1 git commit ...`, or skip every hook with `--no-verify`. CI keeps the cheap checks: PHPCS, ESLint, the spell check, and a lint of the workflow files. Plugin Check and the suite can be run in Actions by hand from their workflow pages.
 
 ## Pull requests
 
@@ -32,7 +32,7 @@ CI runs the same PHPCS and ESLint, the Playwright suite, the WordPress.org Plugi
 The repository is meant to be left alone for long stretches, so the routine work is automated and gated on the same checks a pull request gets:
 
 - **Dependencies.** Dependabot opens one grouped pull request per ecosystem each month for minor and patch bumps, and `dependabot-auto-merge.yml` merges it once every required check is green. Major bumps open on their own and wait for a person. Security updates arrive as soon as an advisory does.
-- **Required checks.** `main` is protected behind the single `CI status` check, which passes only when PHPCS, ESLint, Playwright, Plugin Check and the spell check have each passed or been skipped by the paths filter. Nothing merges red, by hand or by bot.
+- **Required checks.** `main` is protected behind the single `CI status` check: PHPCS, ESLint and the spell check. The Playwright suite and Plugin Check run locally before each commit instead, so nothing reaches a commit red either.
 - **Weekly run.** CI runs the full suite every Monday against current WordPress core, so a core release that breaks something shows up as a failed run in your inbox rather than in production. The release and Playground workflows run weekly too, because a commit produced by a self-merging Dependabot pull request does not start push workflows on its own.
 - **Version strings.** `scripts/sync-versions.sh` writes the version everywhere WordPress reads it and sets `Tested up to` from the core version the suite just ran against, so neither goes stale.
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/josephfusco/callboard/compare/v1.4.1...v1.4.2) (2026-09-07)
+
+
+### Bug Fixes
+
+* polish the set header, deck time row, and stylesheet ([#15](https://github.com/josephfusco/callboard/issues/15)) ([a750016](https://github.com/josephfusco/callboard/commit/a750016d2d66dc4a900e57120d7ae19ef9cd8215))
+
 ## [1.4.1](https://github.com/josephfusco/callboard/compare/v1.4.0...v1.4.1) (2026-09-07)
 
 

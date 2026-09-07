@@ -22,7 +22,7 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 			<?php if ( Callboard\Settings::get( 'offline' ) ) : ?>
 			<button type="button" class="btn btn-quiet" id="offline" hidden><?php esc_html_e( 'Save offline', 'callboard' ); ?></button>
 			<?php endif; ?>
-			<button type="button" class="btn btn-quiet" id="share" hidden><?php esc_html_e( 'Share', 'callboard' ); ?></button>
+			<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="<?php esc_attr_e( 'Share a link to this set', 'callboard' ); ?>" hidden><?php echo callboard_icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
 		</div>
 		<?php endif; ?>
 	</header>

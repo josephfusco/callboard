@@ -47,6 +47,10 @@
 		window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
 	const setBy = ( slug ) => G.sets.find( ( s ) => s.slug === slug );
 	const hasLyrics = ( set, id ) => !! ( set.lyrics && set.lyrics[ id ] );
+	// Inline icons the client renderer needs; the same paths callboard_icon() ships.
+	const ICONS = {
+		share: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v12m0-12L8 7m4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+	};
 
 	( window.requestIdleCallback || ( ( f ) => setTimeout( f, 1000 ) ) )(
 		() => {
@@ -214,9 +218,9 @@ ${
 							T.save
 					  ) }</button>`
 					: ''
-		  }<button type="button" class="btn btn-quiet" id="share" hidden>${ esc(
+		  }<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="${ esc(
 				T.share
-		  ) }</button></div>`
+		  ) }" hidden>${ ICONS.share }</button></div>`
 		: ''
 }
 </header>
@@ -767,7 +771,7 @@ ${ footer( s ) }
 				load( i + 1 )
 			);
 			navigator.mediaSession.setActionHandler( 'play', () =>
-				audio.play()
+				audio.play().catch( () => {} )
 			);
 			navigator.mediaSession.setActionHandler( 'pause', () =>
 				audio.pause()
@@ -976,7 +980,10 @@ ${ footer( s ) }
 		if ( i >= 0 ) {
 			morph( audio.paused ? 'pause' : 'play' ); // answer the tap now; the audio events reconcile
 		}
-		return i < 0 ? load( 0 ) : audio.paused ? audio.play() : audio.pause();
+		if ( i < 0 ) {
+			return load( 0 );
+		}
+		return audio.paused ? audio.play().catch( () => {} ) : audio.pause();
 	} );
 
 	// ---- Count-in: with a tempo, Play from the top taps four beats first (a soft click, the button breathes)
@@ -1547,7 +1554,11 @@ ${ footer( s ) }
 			}
 			haptic();
 			if ( onQueuePage() && n === i ) {
-				audio.paused ? audio.play() : audio.pause();
+				if ( audio.paused ) {
+					audio.play().catch( () => {} );
+				} else {
+					audio.pause();
+				}
 			} else {
 				startSet( set, n );
 			}
@@ -1784,7 +1795,11 @@ ${ footer( s ) }
 			$( 'play-all' )?.addEventListener( 'click', () => {
 				haptic();
 				if ( played && onQueuePage() && i >= 0 ) {
-					audio.paused ? audio.play() : audio.pause();
+					if ( audio.paused ) {
+						audio.play().catch( () => {} );
+					} else {
+						audio.pause();
+					}
 				} else {
 					startSet( set, 0 );
 				}
@@ -1825,10 +1840,11 @@ ${ footer( s ) }
 			navigator.clipboard
 				.writeText( url )
 				.then( () => {
+					const icon = btn.innerHTML;
 					btn.textContent = T.copied;
 					btn.classList.add( 'is-done' );
 					setTimeout( () => {
-						btn.textContent = T.share;
+						btn.innerHTML = icon;
 						btn.classList.remove( 'is-done' );
 					}, 1600 );
 				} )

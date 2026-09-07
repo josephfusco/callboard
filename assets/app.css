@@ -3,14 +3,14 @@
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .16 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); --warmth:rgba(214,184,150,.18);
   --bg:#eceae5; --surface:#f6f5f2; --surface-2:#e2e0da; --line:#d3d1cb; --line-strong:#b8b6b0;
   --ink:#1c1c1c; --ink-2:#55544f; --ink-3:#6f6e69; --accent:#e8541e; --accent-text:#c2401a; --accent-ink:#fff;
-  --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06); --deck-hi:rgba(255,255,255,.72); --gloss:rgba(255,255,255,.85); --play-hi:#565554; --play-rim:rgba(255,255,255,.22); --play-shadow:rgba(0,0,0,.42); --dish:rgba(0,0,0,.08); --glass:rgba(255,255,255,.3); --glass-hi:rgba(255,255,255,.5); --glass-lo:rgba(255,255,255,.06); --glass-rim:rgba(255,255,255,.95); --glass-edge:rgba(0,0,0,.12); --glass-shadow:rgba(0,0,0,.22);
+  --deck:#f6f5f2; --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06); --deck-hi:rgba(255,255,255,.72); --gloss:rgba(255,255,255,.85); --play-hi:#565554; --play-rim:rgba(255,255,255,.22); --play-shadow:rgba(0,0,0,.42); --dish:rgba(0,0,0,.08); --glass:rgba(255,255,255,.3); --glass-hi:rgba(255,255,255,.5); --glass-lo:rgba(255,255,255,.06); --glass-rim:rgba(255,255,255,.95); --glass-shadow:rgba(0,0,0,.28); --grommet-in:#cfccc4; --grommet:#b9b6ae; --grommet-edge:#9d9a92;
   --ease:cubic-bezier(.2,.8,.2,1); --ease-spring:cubic-bezier(.34,1.4,.64,1); --t-fast:.12s; --t:.2s; --t-slow:.36s; --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:146px; --deck-bg:rgba(246,245,242,.94);
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#161616; --surface:#1f1f1f; --surface-2:#292929; --line:#2e2e2e; --line-strong:#444;
   --ink:#f2f1ee; --ink-2:#b3b2ae; --ink-3:#95948f; --accent:#ff6a2e; --accent-text:#ff7d47; --accent-ink:#161616;
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .22 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); --warmth:rgba(120,92,68,.1);
-  --deck:#1f1f1f; --deck-bg:rgba(28,28,28,.94); --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.5); --deck-hi:rgba(44,44,44,.94); --gloss:rgba(255,255,255,.08); --play-hi:#ffffff; --play-rim:rgba(255,255,255,.95); --play-shadow:rgba(0,0,0,.7); --dish:rgba(0,0,0,.35); --glass:rgba(255,255,255,.11); --glass-hi:rgba(255,255,255,.22); --glass-lo:rgba(255,255,255,.03); --glass-rim:rgba(255,255,255,.55); --glass-edge:rgba(0,0,0,.35); --glass-shadow:rgba(0,0,0,.5);
+  --deck:#1f1f1f; --deck-bg:rgba(28,28,28,.94); --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.5); --deck-hi:rgba(44,44,44,.94); --gloss:rgba(255,255,255,.08); --play-hi:#ffffff; --play-rim:rgba(255,255,255,.95); --play-shadow:rgba(0,0,0,.7); --dish:rgba(0,0,0,.35); --glass:rgba(255,255,255,.11); --glass-hi:rgba(255,255,255,.22); --glass-lo:rgba(255,255,255,.03); --glass-rim:rgba(255,255,255,.55); --glass-shadow:rgba(0,0,0,.6); --grommet-in:#0e0e0e; --grommet:#232323; --grommet-edge:#3a3a3a;
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
@@ -207,22 +207,18 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .ctl svg{width:30px;height:30px;fill:currentColor}
 .deck-controls .ctl.skip{width:56px;height:56px}
 .ctl:active{background:radial-gradient(circle at 50% 42%,var(--surface-2),var(--surface));box-shadow:inset 0 2px 5px var(--dish)} /* pressed: a shallow dish */
-.ctl.play{width:66px;height:66px;color:var(--ink);margin:0 4px;position:relative;isolation:isolate;
-  background:linear-gradient(165deg,var(--glass-hi),var(--glass-lo) 62%),var(--glass);
-  -webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);
-  box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px -14px var(--glass-shadow),0 1px 2px rgba(0,0,0,.1);
-  transition:transform var(--t-fast),box-shadow var(--t-fast),background var(--t-fast)} /* glass, the way the system draws it: the deck showing through a heavy blur, a hairline of light along the top, soft depth under it */
-.ctl.play .gloss{position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;background:conic-gradient(from 225deg,rgba(255,255,255,.95) 0deg,rgba(255,255,255,.1) 70deg,rgba(255,255,255,0) 120deg,rgba(255,255,255,0) 215deg,rgba(255,255,255,.18) 290deg,rgba(255,255,255,.95) 360deg);-webkit-mask:radial-gradient(circle,transparent 62%,#000 66%,#000 69.5%,transparent 73%);mask:radial-gradient(circle,transparent 62%,#000 66%,#000 69.5%,transparent 73%);opacity:.9;transition:opacity var(--t-fast)} /* the lensed rim: brightest toward the light, a faint return on the far edge */
-.ctl.play .well{display:none}
-.ctl.play:active{transform:scale(.96);background:linear-gradient(165deg,var(--glass-lo),var(--glass-lo)),var(--glass);box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 2px 8px rgba(0,0,0,.18),0 4px 12px -8px var(--glass-shadow)}
-.ctl.play:active .gloss{opacity:.5}
+.ctl.play{width:66px;height:66px;color:var(--ink);margin:0 4px;position:relative;isolation:isolate;background:radial-gradient(circle at 50% 40%,var(--grommet-in) 58%,var(--grommet) 66%,var(--grommet-edge) 100%);box-shadow:inset 0 2px 5px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.08),0 1px 0 rgba(255,255,255,.06);transition:none} /* the grommet: a fixed housing the cap sits in, like an arcade button */
+.ctl.play .cap{position:absolute;inset:4px;border-radius:50%;display:block;background:linear-gradient(165deg,var(--glass-hi),var(--glass-lo) 62%),var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 -1px 0 rgba(255,255,255,.06),0 5px 10px -4px var(--glass-shadow),0 1px 2px rgba(0,0,0,.15);transform:translateY(-1px);transition:transform .08s var(--ease),box-shadow .08s var(--ease)} /* the cap: system glass, standing a hair proud of the housing */
+.ctl.play .gloss{position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;background:conic-gradient(from 225deg,rgba(255,255,255,.95) 0deg,rgba(255,255,255,.1) 70deg,rgba(255,255,255,0) 120deg,rgba(255,255,255,0) 215deg,rgba(255,255,255,.18) 290deg,rgba(255,255,255,.95) 360deg);-webkit-mask:radial-gradient(circle,transparent 60%,#000 64%,#000 69%,transparent 73%);mask:radial-gradient(circle,transparent 60%,#000 64%,#000 69%,transparent 73%);opacity:.9} /* the lensed rim of the cap */
+.ctl.play:active .cap{transform:translateY(2px);box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 2px 6px rgba(0,0,0,.2),0 0 0 rgba(0,0,0,0)} /* pressed: the cap goes down into the grommet; nothing else moves */
+.ctl.play:active .gloss{opacity:.6}
 /* play ⇄ pause: the glyph not in use sinks out of sight; the one called for rises through the glass into place a
    beat later, and the button gives one short wobble. */
 .ctl.play .pp{position:absolute;inset:0;margin:auto;width:28px;height:28px;fill:currentColor;will-change:transform,opacity;z-index:2}
 .ctl.play .pp{opacity:0;transform:translateY(12px) scale(.35);transition:opacity .2s var(--ease),transform .2s var(--ease)} /* sunk, quickly */
 .ctl.play[data-state="play"] .pp-play,.ctl.play[data-state="pause"] .pp-pause{opacity:1;transform:none;transition:opacity .32s var(--ease) .16s,transform .5s var(--ease-spring) .16s} /* risen, a beat later */
-.ctl.play.shake{animation:shake .6s var(--ease-spring)}
-@keyframes shake{20%{transform:rotate(-5deg) scale(1.04)}45%{transform:rotate(4deg)}70%{transform:rotate(-2deg)}100%{transform:none}}}}
+.ctl.play.shake .cap{animation:shake .6s var(--ease-spring)}
+@keyframes shake{20%{transform:translateY(-1px) rotate(-5deg) scale(1.03)}45%{transform:translateY(-1px) rotate(4deg)}70%{transform:translateY(-1px) rotate(-2deg)}100%{transform:translateY(-1px)}}}}
 /* soft ring when playback begins */
 .ctl.play::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--accent);opacity:0;pointer-events:none;z-index:-1}
 .ctl.play.ring::after{animation:ring .6s var(--ease) forwards}
@@ -277,8 +273,7 @@ body:not(.has-deck) .update{bottom:calc(var(--safe-b) + 12px)}
   .ctl.play{width:60px;height:60px}
   h1{font-size:2.5rem}
   .set:hover,.tracks li:hover{background:var(--surface)}
-  .ctl:hover{background:var(--surface-2)}
-  .ctl.play:hover{background:var(--ink)}
+  .ctl:not(.play):hover{background:var(--surface-2)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 

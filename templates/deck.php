@@ -24,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 			<div class="deck-controls">
 				<button type="button" class="ctl skip" id="prev" aria-label="<?php esc_attr_e( 'Previous', 'callboard' ); ?>"><?php echo callboard_icon( 'prev' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
-				<button type="button" class="ctl play" id="toggle" data-state="play" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><i class="well" aria-hidden="true"></i><svg class="pp pp-play" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path d="M 12,26 25,18 12,10 z"/></svg><svg class="pp pp-pause" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path d="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z"/></svg><i class="gloss" aria-hidden="true"></i></button>
+				<button type="button" class="ctl play" id="toggle" data-state="play" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><i class="cap" aria-hidden="true"><svg class="pp pp-play" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path d="M 12,26 25,18 12,10 z"/></svg><svg class="pp pp-pause" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path d="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z"/></svg><i class="gloss"></i></i></button>
 				<button type="button" class="ctl skip" id="next" aria-label="<?php esc_attr_e( 'Next', 'callboard' ); ?>"><?php echo callboard_icon( 'next' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
 			</div>
 		</div>

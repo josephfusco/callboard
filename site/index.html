@@ -62,6 +62,14 @@ h2{font-size:clamp(2rem,4.2vw,3.25rem)}
 .crop img{position:absolute;left:50%;transform:translateX(-50%);width:min(100%,420px);border-radius:24px 24px 0 0;box-shadow:0 30px 70px -20px rgba(0,0,0,.35)}
 .crop.top img{top:8%}
 .crop.bottom img{bottom:-12%;top:auto;border-radius:24px}
+/* make it yours: the same app three times, each one someone else's */
+.yours{padding:120px 0 40px}
+.yours .lede{max-width:40rem}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:start;margin-top:56px;max-width:1040px}
+.trio .device{display:block;width:100%}
+.trio .device:nth-child(2){transform:translateY(32px)}
+@media (max-width:900px){.yours{padding:80px 0 20px}.trio{grid-template-columns:1fr 1fr;gap:20px}.trio .device:nth-child(3){grid-column:1 / -1;width:50%;margin:0 auto}}
+@media (max-width:560px){.trio{grid-template-columns:1fr;max-width:280px;margin:40px auto 0}.trio .device:nth-child(2){transform:none}.trio .device:nth-child(3){width:100%}}
 /* the board: the editor doing the work, the phone showing the result */
 .board{padding:120px 0 96px}
 .board .lede{max-width:40rem}
@@ -91,7 +99,7 @@ html.js .r.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Callboard</a><nav><a href="#board">The board</a><a href="#player">The player</a><a href="#yours">Yours</a><a href="#under">Under the hood</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Callboard</a><nav><a href="#yours">Yours</a><a href="#board">The board</a><a href="#player">The player</a><a href="#under">Under the hood</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
@@ -100,6 +108,11 @@ html.js .r.in{opacity:1;transform:none}
 		<p class="lede">The call at the top. The numbers to run underneath. A player that keeps playing when the phone goes in a pocket. Yours, on your own site.</p>
 	</div>
 	<div class="stage r" aria-hidden="true"><span class="device"><img src="home-light.png" alt=""></span></div>
+</div></section>
+
+<section class="yours" id="yours"><div class="wrap">
+	<div class="r"><h2>Make it yours.</h2><p class="lede" style="margin-top:20px">Your name on the door. Your colour on the wave. Your badge on the track that is playing. Your lucky number in the confetti. Every one is a setting, not code, and for the ones who want code, a handful of WordPress hooks and template overrides. Underneath, a self-hosted player: any folder of audio becomes a set, for a cast, a choir, a band, or one kid's favourite songs.</p></div>
+	<div class="trio r" aria-hidden="true"><span class="device"><img src="yours-1.png" alt=""></span><span class="device"><img src="yours-2.png" alt=""></span><span class="device"><img src="yours-3.png" alt=""></span></div>
 </div></section>
 
 <section class="board" id="board"><div class="wrap">
@@ -112,11 +125,6 @@ html.js .r.in{opacity:1;transform:none}
 	<div class="r"><h2>The player.</h2><p class="lede" style="margin-top:20px">A waveform to scrub. A loop for the hard eight bars. Slower without changing key. Lyrics and the director's notes in time with the track. Save a set once and it plays with no signal in the building.</p></div>
 </div></section>
 
-
-<section class="stmt flip" id="yours"><div class="wrap">
-	<div class="r"><h2>Make it yours.</h2><p>A lucky number and a shower of hearts behind a triple tap on the title. Your colour on the wave. An emoji on the track that is playing. Your name on the door. All of it is a setting, not code, and for the ones who want code, a handful of WordPress hooks and template overrides. Underneath, it is a self-hosted player: any folder of audio becomes a set, for a cast, a choir, a band, or one kid's favourite songs.</p></div>
-	<div class="crop top r"><img src="confetti-dark.png" alt=""></div>
-</div></section>
 
 <section class="under" id="under"><div class="wrap">
 	<div class="r"><h2>Under the hood.</h2><p class="lede" style="margin-top:20px">A WordPress plugin, one script and one stylesheet, and as much of the web platform as the phones in a rehearsal room can run.</p></div>

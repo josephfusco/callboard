@@ -187,6 +187,13 @@ final class Calls {
 			$line ? implode( ' · ', $line ) : wp_trim_words( wp_strip_all_tags( $post->post_content ), 18 ),
 			home_url( '/' )
 		);
+		/**
+		 * A call went up on the board.
+		 *
+		 * @param WP_Post              $post The call.
+		 * @param array<string, mixed> $call Calls::build() for it.
+		 */
+		do_action( 'callboard_call_published', $post, $call );
 	}
 
 	/**
@@ -221,7 +228,12 @@ final class Calls {
 		if ( $timed ) {
 			$timed[0]['is_next'] = true;
 		}
-		return array_slice( array_merge( $timed, $plain ), 0, self::LIMIT );
+		/**
+		 * What the board shows. Each call is the array Calls::build() returns; the first timed one carries is_next.
+		 *
+		 * @param array<int, array<string, mixed>> $calls Calls, soonest first, then undated notices.
+		 */
+		return apply_filters( 'callboard_board', array_slice( array_merge( $timed, $plain ), 0, self::LIMIT ) );
 	}
 
 	/**

@@ -204,7 +204,19 @@ final class Push {
 	 * @return array{sent: int, failed: int, pruned: int}|WP_Error
 	 */
 	public static function send( string $title, string $body, string $url = '' ) {
-		$keys = self::keys();
+		/**
+		 * The notification about to go to every subscriber. Return an empty array to send nothing.
+		 *
+		 * @param array{title: string, body: string, url: string} $message Title, body, and the URL a tap opens.
+		 */
+		$message = apply_filters( 'callboard_push_message', compact( 'title', 'body', 'url' ) );
+		if ( empty( $message['title'] ) ) {
+			return true;
+		}
+		$title = (string) $message['title'];
+		$body  = (string) ( $message['body'] ?? '' );
+		$url   = (string) ( $message['url'] ?? '' );
+		$keys  = self::keys();
 		if ( ! $keys ) {
 			return new WP_Error( 'callboard_no_push', __( 'Push is not available on this server.', 'callboard' ) );
 		}

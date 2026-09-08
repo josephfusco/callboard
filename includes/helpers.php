@@ -25,7 +25,14 @@ function callboard_render(): void {
  * @param array<string, mixed> $args Variables to expose.
  */
 function callboard_template( string $name, array $args = array() ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- $args is read by the included template.
-	$file = CALLBOARD_DIR . 'templates/' . $name . '.php';
+	/**
+	 * Swap a template for your own. Return a path to a PHP file that receives the same $args.
+	 *
+	 * @param string               $file Path to the plugin's template.
+	 * @param string               $name Template name: index, home, set, board, deck, footer, fragment.
+	 * @param array<string, mixed> $args Template arguments.
+	 */
+	$file = (string) apply_filters( 'callboard_template_path', CALLBOARD_DIR . 'templates/' . $name . '.php', $name, $args );
 	if ( ! is_readable( $file ) ) {
 		return;
 	}

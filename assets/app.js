@@ -681,6 +681,7 @@ ${ footer( s ) }
 	};
 	window.addEventListener( 'resize', measureSeek );
 	let lastStep = -1;
+	let lastMask = -1;
 	const setProgress = ( ratio ) => {
 		if ( ! seekWidth ) {
 			measureSeek();
@@ -696,9 +697,14 @@ ${ footer( s ) }
 			wavePlayed.style.clipPath = `inset(0 ${ ( 100 - pct ).toFixed(
 				2
 			) }% 0 0)`;
-			// the playhead is the lamp: bars beside it burn, bars behind it cool toward ember
-			wavePlayed.style.maskImage = `linear-gradient(90deg, rgba(0,0,0,.42), #000 ${ pct }%)`;
-			wavePlayed.style.webkitMaskImage = wavePlayed.style.maskImage;
+			// the playhead is the lamp: bars beside it burn, bars behind it cool toward ember. The mask is a
+			// gradient the browser re-rasterises on every write, so it moves in quarter-percent steps
+			const maskStep = Math.round( ratio * 400 );
+			if ( maskStep !== lastMask ) {
+				lastMask = maskStep;
+				wavePlayed.style.maskImage = `linear-gradient(90deg, rgba(0,0,0,.42), #000 ${ pct }%)`;
+				wavePlayed.style.webkitMaskImage = wavePlayed.style.maskImage;
+			}
 		}
 		if ( seekKnob ) {
 			seekKnob.style.transform = `translateX(${ (
@@ -1328,6 +1334,34 @@ ${ footer( s ) }
 			haptic();
 			audio.remote.prompt().catch( () => {} ); // cancelled, or nothing in reach: the picker already said so
 		} );
+	}
+
+	// Safari restores pages from the back/forward cache with their script state frozen mid-thought. On a
+	// restore, the deck reads the element again rather than trusting what it last drew.
+	window.addEventListener( 'pageshow', ( e ) => {
+		if ( e.persisted ) {
+			morph( audio.paused ? 'play' : 'pause' );
+			positionState();
+		}
+	} );
+
+	// The deck's height is a token the page padding and the lyrics sheet read. Measured rather than assumed,
+	// so Dynamic Type on iPhone, a landscape inset, or a longer row never leaves the last track under the deck.
+	if ( window.ResizeObserver ) {
+		new ResizeObserver( () => {
+			if ( deck.hidden ) {
+				return;
+			}
+			const h =
+				deck.offsetHeight -
+				parseFloat( getComputedStyle( deck ).paddingBottom ); // the overscroll run-off and the safe area are not height
+			if ( h > 80 ) {
+				document.documentElement.style.setProperty(
+					'--deck-h',
+					`${ Math.round( h ) }px`
+				);
+			}
+		} ).observe( deck );
 	}
 
 	// ---- Marks on the seek line: ticks where singing resumes after a rest (from the lyrics), pins for director notes

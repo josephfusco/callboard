@@ -136,10 +136,19 @@ test.describe( 'Admin', () => {
 			'edit.php',
 			'post_type=callboard_set&page=callboard-notices'
 		);
-		await expect( page.locator( '.wrap p' ).first() ).toContainText(
-			/subscribed/
-		);
+		const count = page.locator( '.wrap p' ).first();
+		await expect( count ).toContainText( /subscribed/ );
 		await expect( page.locator( '#callboard-nbody' ) ).toBeVisible();
-		await expect( page.locator( '#submit' ) ).toBeDisabled(); // nobody subscribed yet
+		// Send is enabled exactly when someone is subscribed. A developer's own browser may well be, so
+		// the test reads the count rather than assuming zero.
+		const n = parseInt(
+			( await count.textContent() ).match( /\d+/ )[ 0 ],
+			10
+		);
+		if ( n ) {
+			await expect( page.locator( '#submit' ) ).toBeEnabled();
+		} else {
+			await expect( page.locator( '#submit' ) ).toBeDisabled();
+		}
 	} );
 } );

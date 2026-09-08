@@ -162,6 +162,8 @@ Everything below is in use today. Web platform links go to the specification, Wo
 - [x] [History API](https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-history-interface) for in-app navigation
 - [x] [Online and offline events](https://html.spec.whatwg.org/multipage/system-state.html#navigator.online) for the offline banner
 - [x] [Pointer Events](https://www.w3.org/TR/pointerevents/) for the scrubber, edge-swipe back, and taps
+- [x] [ResizeObserver](https://www.w3.org/TR/resize-observer/) to measure the deck and publish its height as a token, so Dynamic Type and landscape insets never hide the last track
+- [x] [Back/forward cache](https://web.dev/articles/bfcache) restores through `pageshow`, re-reading the media element instead of trusting the last frame drawn
 - [x] [View Transitions](https://www.w3.org/TR/css-view-transitions-1/) between the home page and a set
 - [x] [requestIdleCallback](https://www.w3.org/TR/requestidlecallback/) for deferred setup
 - [x] [AbortController](https://dom.spec.whatwg.org/#interface-abortcontroller) to cancel an offline save in flight
@@ -174,7 +176,9 @@ Everything below is in use today. Web platform links go to the specification, Wo
 <details>
 <summary>CSS</summary>
 
-- [x] [Environment variables](https://www.w3.org/TR/css-env-1/) for the safe-area insets
+- [x] [Environment variables](https://www.w3.org/TR/css-env-1/) for the safe-area insets on all four sides, with `max()` so the column clears the island in landscape
+- [x] [text-box-trim](https://www.w3.org/TR/css-inline-3/#text-box-trim) on headings behind `@supports`, so the space above a title is measured from the cap height (Safari 18.2, Chrome 133)
+- [x] Dynamic Type through `font: -apple-system-body`, so the app follows the iPhone's text size setting
 - [x] [backdrop-filter](https://www.w3.org/TR/filter-effects-2/#BackdropFilterProperty) on the deck and top bar, with an `@supports` fallback to a solid ground
 - [x] [@starting-style](https://www.w3.org/TR/css-transitions-2/#defining-before-change-style) for enter animations
 - [x] [Scroll-driven animations](https://www.w3.org/TR/scroll-animations-1/) behind `@supports`
@@ -234,7 +238,7 @@ A running log of browser and WordPress capabilities and what each would do for a
 - [ ] [AudioWorklet](https://www.w3.org/TR/webaudio/#AudioWorklet) for transposing a track without changing tempo. The one feature choir directors ask for most, and the largest item here: a worklet plus a pitch-shift kernel.
 - [ ] [Media Capabilities](https://www.w3.org/TR/media-capabilities/) so the client picks the format it decodes best when the importer kept m4a as well as mp3.
 - [ ] [Navigation API](https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api) to replace the hand-rolled `pushState` routing and integrate with view transitions directly. Safari 18.4 and later.
-- [ ] CSS [`light-dark()`](https://www.w3.org/TR/css-color-5/#light-dark) for the color tokens, [`text-box-trim`](https://www.w3.org/TR/css-inline-3/#text-box-trim) to make the vertical rhythm exact, [scroll snap](https://www.w3.org/TR/css-scroll-snap-1/) for swiping between sets.
+- [ ] CSS [`light-dark()`](https://www.w3.org/TR/css-color-5/#light-dark) to collapse the two token blocks into one (Safari 17.5, Chrome 123), [scroll snap](https://www.w3.org/TR/css-scroll-snap-1/) for swiping between sets, [`contrast-color()`](https://www.w3.org/TR/css-color-5/#contrast-color) for the text on the accent (Safari 26).
 
 </details>
 

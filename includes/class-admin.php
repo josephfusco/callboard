@@ -233,6 +233,7 @@ final class Admin {
 			'offline'         => array( __( 'Offer "Save offline"', 'callboard' ), 'checkbox', '' ),
 			'push'            => array( __( 'Offer notifications', 'callboard' ), 'checkbox', __( 'A bell on the home page lets the cast opt in. On iPhone this needs the app added to the Home Screen.', 'callboard' ) ),
 			'notify_new_sets' => array( __( 'Notify when a set is published', 'callboard' ), 'checkbox', '' ),
+			'notify_calls'    => array( __( 'Notify when a call is posted', 'callboard' ), 'checkbox', __( 'Calls live under Sets. Publishing one, or a scheduled one going live, sends it to the cast.', 'callboard' ) ),
 			'count_in'        => array( __( 'Count in tracks that have a tempo', 'callboard' ), 'checkbox', __( 'Four clicks at the marked tempo before a track starts from the top, so singers come in on the beat. Off, the tempo still shows on the track.', 'callboard' ) ),
 		);
 		foreach ( $fields as $key => list( $label, $type, $help ) ) {

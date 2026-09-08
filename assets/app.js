@@ -1775,6 +1775,16 @@
 			return;
 		}
 		e.preventDefault();
+		if ( a.dataset.track ) {
+			// a number on the board: open its set and start it
+			go( a.href ).then( () => {
+				const set = setBy( routeOf( a.href ) );
+				if ( set ) {
+					startSet( set, +a.dataset.track );
+				}
+			} );
+			return;
+		}
 		go( a.href );
 	} );
 
@@ -1934,6 +1944,33 @@
 		};
 	}
 
+	// The board's "in 2 days" is rendered by the server and refreshed here, so a copy the worker kept overnight reads right.
+	function paintCalls() {
+		const rel = window.Intl?.RelativeTimeFormat
+			? new Intl.RelativeTimeFormat(
+					document.documentElement.lang || 'en',
+					{
+						numeric: 'auto',
+					}
+			  )
+			: null;
+		document.querySelectorAll( '.call-rel[data-when]' ).forEach( ( el ) => {
+			const s = ( new Date( el.dataset.when ) - Date.now() ) / 1000;
+			if ( ! rel || Math.abs( s ) < 300 ) {
+				return; // "now" from the server stands
+			}
+			const units = [
+				[ 86400 * 7, 'week' ],
+				[ 86400, 'day' ],
+				[ 3600, 'hour' ],
+				[ 60, 'minute' ],
+			];
+			const [ size, unit ] =
+				units.find( ( [ n ] ) => Math.abs( s ) >= n ) || units[ 3 ];
+			el.textContent = rel.format( Math.round( s / size ), unit );
+		} );
+	}
+
 	// Home rows: where each set was left, and which one is in the deck. Text inside the meta line, so nothing moves.
 	function paintHomeResume() {
 		document.querySelectorAll( '.set-resume' ).forEach( ( el ) => {
@@ -2006,6 +2043,7 @@
 			bindNotify().catch( () => {} );
 			paintHomeOffline().catch( () => {} );
 			paintHomeResume();
+			paintCalls();
 		}
 		if ( set?.tracks.length ) {
 			if ( ! queue ) {

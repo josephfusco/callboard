@@ -14,13 +14,14 @@ Every pull request gets its own Playground link in a sticky comment, built from 
 
 ## What it does
 
+- **The board.** The home page opens with what is posted: the next call pinned at the top with its time, place, and note, then anything else the stage manager has put up. A call is a post, written and scheduled like any post under Sets, and publishing one sends the push. The numbers being worked are taps that start the track.
 - **Sets are posts.** A set is a `callboard_set` post. Its tracks are audio attachments parented to it, ordered and retitled in the set's edit screen. The featured image is the lock-screen cover.
 - **Fetch from YouTube with WP-CLI** wherever `yt-dlp` exists: `wp callboard fetch '<url>' --name="Spring Show"`. Or queue URLs in the admin and let a machine with the tools drain the queue with `wp callboard run`.
 - **Import a folder** of audio plus `manifest.json` from `wp-content/uploads/callboard/<slug>/`, for hosts that cannot run binaries.
 - **Player.** One persistent deck: waveform scrubber, A/B loop, speed with the pitch held, count-in on tracks with a tempo, lyrics in time, timestamped director's notes, AirPlay and Cast, lock-screen controls, one tab playing at a time.
 - **Offline.** Each set offers "Save offline". Saved audio plays from the service worker, seeks included, with no network.
 - **Notices.** The cast opts in from the home page. You send messages from the Notices screen under Sets, and new sets announce themselves.
-- **Settings**, under Sets: tagline, footer note, an emoji badge on the playing track, confetti text (and optional hearts) behind a triple tap on the title, the iPhone install hint, and switches for offline saving, notifications, new-set notices, and the count-in.
+- **Settings**, under Sets: tagline, footer note, an emoji badge on the playing track, confetti text (and optional hearts) behind a triple tap on the title, the iPhone install hint, and switches for offline saving, notifications, new-set and new-call notices, and the count-in.
 
 ## How it is built
 
@@ -49,6 +50,7 @@ Design rules the code follows: transform and opacity animations only, no font-we
 
 | Where | What |
 | --- | --- |
+| `callboard_call` post | A posted call: title and body from the editor, `_callboard_when` in the site's time zone (empty for a plain notice), `_callboard_where`, `_callboard_numbers` as the attachment ids of the tracks being worked. It leaves the board six hours after its time |
 | `callboard_set` post | Name, slug, order, credits (`_callboard_credits`), source link, share image |
 | Audio attachment, parented to the set | The track. `menu_order` is its position |
 | `_callboard_duration` | Seconds, measured at import |
@@ -108,8 +110,8 @@ A cast site should not be discoverable. `Privacy` sends `noindex` through `wp_ro
 | Path | Purpose |
 | --- | --- |
 | `callboard.php` | Plugin header, constants, autoload, bootstrap |
-| `includes/` | One class per concern, `Callboard\` namespace: `Plugin` wires them, `Router`, `Frontend`, `Sets`, `PostTypes`, `Admin`, `Settings`, `Importer`, `Fetcher`, `Requests`, `Push`, `Pwa`, `Privacy`, `Art`, `Cli`. `helpers.php` holds icons and formatting |
-| `templates/` | Server-rendered views: `index.php` shell, `fragment.php` (a view without the shell, for navigation), `home.php`, `set.php`, `deck.php` (the player), `footer.php` |
+| `includes/` | One class per concern, `Callboard\` namespace: `Plugin` wires them, `Router`, `Frontend`, `Sets`, `Calls`, `PostTypes`, `Admin`, `Settings`, `Importer`, `Fetcher`, `Requests`, `Push`, `Pwa`, `Privacy`, `Art`, `Cli`. `helpers.php` holds icons and formatting |
+| `templates/` | Server-rendered views: `index.php` shell, `fragment.php` (a view without the shell, for navigation), `home.php`, `board.php` (the posted calls), `set.php`, `deck.php` (the player), `footer.php` |
 | `assets/` | `app.js` and `app.css`, served as written |
 | `pwa/sw.js` | Service worker source, templated into the site root |
 | `tests/e2e/` | Playwright suites: front end, controls, PWA, admin, privacy, accessibility |
@@ -263,7 +265,7 @@ A running log of browser and WordPress capabilities and what each would do for a
 - [ ] [Script Modules](https://make.wordpress.org/core/2024/03/04/script-modules-in-6-5/) to load the app as an ES module with import maps once the service worker precache learns module URLs.
 - [ ] [HTML API](https://developer.wordpress.org/reference/classes/wp_html_tag_processor/) to rewrite the rendered shell instead of regular expressions, should the theme ever be allowed to contribute markup.
 - [ ] [Abilities API](https://make.wordpress.org/core/tag/abilities-api/) to expose import and notice sending to agents and other plugins.
-- [ ] [Presence API](https://github.com/WordPress/presence-api) (a Featured Plugin) for showing who else is rehearsing right now. Useful in the admin; on the front end it would need every cast member logged in, which waits on the gated front end above.
+- [ ] [Presence API](https://github.com/WordPress/presence-api) (a Featured Plugin) for the sign-in sheet: who is in the building at half hour. On the front end it needs every cast member known to the site, which waits on the gated front end above; the honor-system version (pick your name once, the device remembers) can come first.
 - [ ] [Plugin dependencies header](https://make.wordpress.org/core/2024/03/05/introducing-plugin-dependencies-in-wordpress-6-5/) is not needed; the plugin stands alone.
 
 </details>

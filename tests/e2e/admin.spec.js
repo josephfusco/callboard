@@ -17,6 +17,7 @@ test.describe( 'Admin', () => {
 		await page.fill( '#callboard-badge', '★' );
 		await page.fill( '#callboard-confetti', '22' );
 		await page.check( '#callboard-hearts' );
+		await page.fill( '#callboard-accent', '#3b82f6' );
 		await page.click( '#submit' );
 		await expect(
 			page
@@ -29,6 +30,22 @@ test.describe( 'Admin', () => {
 		await expect(
 			page.locator( 'meta[property="og:description"]' )
 		).toHaveAttribute( 'content', /Practice tracks/ );
+		expect(
+			await page.evaluate( () =>
+				getComputedStyle( document.documentElement )
+					.getPropertyValue( '--accent' )
+					.trim()
+			)
+		).toBe( '#3b82f6' );
+		// back to the house colour, so the other tests and the screenshots see it
+		await admin.visitAdminPage(
+			'edit.php',
+			'post_type=callboard_set&page=callboard-settings'
+		);
+		await page.fill( '#callboard-accent', '' );
+		await page.click( '#submit' );
+		await page.goto( '/' );
+		await expect( page.locator( '#callboard-accent' ) ).toHaveCount( 0 );
 	} );
 
 	test( 'a set has a tracks meta box with reorderable, retitlable rows', async ( {

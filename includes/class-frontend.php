@@ -128,6 +128,26 @@ final class Frontend {
 	public static function inline_css(): void {
 		$css = file_get_contents( CALLBOARD_DIR . 'assets/app.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		echo '<style id="callboard-css">' . $css . '</style>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static plugin file.
+		$accent = sanitize_hex_color( (string) Settings::get( 'accent' ) );
+		if ( $accent ) {
+			// One token drives the played wave, the filament, the marks, and the pins. Text on light backgrounds
+			// takes a darker shade of it so it stays readable.
+			printf( '<style id="callboard-accent">:root{--accent:%1$s;--accent-text:%2$s}@media (prefers-color-scheme:dark){:root{--accent-text:%1$s}}</style>' . "\n", esc_html( $accent ), esc_html( self::shade( $accent, 0.78 ) ) );
+		}
+	}
+
+	/**
+	 * A hex colour scaled toward black (factor below 1) or white (above 1).
+	 *
+	 * @param string $hex    #rrggbb.
+	 * @param float  $factor Multiplier for each channel.
+	 */
+	private static function shade( string $hex, float $factor ): string {
+		$out = '#';
+		foreach ( str_split( ltrim( $hex, '#' ), 2 ) as $ch ) {
+			$out .= str_pad( dechex( (int) max( 0, min( 255, round( hexdec( $ch ) * $factor ) ) ) ), 2, '0', STR_PAD_LEFT );
+		}
+		return $out;
 	}
 
 	/**
@@ -165,6 +185,11 @@ final class Frontend {
 				}
 			}
 		}
+		/**
+		 * Print into the head of every front-end page: a stylesheet, a font, extra meta. The theme's own
+		 * head is not used, so this is the place.
+		 */
+		do_action( 'callboard_head' );
 	}
 
 	/**

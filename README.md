@@ -21,7 +21,7 @@ Every pull request gets its own Playground link in a sticky comment, built from 
 - **Player.** One persistent deck: waveform scrubber, A/B loop, speed with the pitch held, count-in on tracks with a tempo, lyrics in time, timestamped director's notes, AirPlay and Cast, lock-screen controls, one tab playing at a time.
 - **Offline.** Each set offers "Save offline". Saved audio plays from the service worker, seeks included, with no network.
 - **Notices.** The cast opts in from the home page. You send messages from the Notices screen under Sets, and new sets announce themselves.
-- **Settings**, under Sets: tagline, footer note, an emoji badge on the playing track, confetti text (and optional hearts) behind a triple tap on the title, the iPhone install hint, and switches for offline saving, notifications, new-set and new-call notices, and the count-in.
+- **Settings**, under Sets: tagline, footer note, an accent colour, an emoji badge on the playing track, confetti text (and optional hearts) behind a triple tap on the title, the iPhone install hint, and switches for offline saving, notifications, new-set and new-call notices, and the count-in.
 
 ## How it is built
 
@@ -101,6 +101,27 @@ A cast site should not be discoverable. `Privacy` sends `noindex` through `wp_ro
 <summary>Artwork</summary>
 
 `Art` draws covers, share cards, and the iPhone splash screens with GD: a warm ground, the set name, a label, one accent. Nothing is uploaded; everything is derived from the set.
+
+</details>
+
+<details>
+<summary>Developer API</summary>
+
+A short list on purpose. Each hook exists because a site needed it; none is speculative.
+
+| Hook | Kind | What it does |
+| --- | --- | --- |
+| `callboard_head` | action | Print into the head of every front-end page: a stylesheet, a font, extra meta. The theme's head is not used, so this is the place |
+| `callboard_template_path` | filter | Swap any template (`index`, `home`, `set`, `board`, `deck`, `footer`, `fragment`) for your own file; it receives the same `$args` |
+| `callboard_app_data` | filter | Everything the script knows on load: site, sets, settings, text |
+| `callboard_set_data` | filter | One set's data as the templates and the player see it |
+| `callboard_board` | filter | The calls the board shows, soonest first; the first timed one carries `is_next` |
+| `callboard_push_message` | filter | Title, body, and URL of a notification before it goes out; return an empty array to send nothing |
+| `callboard_call_published` | action | A call went up on the board |
+| `callboard_imported` | action | A set folder was imported |
+| `callboard_import_dir`, `callboard_ytdlp_path`, `callboard_ffmpeg_path`, `callboard_max_subscribers` | filters | Where sets are read from, where the tools are, how many devices may subscribe |
+
+The accent colour is a setting rather than a hook, because it is the customisation most sites want: one token drives the played wave, the filament, the marks, and the pins.
 
 </details>
 

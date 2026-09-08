@@ -227,6 +227,7 @@ final class Admin {
 			'tagline'         => array( __( 'Tagline', 'callboard' ), 'text', __( 'Shown under the title and in link previews.', 'callboard' ) ),
 			'footer_note'     => array( __( 'Home page footer', 'callboard' ), 'text', __( 'A short disclosure, e.g. "For rehearsal use only."', 'callboard' ) ),
 			'badge'           => array( __( 'Badge on the playing track', 'callboard' ), 'text', __( 'An emoji, or leave empty.', 'callboard' ) ),
+			'accent'          => array( __( 'Accent colour', 'callboard' ), 'color', __( 'A hex colour such as #3b82f6 for the played wave, the filament, and the marks. Empty keeps the house orange.', 'callboard' ) ),
 			'confetti'        => array( __( 'Confetti text', 'callboard' ), 'text', __( 'Triple-tap the big title to release it. A lucky number, a name. Empty turns it off.', 'callboard' ) ),
 			'hearts'          => array( __( 'Mix hearts into the confetti', 'callboard' ), 'checkbox', '' ),
 			'show_hint'       => array( __( 'Show the "Add to Home Screen" hint on iPhone', 'callboard' ), 'checkbox', '' ),
@@ -263,6 +264,8 @@ final class Admin {
 		$name  = Settings::OPTION . '[' . $args['key'] . ']';
 		if ( 'checkbox' === $args['type'] ) {
 			printf( '<input type="checkbox" id="callboard-%1$s" name="%2$s" value="1" %3$s>', esc_attr( $args['key'] ), esc_attr( $name ), checked( (bool) $value, true, false ) );
+		} elseif ( 'color' === $args['type'] ) {
+			printf( '<input type="text" class="regular-text code" id="callboard-%1$s" name="%2$s" value="%3$s" placeholder="#e8541e" pattern="#[0-9a-fA-F]{6}" style="border-left:14px solid %4$s">', esc_attr( $args['key'] ), esc_attr( $name ), esc_attr( (string) $value ), esc_attr( (string) $value ? (string) $value : '#e8541e' ) );
 		} else {
 			printf( '<input type="text" class="regular-text" id="callboard-%1$s" name="%2$s" value="%3$s">', esc_attr( $args['key'] ), esc_attr( $name ), esc_attr( (string) $value ) );
 		}

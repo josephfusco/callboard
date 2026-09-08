@@ -32,6 +32,7 @@ final class Settings {
 			'offline'         => true,
 			'push'            => true,
 			'notify_new_sets' => true,
+			'notify_calls'    => true,
 			'count_in'        => false,
 		);
 	}
@@ -72,6 +73,7 @@ final class Settings {
 			'offline'         => ! empty( $input['offline'] ),
 			'push'            => ! empty( $input['push'] ),
 			'notify_new_sets' => ! empty( $input['notify_new_sets'] ),
+			'notify_calls'    => ! empty( $input['notify_calls'] ),
 			'count_in'        => ! empty( $input['count_in'] ),
 		);
 	}

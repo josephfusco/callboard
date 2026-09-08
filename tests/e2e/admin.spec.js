@@ -151,4 +151,64 @@ test.describe( 'Admin', () => {
 			await expect( page.locator( '#submit' ) ).toBeDisabled();
 		}
 	} );
+
+	test( 'a posted call opens the board, and its number starts the track', async ( {
+		admin,
+		page,
+	} ) => {
+		await admin.visitAdminPage(
+			'post-new.php',
+			'post_type=callboard_call'
+		);
+		await page.fill( '#title', 'Act II sitzprobe' );
+		await page.click( '#content-html' ); // the code tab: the visual editor hides the textarea
+		await page.fill( '#content', 'Orchestra joins us. Be warmed up.' );
+		const when = new Date( Date.now() + 3 * 86400 * 1000 );
+		when.setHours( 19, 0, 0, 0 );
+		const pad = ( n ) => String( n ).padStart( 2, '0' );
+		await page.fill(
+			'#callboard-when',
+			`${ when.getFullYear() }-${ pad( when.getMonth() + 1 ) }-${ pad(
+				when.getDate()
+			) }T19:00`
+		);
+		await page.fill( '#callboard-where', 'Pit' );
+		const demo = page.locator( '.callboard-numbers details', {
+			hasText: 'Demo Set',
+		} );
+		await demo.locator( 'summary' ).click();
+		await demo.locator( 'input[type=checkbox]' ).nth( 2 ).check(); // Für Elise
+		await page.click( '#publish' );
+		await page.waitForURL( /post\.php\?post=\d+&action=edit&message=/ );
+		await expect( page.locator( '#callboard-where' ) ).toHaveValue( 'Pit' );
+
+		await page.goto( '/' );
+		const call = page.locator( '.call', { hasText: 'Act II sitzprobe' } );
+		await expect( call ).toBeVisible();
+		await expect( call.locator( '.call-rel' ) ).toContainText( /in|days/ );
+		await expect( call.locator( '.call-where' ) ).toHaveText( 'Pit' );
+		await expect( call.locator( '.call-numbers a' ) ).toHaveText(
+			'Für Elise'
+		);
+		await call.locator( '.call-numbers a' ).click();
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'Für Elise'
+		);
+
+		// leave the board as it was
+		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_call' );
+		const rows = page.locator( '#the-list tr', {
+			hasText: 'Act II sitzprobe',
+		} );
+		await expect(
+			rows.first().locator( '.column-callboard_when' )
+		).toContainText( /\(in / );
+		while ( ( await rows.count() ) > 0 ) {
+			const n = await rows.count();
+			await rows.first().hover();
+			await rows.first().locator( 'a.submitdelete' ).click();
+			await expect( rows ).toHaveCount( n - 1 );
+		}
+	} );
 } );

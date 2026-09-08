@@ -6,7 +6,7 @@ This file is the long-form record of the project: what it does, how it is built,
 
 ## Try it
 
-No install needed. Launch a scratch site from `main` with a demo set already imported.
+The landing page is at [josephfus.co/callboard](https://josephfus.co/callboard/). No install needed. Launch a scratch site from `main` with a demo set already imported.
 
 [![Launch in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/josephfusco/callboard/main/blueprint.json)
 

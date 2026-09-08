@@ -1,10 +1,13 @@
 name: Pages
 
-# Publishes site/ (the marketing page) with GitHub Pages. Enable Pages → Source:
-# GitHub Actions once the repository is public, then switch this to push-on-main.
+# Publishes site/ (the landing page) with GitHub Pages, source "GitHub Actions". The Pages site is
+# public even though the repository is private; it serves at https://josephfus.co/callboard/.
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['site/**']
 
 permissions: {}
 

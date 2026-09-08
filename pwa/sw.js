@@ -128,8 +128,9 @@ self.addEventListener( 'fetch', ( e ) => {
 	if ( /\.(mp3|m4a|aac|ogg|opus|wav|flac)$/i.test( url.pathname ) ) {
 		return e.respondWith( audio( req, url ) );
 	}
-	if ( req.mode === 'navigate' ) {
-		if ( url.pathname.startsWith( '/wp-' ) ) {
+	const fragment = url.searchParams.has( 'fragment' ); // a view without the shell, fetched by the page on navigation
+	if ( req.mode === 'navigate' || fragment ) {
+		if ( ! fragment && url.pathname.startsWith( '/wp-' ) ) {
 			// wp-admin and wp-login are not ours, but with navigation preload on the browser has already sent
 			// the request; hand that response over rather than let a second request follow the first, which
 			// on an options.php redirect loses the "Settings saved" notice.
@@ -137,7 +138,7 @@ self.addEventListener( 'fetch', ( e ) => {
 				( async () => ( await e.preloadResponse ) || fetch( req ) )()
 			);
 		}
-		return e.respondWith( page( req, e ) );
+		return e.respondWith( page( req, e, fragment ) );
 	}
 	if (
 		url.pathname.startsWith( PLUGIN ) ||
@@ -182,7 +183,7 @@ async function audio( req, url ) {
 		},
 	} );
 }
-async function page( req, e ) {
+async function page( req, e, fragment ) {
 	const cache = await caches.open( SHELL );
 	try {
 		const res = ( await e.preloadResponse ) || ( await fetch( req ) );
@@ -191,9 +192,11 @@ async function page( req, e ) {
 		}
 		return res;
 	} catch {
+		// a fragment with no copy fails, and the page falls back to a full navigation, which lands here again
+		// as a document and gets the shell's home
 		return (
 			( await cache.match( req.url ) ) ||
-			( await cache.match( '/' ) ) ||
+			( ! fragment && ( await cache.match( '/' ) ) ) ||
 			new Response( 'You are offline.', {
 				status: 503,
 				headers: { 'Content-Type': 'text/plain' },

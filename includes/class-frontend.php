@@ -46,11 +46,7 @@ final class Frontend {
 			'api' => esc_url_raw( rest_url( 'callboard/v1/push/' ) ),
 		) : null;
 		$data['text']     = array(
-			'tagline'        => Settings::get( 'tagline' ),
-			'footer_note'    => Settings::get( 'footer_note' ),
-			'all_sets'       => __( 'All sets', 'callboard' ),
 			'play_all'       => __( 'Play all', 'callboard' ),
-			'share'          => __( 'Share a link to this set', 'callboard' ),
 			'copied'         => __( 'Link copied', 'callboard' ),
 			'pause'          => __( 'Pause', 'callboard' ),
 			'resume'         => __( 'Play', 'callboard' ),
@@ -64,29 +60,17 @@ final class Frontend {
 			'saving_set'     => __( 'Saving offline, %1$s of %2$s', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
 			'save_rest'      => __( 'Save the rest, %1$s of %2$s saved', 'callboard' ),
-			'updated'        => __( 'Updated', 'callboard' ),
-			'reload'         => __( 'Reload', 'callboard' ),
 			'saved_hover'    => __( ' · hold to remove', 'callboard' ),
 			'saved_hint'     => __( 'Saved offline. Press and hold, or press Delete, to remove the copies.', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
 			'saving'         => __( 'Saving %1$s/%2$s · Cancel', 'callboard' ),
-			'not_here'       => __( "That page isn't here. Everything we have is below.", 'callboard' ),
-			'nothing'        => __( 'Nothing here yet.', 'callboard' ),
-			'no_audio'       => __( 'No audio in this set yet.', 'callboard' ),
-			'audio_by'       => __( 'Audio by', 'callboard' ),
-			'playlist'       => __( 'Playlist', 'callboard' ),
-			'by'             => __( 'by', 'callboard' ),
-			'lyrics'         => __( 'lyrics', 'callboard' ),
 			/* translators: %s: track title. */
-			'play'           => __( 'Play %s', 'callboard' ),
-			'tracks'         => __( 'Tracks', 'callboard' ),
 			'lyrics_label'   => __( 'Lyrics', 'callboard' ),
 			'lyrics_sheet'   => __( 'Lyrics · auto-captions, may be rough', 'callboard' ),
 			'notes'          => __( 'Notes', 'callboard' ),
 			'notes_sheet'    => __( 'Director notes', 'callboard' ),
 			'show_notes'     => __( 'Show director notes', 'callboard' ),
 			'hide_notes'     => __( 'Hide director notes', 'callboard' ),
-			'loop'           => __( 'Loop', 'callboard' ),
 			'loop_clear'     => __( 'Clear loop', 'callboard' ),
 			'loop_set'       => __( 'Set a loop: tap at the start, then at the end', 'callboard' ),
 			'loop_from'      => __( 'From', 'callboard' ),
@@ -95,7 +79,6 @@ final class Frontend {
 			'rate_label'     => __( 'Playback speed %s, tap to slow down', 'callboard' ),
 			'rate_reset'     => __( 'Playback speed 0.5×, tap for full speed', 'callboard' ),
 			/* translators: %d: beats per minute. */
-			'tempo'          => __( '%d beats per minute, counts in', 'callboard' ),
 			'show_lyrics'    => __( 'Show lyrics', 'callboard' ),
 			'hide_lyrics'    => __( 'Hide lyrics', 'callboard' ),
 			'show_track'     => __( 'Show current track', 'callboard' ),
@@ -111,6 +94,8 @@ final class Frontend {
 			/* translators: %s: track title. */
 			'saving_track'   => __( 'Saving %s, tap to cancel', 'callboard' ),
 			'notify'         => __( 'Notify me about new sets', 'callboard' ),
+			/* translators: %s: track title. */
+			'left_off'       => __( 'Left off at %s', 'callboard' ),
 			'notify_on'      => __( 'Notifications on', 'callboard' ),
 			'notify_home'    => __( 'Add to Home Screen first, then turn on notifications from there.', 'callboard' ),
 			'notify_denied'  => __( 'Notifications are blocked in your browser settings.', 'callboard' ),

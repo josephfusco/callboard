@@ -29,28 +29,11 @@
 					Math.floor( s % 60 )
 			  ).padStart( 2, '0' ) }`
 			: '0:00';
-	const esc = ( v ) =>
-		String( v ?? '' ).replace(
-			/[&<>"']/g,
-			( c ) =>
-				( {
-					'&': '&amp;',
-					'<': '&lt;',
-					'>': '&gt;',
-					'"': '&quot;',
-					"'": '&#039;',
-				} )[ c ]
-		);
 	const tpl = ( s, ...a ) =>
 		s.replace( /%(\d)\$s|%s/g, ( m, n ) => a[ n ? n - 1 : 0 ] );
 	const reduce = () =>
 		window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
 	const setBy = ( slug ) => G.sets.find( ( s ) => s.slug === slug );
-	const hasLyrics = ( set, id ) => !! ( set.lyrics && set.lyrics[ id ] );
-	// Inline icons the client renderer needs; the same paths callboard_icon() ships.
-	const ICONS = {
-		share: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v12m0-12L8 7m4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-	};
 
 	( window.requestIdleCallback || ( ( f ) => setTimeout( f, 1000 ) ) )(
 		() => {
@@ -128,154 +111,6 @@
 		ls.set( 'callboard:a2hs', 1 );
 		paintTip();
 	} );
-
-	// ---- Views, rendered from data (same markup the server renders on first load)
-	const link = ( text, url ) =>
-		url
-			? `<a href="${ esc(
-					url
-			  ) }" target="_blank" rel="nofollow noopener noreferrer">${ esc(
-					text
-			  ) }</a>`
-			: esc( text );
-	const footer = ( set ) => {
-		if ( ! set ) {
-			return `<footer class="colophon">${
-				T.footer_note ? `<p>${ esc( T.footer_note ) }</p>` : ''
-			}<p class="version">Callboard ${ esc( G.version ) }</p></footer>`;
-		}
-		const c = set.credits || {},
-			names = Object.keys( c.uploaders || {} );
-		return `<footer class="colophon">${
-			names.length
-				? `<p>${ esc( T.audio_by ) } ${ names
-						.map( ( n ) => link( n, c.uploaders[ n ] ) )
-						.join( ', ' ) }${
-						c.playlist_url
-							? ` · ${ link( T.playlist, c.playlist_url ) }${
-									c.curator
-										? ` ${ esc( T.by ) } ${ link(
-												c.curator,
-												c.curator_url
-										  ) }`
-										: ''
-							  }`
-							: ''
-				  }</p>`
-				: ''
-		}</footer>`;
-	};
-	const renderHome = () => `<main class="app" id="main" tabindex="-1">
-<header class="masthead"><h1>${ esc( G.site ) }</h1>${
-		G.push
-			? `<div class="actions"><button type="button" class="btn btn-quiet" id="notify" hidden>${ esc(
-					T.notify
-			  ) }</button><p class="note small" id="notify-note" hidden></p></div>`
-			: ''
-	}</header>
-${
-	G.sets.length
-		? `<ul class="sets">${ G.sets
-				.map(
-					( s ) =>
-						`<li><a class="set" href="${ esc( G.home ) }${ esc(
-							s.slug
-						) }/">${
-							s.cover
-								? `<img class="set-art" src="${ esc(
-										s.cover
-								  ) }" alt="" width="56" height="56" loading="lazy" decoding="async">`
-								: `<span class="set-mark" aria-hidden="true">${ esc(
-										s.name.slice( 0, 1 ).toUpperCase()
-								  ) }</span>`
-						}<span class="set-text"><span class="set-name" style="view-transition-name:set-${ esc(
-							s.slug
-						) }">${ esc(
-							s.name
-						) }</span><span class="set-meta">${ esc(
-							s.meta
-						) }</span></span><span class="set-off" data-slug="${ esc(
-							s.slug
-						) }" data-state=""><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span><span class="set-go" aria-hidden="true"></span></a></li>`
-				)
-				.join( '' ) }</ul>`
-		: `<p class="note">${ esc( T.nothing ) }</p>`
-}
-${ footer( null ) }
-</main>`;
-	const renderSet = ( s ) => `<main class="app" id="main" tabindex="-1">
-<header class="masthead">
-<a class="back" href="${ esc( G.home ) }">${ esc( T.all_sets ) }</a>
-<h1 style="view-transition-name:set-${ esc( s.slug ) }">${ esc( s.name ) }</h1>
-<p class="label">${ esc( s.meta ) }</p>
-${
-	s.tracks.length
-		? `<div class="actions"><button type="button" class="btn" id="play-all">${ esc(
-				T.play_all
-		  ) }</button>${
-				S.offline
-					? `<button type="button" class="btn btn-quiet" id="offline">${ esc(
-							`${ T.save } · ${ sizeLabel(
-								s.tracks.reduce(
-									( a, t ) => a + ( t.bytes || 0 ),
-									0
-								)
-							) }`
-					  ) }</button>`
-					: ''
-		  }<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="${ esc(
-				T.share
-		  ) }">${ ICONS.share }</button></div>`
-		: ''
-}
-</header>
-${
-	s.tracks.length
-		? `<ol class="tracks" id="tracks" aria-label="${ esc(
-				T.tracks
-		  ) }">${ s.tracks
-				.map(
-					( t, i ) =>
-						`<li><button type="button" class="track" data-i="${ i }" aria-label="${ esc(
-							tpl( T.play, t.title )
-						) }"><span class="num"><span class="digits">${ String(
-							t.index
-						).padStart(
-							2,
-							'0'
-						) }</span><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span></span><span class="title">${ esc(
-							t.title
-						) }${
-							hasLyrics( s, t.id )
-								? ` <span class="has-lyrics">${ esc(
-										T.lyrics
-								  ) }</span>`
-								: ''
-						}</span><span class="len">${
-							S.badge
-								? `<span class="hh" aria-hidden="true">${ esc(
-										S.badge
-								  ) }</span>`
-								: ''
-						}${
-							t.bpm
-								? `<span class="bpm" aria-label="${ esc(
-										tpl( T.tempo, t.bpm )
-								  ) }">♩ ${ t.bpm }</span>`
-								: ''
-						}${ fmt( t.duration ) }</span></button>${
-							S.offline
-								? `<button type="button" class="dl" data-i="${ i }" data-state="" aria-label="${ esc(
-										tpl( T.save_track, t.title )
-								  ) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>`
-								: ''
-						}</li>`
-				)
-				.join( '' ) }</ol>`
-		: `<p class="note">${ esc( T.no_audio ) }</p>`
-}
-${ footer( s ) }
-</main>`;
 
 	// ---- Confetti: triple-tap the big title (configured text, optional hearts)
 	const burst = () => {
@@ -2020,39 +1855,51 @@ ${ footer( s ) }
 		const raw = atob( s );
 		return Uint8Array.from( [ ...raw ].map( ( c ) => c.charCodeAt( 0 ) ) );
 	};
+	const toastEl = $( 'toast' );
+	let toastTimer = 0;
+	function toast( msg ) {
+		if ( ! toastEl ) {
+			return;
+		}
+		toastEl.textContent = msg;
+		toastEl.hidden = false;
+		clearTimeout( toastTimer );
+		toastTimer = setTimeout( () => {
+			toastEl.hidden = true;
+		}, 4000 );
+	}
 	async function bindNotify() {
-		const btn = $( 'notify' ),
-			note = $( 'notify-note' );
+		const btn = $( 'notify' );
+		if ( ! btn ) {
+			return;
+		}
+		const iosTab = isIOS && ! standalone; // Safari's tab: push needs the Home Screen app; the bell explains
 		if (
-			! btn ||
-			! G.push ||
-			! ( 'serviceWorker' in navigator ) ||
-			! ( 'PushManager' in window ) ||
-			! ( 'Notification' in window )
+			! iosTab &&
+			( ! G.push ||
+				! ( 'serviceWorker' in navigator ) ||
+				! ( 'PushManager' in window ) ||
+				! ( 'Notification' in window ) )
 		) {
+			btn.hidden = true; // no push in this browser at all: the one case the bell leaves
 			return;
 		}
-		if ( isIOS && ! standalone ) {
-			note.textContent = T.notify_home;
-			note.hidden = false;
-			return;
-		}
-		if ( Notification.permission === 'denied' ) {
-			note.textContent = T.notify_denied;
-			note.hidden = false;
-			return;
-		}
-		const reg = await navigator.serviceWorker.ready;
-		let sub = await reg.pushManager.getSubscription();
-		const paintBtn = () => {
-			btn.hidden = false;
-			btn.textContent = sub ? T.notify_on : T.notify;
-			btn.classList.toggle( 'is-done', !! sub );
+		const reg = iosTab ? null : await navigator.serviceWorker.ready;
+		let sub = reg ? await reg.pushManager.getSubscription() : null;
+		const paintBell = () => {
+			btn.dataset.state = sub ? 'on' : '';
 			btn.setAttribute( 'aria-pressed', sub ? 'true' : 'false' );
+			btn.setAttribute( 'aria-label', sub ? T.notify_on : T.notify );
 		};
-		paintBtn();
+		paintBell();
 		btn.onclick = async () => {
 			haptic(); // now, while this is still the tap; nothing after the awaits below can
+			if ( iosTab ) {
+				return toast( T.notify_home );
+			}
+			if ( Notification.permission === 'denied' ) {
+				return toast( T.notify_denied );
+			}
 			btn.disabled = true;
 			try {
 				if ( sub ) {
@@ -2063,14 +1910,11 @@ ${ footer( s ) }
 					} );
 					await sub.unsubscribe();
 					sub = null;
+				} else if (
+					( await Notification.requestPermission() ) !== 'granted'
+				) {
+					toast( T.notify_denied );
 				} else {
-					if (
-						( await Notification.requestPermission() ) !== 'granted'
-					) {
-						note.textContent = T.notify_denied;
-						note.hidden = false;
-						return;
-					}
 					sub = await reg.pushManager.subscribe( {
 						userVisibleOnly: true,
 						applicationServerKey: urlBase64ToUint8Array(
@@ -2085,12 +1929,31 @@ ${ footer( s ) }
 					if ( ! r.ok ) {
 						await sub.unsubscribe();
 						sub = null;
+					} else {
+						toast( T.notify_on );
 					}
 				}
 			} catch {}
 			btn.disabled = false;
-			paintBtn();
+			paintBell();
 		};
+	}
+
+	// Home rows: where each set was left, and which one is in the deck. Text inside the meta line, so nothing moves.
+	function paintHomeResume() {
+		document.querySelectorAll( '.set-resume' ).forEach( ( el ) => {
+			const s = setBy( el.dataset.slug ),
+				pos = s && ls.get( `callboard:${ s.slug }` ),
+				t = pos && s.tracks[ pos.i ];
+			el.closest( '.set' )?.classList.toggle(
+				'is-now',
+				!! queue && queue.slug === s?.slug
+			);
+			el.textContent =
+				t && ( pos.i > 0 || pos.t >= 15 )
+					? ` · ${ tpl( T.left_off, t.title ) }`
+					: '';
+		} );
 	}
 
 	// ---- Per-view bindings (first load and after every render)
@@ -2119,6 +1982,9 @@ ${ footer( s ) }
 				? 'partial'
 				: '';
 			el.dataset.state = state;
+			if ( state === 'saved' ) {
+				warmPage( s.slug );
+			}
 			if ( state ) {
 				el.style.setProperty(
 					'--p',
@@ -2144,6 +2010,7 @@ ${ footer( s ) }
 		if ( ! set ) {
 			bindNotify().catch( () => {} );
 			paintHomeOffline().catch( () => {} );
+			paintHomeResume();
 		}
 		if ( set?.tracks.length ) {
 			if ( ! queue ) {
@@ -2490,6 +2357,7 @@ ${ footer( s ) }
 				}
 			};
 			await Promise.all( [ worker(), worker() ] );
+			warmPage( set.slug ); // the set is saved; its page should open offline too
 			if ( full ) {
 				return noSpace( await freeSpace() );
 			}
@@ -2525,7 +2393,10 @@ ${ footer( s ) }
 		} );
 	}
 
-	// ---- Client-side routing: render from data, no fetches. '' = home, 'slug' = a set, null = not ours.
+	// ---- Client-side routing. The server renders every view; on navigation the script fetches the view as an
+	// HTML fragment (the same templates, without the shell) and swaps it in under a view transition. One
+	// renderer, on the server. The service worker keeps fragments for offline; a saved set's is warmed here.
+	// '' = home, 'slug' = a set, null = not ours.
 	const homePath = new URL( G.home ).pathname.replace( /\/$/, '' );
 	function routeOf( href ) {
 		const u = new URL( href, location.href );
@@ -2543,20 +2414,89 @@ ${ footer( s ) }
 		}
 		return setBy( rest ) ? rest : null;
 	}
-	function go( url, push = true, animate = true ) {
+	const fragmentUrl = ( slug ) =>
+		`${ G.home }${ slug ? `${ slug }/` : '' }?fragment=1`;
+	// slug -> the fragment's HTML once it has arrived, or the promise of it. A touch on a link starts the
+	// fetch, so by the time the tap lands the view is usually here. A used copy is refreshed for next time.
+	const fragments = new Map();
+	function fetchFragment( slug ) {
+		const p = fetch( fragmentUrl( slug ), {
+			cache: 'no-cache',
+			headers: { Accept: 'text/html' },
+		} ).then( ( r ) => {
+			if ( ! r.ok ) {
+				throw new Error( String( r.status ) );
+			}
+			return r.text();
+		} );
+		fragments.set( slug, p );
+		p.then(
+			( html ) => fragments.set( slug, html ),
+			() => fragments.delete( slug )
+		);
+		return p;
+	}
+	const prefetch = ( slug ) => {
+		if ( ! fragments.has( slug ) ) {
+			fetchFragment( slug );
+		}
+	};
+	const warmed = new Set();
+	function warmPage( slug ) {
+		// a saved set has to open offline: fetch its fragment once while online so the worker holds a copy
+		if ( warmed.has( slug ) || ! navigator.onLine ) {
+			return;
+		}
+		warmed.add( slug );
+		fetch( fragmentUrl( slug ), { cache: 'no-cache' } ).catch( () =>
+			warmed.delete( slug )
+		);
+	}
+	async function go( url, push = true, animate = true ) {
 		const slug = routeOf( url );
 		if ( slug === null ) {
 			location.href = url;
 			return;
 		}
 		const set = slug ? setBy( slug ) : null;
+		const slow = setTimeout(
+			() => document.body.classList.add( 'is-loading' ),
+			300
+		);
+		let html;
+		try {
+			const have = fragments.get( slug );
+			if ( typeof have === 'string' ) {
+				html = have;
+				fetchFragment( slug ); // this copy is used; the next visit gets a fresh one
+			} else {
+				html = await ( have || fetchFragment( slug ) );
+			}
+		} catch {
+			clearTimeout( slow );
+			document.body.classList.remove( 'is-loading' );
+			// offline with no copy: a full navigation, which the worker answers from the shell
+			if ( push ) {
+				location.href = url;
+			} else {
+				location.reload();
+			}
+			return;
+		}
+		clearTimeout( slow );
+		document.body.classList.remove( 'is-loading' );
 		if ( push ) {
 			history.pushState( {}, '', url );
 		}
 		const apply = () => {
 			const t = document.createElement( 'template' );
-			t.innerHTML = set ? renderSet( set ) : renderHome();
-			$( 'main' ).replaceWith( t.content.firstElementChild );
+			t.innerHTML = html;
+			const main = t.content.querySelector( 'main' );
+			if ( ! main ) {
+				location.href = url;
+				return;
+			}
+			$( 'main' ).replaceWith( main );
 			document.title = set ? `${ set.name } · ${ G.site }` : G.site;
 			document.body.dataset.slug = slug;
 			document.body.classList.toggle( 'view-home', ! slug );
@@ -2581,6 +2521,21 @@ ${ footer( s ) }
 	window.addEventListener( 'popstate', ( e ) =>
 		go( location.href, false, ! e.hasUAVisualTransition )
 	);
+	// The first touch on a link starts the fetch; hovering does too. Back to home is prefetched at idle.
+	const prefetchLink = ( e ) => {
+		const a = e.target.closest?.( 'a[href]' );
+		const slug = a && routeOf( a.href );
+		if ( slug !== null && slug !== undefined ) {
+			prefetch( slug );
+		}
+	};
+	document.addEventListener( 'pointerdown', prefetchLink, { passive: true } );
+	document.addEventListener( 'pointerover', prefetchLink, { passive: true } );
+	if ( view() ) {
+		( window.requestIdleCallback || ( ( f ) => setTimeout( f, 2000 ) ) )(
+			() => prefetch( '' )
+		);
+	}
 
 	bindView();
 } )();

@@ -530,44 +530,32 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#play-all' ) ).toHaveCount( 0 );
 	} );
 
-	test( 'the server and client renderers produce the same markup', async ( {
+	test( 'navigation swaps in the fragment the server renders', async ( {
 		page,
+		request,
 	} ) => {
-		// state the player paints after load is not part of the comparison
-		const tidy = ( html ) =>
-			html
-				.replace( />\s+</g, '><' )
-				.replace( /\s+/g, ' ' )
-				.replace(
-					/ (hidden|disabled|aria-current|aria-label|aria-pressed|data-state|style)(="[^"]*")?/g,
-					''
-				)
-				.replace(
-					/ class="([^"]*)"/g,
-					( m, c ) =>
-						` class="${ c
-							.replace(
-								/\b(active|playing|is-done|is-busy|is-playing)\b/g,
-								''
-							)
-							.trim() }"`
-				)
-				.trim();
-		for ( const path of [ '/long-set/', '/', '/empty-set/' ] ) {
-			await page.goto( path );
-			await page.waitForTimeout( 900 );
-			const server = tidy(
-				await page.locator( '#main' ).evaluate( ( el ) => el.outerHTML )
-			);
-			await page.locator( '.back, a.set' ).first().click(); // leave, then come back through the client renderer
-			await page.goBack();
-			await expect( page ).toHaveURL( new RegExp( `${ path }$` ) );
-			await page.waitForTimeout( 900 );
-			const client = tidy(
-				await page.locator( '#main' ).evaluate( ( el ) => el.outerHTML )
-			);
-			expect( client ).toBe( server );
-		}
+		const frag = await request.get( '/long-set/?fragment=1' );
+		expect( frag.ok() ).toBeTruthy();
+		const body = await frag.text();
+		expect( body.trim().startsWith( '<main' ) ).toBeTruthy();
+		expect( body ).not.toContain( '<html' );
+		expect( body ).toContain( 'class="tracks"' );
+		expect(
+			await ( await request.get( '/?fragment=1' ) ).text()
+		).toContain( 'class="sets"' );
+		expect( ( await request.get( '/nope/?fragment=1' ) ).status() ).toBe(
+			404
+		);
+		await page.goto( '/' );
+		const [ res ] = await Promise.all( [
+			page.waitForResponse( ( r ) => r.url().includes( 'fragment=1' ) ),
+			page.locator( 'a.set', { hasText: 'Long Set' } ).click(),
+		] );
+		expect( res.ok() ).toBeTruthy();
+		await expect( page ).toHaveURL( /\/long-set\/$/ );
+		await expect( page.locator( 'h1' ) ).toHaveText( 'Long Set' );
+		await expect( page.locator( '.track' ) ).toHaveCount( 24 );
+		await expect( page.locator( '.colophon' ) ).toContainText( 'Audio by' ); // the footer came with it
 	} );
 
 	test( 'All sets swaps views in place and keeps the player', async ( {

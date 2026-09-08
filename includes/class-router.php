@@ -60,7 +60,14 @@ final class Router {
 	 * Render every front-end request with the plugin template.
 	 */
 	public static function template(): string {
-		return CALLBOARD_DIR . 'templates/index.php';
+		return CALLBOARD_DIR . ( self::is_fragment() ? 'templates/fragment.php' : 'templates/index.php' );
+	}
+
+	/**
+	 * A view without the shell, for the script to swap in on navigation. Same templates, same data.
+	 */
+	public static function is_fragment(): bool {
+		return isset( $_GET['fragment'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a read-only render switch.
 	}
 
 	/**

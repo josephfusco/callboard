@@ -29,7 +29,7 @@ Every pull request gets its own Playground link in a sticky comment, built from 
 
 `Router` registers two routes, the home page and `/<set-slug>/`. Anything else falls back to home with a note. On `template_redirect`, `Frontend` renders the page from the templates in `templates/` and sends only the plugin's own stylesheet and script, so the active theme never shows through.
 
-The script then takes over navigation. Moving between home and a set is a `pushState` plus a view transition, and the client renders the same markup the server does, from the same data (`Sets::build()` for a set and `Sets::app_data()` for a view, filterable as `callboard_set_data` and `callboard_app_data`). A Playwright test compares server and client output so the two renderers cannot drift.
+The script then takes over navigation. Moving between home and a set is a `pushState` plus a view transition, and the view that swaps in comes from the server too: the script fetches the same URL with `?fragment=1`, which renders the view template without the shell, and replaces `<main>`. There is one renderer, in PHP. The first touch on a link starts the fetch, so the view is usually there by the time the tap lands, and the home fragment is prefetched at idle from a set page. The player reads its data from `Sets::app_data()`, shipped once with the page and filterable as `callboard_app_data`; a set's data passes through `callboard_set_data`.
 
 Everything that appears after script runs holds its place from the first paint: save marks, header buttons, and the speaker picker render in place and change state, never presence. There is no layout shift on load.
 
@@ -77,7 +77,7 @@ Managed hosts that cannot run binaries take the folder route: build it on a lapt
 <details>
 <summary>Offline</summary>
 
-The service worker precaches the app shell. Saving a set streams each track into the Cache API while a `tee()` branch counts bytes for the progress ring, after asking for persistent storage and checking there is room. Playback of a saved track goes through the worker, which answers `Range` requests from the cached body so seeking works without a network. Saved audio lives in the Cache API rather than IndexedDB or OPFS because a whole file served with Range support is exactly what a media element needs, and it survives on iPhone.
+The service worker precaches the app shell, the home fragment included. When a set is saved, the page fetches that set's fragment once so the worker holds a copy, and does so again on the home screen for every saved set after an update, since the shell cache is versioned. A saved set therefore opens offline from a cold start: home from the shell, the set from its fragment. Saving a set streams each track into the Cache API while a `tee()` branch counts bytes for the progress ring, after asking for persistent storage and checking there is room. Playback of a saved track goes through the worker, which answers `Range` requests from the cached body so seeking works without a network. Saved audio lives in the Cache API rather than IndexedDB or OPFS because a whole file served with Range support is exactly what a media element needs, and it survives on iPhone.
 
 </details>
 
@@ -109,7 +109,7 @@ A cast site should not be discoverable. `Privacy` sends `noindex` through `wp_ro
 | --- | --- |
 | `callboard.php` | Plugin header, constants, autoload, bootstrap |
 | `includes/` | One class per concern, `Callboard\` namespace: `Plugin` wires them, `Router`, `Frontend`, `Sets`, `PostTypes`, `Admin`, `Settings`, `Importer`, `Fetcher`, `Requests`, `Push`, `Pwa`, `Privacy`, `Art`, `Cli`. `helpers.php` holds icons and formatting |
-| `templates/` | Server-rendered views: `index.php` shell, `home.php`, `set.php`, `deck.php` (the player), `footer.php` |
+| `templates/` | Server-rendered views: `index.php` shell, `fragment.php` (a view without the shell, for navigation), `home.php`, `set.php`, `deck.php` (the player), `footer.php` |
 | `assets/` | `app.js` and `app.css`, served as written |
 | `pwa/sw.js` | Service worker source, templated into the site root |
 | `tests/e2e/` | Playwright suites: front end, controls, PWA, admin, privacy, accessibility |
@@ -282,9 +282,9 @@ A running log of browser and WordPress capabilities and what each would do for a
 
 ## Tests
 
-The Playwright suite in `tests/e2e/` runs against wp-env before every commit, from a pre-commit hook `npm install` wires up. It does not run in GitHub Actions: the repository is private and the suite needs a full WordPress. Headless Chromium cannot decode mp3, so the control tests count transport calls and assert on state rather than on audio.
+The Playwright suite in `tests/e2e/` runs against wp-env before every commit, from a pre-commit hook `npm install` wires up. It does not run in GitHub Actions: the repository is private and the suite needs a full WordPress. Headless Chromium cannot decode mp3, so the control tests count transport calls and assert on state rather than on audio. One test fetches the fragment endpoint directly and then watches a navigation swap it in, which is what keeps the single renderer honest.
 
-The fixtures are ten public-domain melodies rendered by `tests/fixtures/chiptunes.js` in the manner of an eighties home keyboard with presets, so the demo has real music with no rights to clear. Run the generator with `node tests/fixtures/chiptunes.js` (needs ffmpeg and ffprobe) to rebuild the mp3s, manifests, and sidecars; the Playground blueprint embeds the same files.
+The fixtures are ten public-domain melodies rendered by `tests/fixtures/chiptunes.js` in the manner of an eighties home keyboard with presets, so the demo has real music with no rights to clear. Their covers are drawn by the plugin's own `Art` class, the way a fetched set's would be. Run the generator with `node tests/fixtures/chiptunes.js` (needs ffmpeg and ffprobe) to rebuild the mp3s, manifests, and sidecars; the Playground blueprint embeds the same files.
 
 ## Releases
 

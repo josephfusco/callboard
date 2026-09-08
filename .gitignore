@@ -10,3 +10,6 @@ plugin-check.json
 *.zip
 .DS_Store
 tests/fixtures/callboard/splash/
+
+# WordPress writes its intermediate sizes next to the fixture covers when the dev sites import them
+tests/fixtures/callboard/*/cover-*.png

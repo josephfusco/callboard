@@ -77,10 +77,9 @@ h2{font-size:clamp(2rem,4.2vw,3.25rem)}
 .apis div+div{border-left:1px solid var(--line);padding-left:28px}
 .apis h3{margin:0 0 12px;font-size:.8125rem;font-weight:600;color:var(--ink-3);letter-spacing:.02em;text-transform:uppercase}
 .apis ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
-.apis li{font-size:.9375rem;color:var(--ink-2);line-height:1.4;text-wrap:pretty}
+.apis li{font-size:.9375rem;line-height:1.4}
 .apis a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);transition:border-color var(--t)}
 .apis a:hover{border-color:var(--ink)}
-.apis code{font:.8125rem ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:0 5px}
 @media (max-width:900px){.apis{grid-template-columns:1fr 1fr}.apis div+div{border-left:0;padding-left:0}.apis div:nth-child(even){border-left:1px solid var(--line);padding-left:28px}}
 @media (max-width:560px){.apis{grid-template-columns:1fr}.apis div:nth-child(even){border-left:0;padding-left:0}}
 footer{border-top:1px solid var(--line);padding:32px 0 64px;color:var(--ink-3);font-size:.875rem}
@@ -122,12 +121,41 @@ html.js .r.in{opacity:1;transform:none}
 </div></section>
 
 <section class="under" id="under"><div class="wrap">
-	<div class="r"><h2>Under the hood.</h2><p class="lede" style="margin-top:20px">A WordPress plugin that renders the whole front end. One script, one stylesheet, no build step. As much of the web platform as the phones in a rehearsal room can run, each piece behind a feature check.</p></div>
+	<div class="r"><h2>Under the hood.</h2><p class="lede" style="margin-top:20px">A WordPress plugin, one script and one stylesheet, and as much of the web platform as the phones in a rehearsal room can run.</p></div>
 	<div class="apis r">
-		<div><h3>Playing</h3><ul><li><a href="https://html.spec.whatwg.org/multipage/media.html">HTML media element</a> with <code>preservesPitch</code></li><li><a href="https://www.w3.org/TR/mediasession/">Media Session</a> for the lock screen</li><li><a href="https://www.w3.org/TR/webaudio/">Web Audio</a> for the meter, the count-in, and a sample-accurate loop</li><li><a href="https://w3c.github.io/audio-session/">Audio Session</a> so iOS treats it as music</li><li><a href="https://www.w3.org/TR/remote-playback/">Remote Playback</a> for AirPlay</li><li><a href="https://www.w3.org/TR/web-locks/">Web Locks</a>, one tab at a time</li><li><a href="https://html.spec.whatwg.org/multipage/media.html#text-track-api">TextTrack</a> cues for lyrics and notes</li></ul></div>
-		<div><h3>Offline</h3><ul><li><a href="https://w3c.github.io/ServiceWorker/">Service Worker</a> with navigation preload</li><li><a href="https://w3c.github.io/ServiceWorker/#cache-interface">Cache API</a> answering <a href="https://www.rfc-editor.org/rfc/rfc9110.html#name-range-requests">Range requests</a></li><li><a href="https://streams.spec.whatwg.org/">Streams</a>, a <code>tee()</code> counting bytes for the ring</li><li><a href="https://storage.spec.whatwg.org/">Storage</a> estimate and persist</li><li><a href="https://www.w3.org/TR/appmanifest/">Web App Manifest</a> written by the plugin</li><li>Server-rendered fragments under <a href="https://www.w3.org/TR/css-view-transitions-1/">View Transitions</a></li></ul></div>
-		<div><h3>Reaching the cast</h3><ul><li><a href="https://www.w3.org/TR/push-api/">Push API</a> with declarative payloads</li><li><a href="https://www.w3.org/TR/badging/">Badging API</a> on the home screen icon</li><li><code>pushsubscriptionchange</code> re-registering rotated endpoints</li><li><a href="https://www.w3.org/TR/web-share/">Web Share</a>, the clipboard as fallback</li><li><a href="https://www.rfc-editor.org/rfc/rfc8292">VAPID</a> keys made with OpenSSL</li></ul></div>
-		<div><h3>Feel</h3><ul><li><a href="https://webkit.org/blog/15054/an-html-switch-control/">WebKit switch</a> haptics on iPhone</li><li><a href="https://html.spec.whatwg.org/multipage/canvas.html">Canvas 2D</a> waveform with a hover preview</li><li><a href="https://www.w3.org/TR/css-anchor-position-1/">Anchor positioning</a>, <a href="https://www.w3.org/TR/css-contain-3/">container queries</a>, <a href="https://www.w3.org/TR/css-transitions-2/#defining-before-change-style">@starting-style</a></li><li><a href="https://www.w3.org/TR/css-inline-3/#text-box-trim">text-box-trim</a>, <a href="https://www.w3.org/TR/css-color-5/#color-mix">color-mix()</a>, <a href="https://www.w3.org/TR/css-text-4/#text-wrap">text-wrap: pretty</a></li><li>Safe-area insets on all four sides, Dynamic Type through the system font</li><li>A CSS <code>d</code> transition morphing play into pause</li></ul></div>
+		<div><h3>Playing</h3><ul>
+			<li><a href="https://html.spec.whatwg.org/multipage/media.html">HTML media element</a></li>
+			<li><a href="https://www.w3.org/TR/mediasession/">Media Session</a></li>
+			<li><a href="https://www.w3.org/TR/webaudio/">Web Audio</a></li>
+			<li><a href="https://w3c.github.io/audio-session/">Audio Session</a></li>
+			<li><a href="https://www.w3.org/TR/remote-playback/">Remote Playback</a></li>
+			<li><a href="https://www.w3.org/TR/web-locks/">Web Locks</a></li>
+			<li><a href="https://html.spec.whatwg.org/multipage/media.html#text-track-api">TextTrack</a></li>
+		</ul></div>
+		<div><h3>Offline</h3><ul>
+			<li><a href="https://w3c.github.io/ServiceWorker/">Service Worker</a></li>
+			<li><a href="https://w3c.github.io/ServiceWorker/#cache-interface">Cache API</a></li>
+			<li><a href="https://www.rfc-editor.org/rfc/rfc9110.html#name-range-requests">Range requests</a></li>
+			<li><a href="https://streams.spec.whatwg.org/">Streams</a></li>
+			<li><a href="https://storage.spec.whatwg.org/">Storage</a></li>
+			<li><a href="https://www.w3.org/TR/appmanifest/">Web App Manifest</a></li>
+			<li><a href="https://www.w3.org/TR/css-view-transitions-1/">View Transitions</a></li>
+		</ul></div>
+		<div><h3>Reaching the cast</h3><ul>
+			<li><a href="https://www.w3.org/TR/push-api/">Push API</a></li>
+			<li><a href="https://notifications.spec.whatwg.org/">Notifications</a></li>
+			<li><a href="https://www.w3.org/TR/badging/">Badging</a></li>
+			<li><a href="https://www.w3.org/TR/web-share/">Web Share</a></li>
+			<li><a href="https://www.rfc-editor.org/rfc/rfc8292">VAPID</a></li>
+		</ul></div>
+		<div><h3>Feel</h3><ul>
+			<li><a href="https://webkit.org/blog/15054/an-html-switch-control/">WebKit switch haptics</a></li>
+			<li><a href="https://html.spec.whatwg.org/multipage/canvas.html">Canvas 2D</a></li>
+			<li><a href="https://www.w3.org/TR/css-anchor-position-1/">Anchor positioning</a></li>
+			<li><a href="https://www.w3.org/TR/css-contain-3/">Container queries</a></li>
+			<li><a href="https://www.w3.org/TR/css-inline-3/#text-box-trim">text-box-trim</a></li>
+			<li><a href="https://www.w3.org/TR/css-text-4/#text-wrap">text-wrap: pretty</a></li>
+		</ul></div>
 	</div>
 </div></section>
 </main>

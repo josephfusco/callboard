@@ -64,6 +64,13 @@ h2{font-size:clamp(2rem,4.2vw,3.25rem)}
 .crop img{position:absolute;left:50%;transform:translateX(-50%);width:min(100%,420px);border-radius:24px 24px 0 0;box-shadow:0 30px 70px -20px rgba(0,0,0,.35)}
 .crop.top img{top:8%}
 .crop.bottom img{bottom:-12%;top:auto;border-radius:24px}
+/* the board: the editor doing the work, the phone showing the result */
+.board{padding:120px 0 96px}
+.board .lede{max-width:40rem}
+.pair{position:relative;margin-top:56px;padding-right:180px}
+.pair .admin{display:block;width:100%;border-radius:18px;border:1px solid var(--line);box-shadow:0 40px 90px -30px rgba(0,0,0,.4);background:#f0f0f1}
+.pair .device{position:absolute;right:0;bottom:-48px;width:300px}
+@media (max-width:900px){.board{padding:80px 0 40px}.pair{padding-right:0;margin-top:40px}.pair .device{position:static;display:block;width:260px;margin:24px auto 0}}
 /* the dark room: the player, at scale */
 .dark{background:#111;color:#f2f1ee;padding:140px 0;position:relative}
 .dark .dark .lede{color:#b3b2ae}
@@ -105,9 +112,9 @@ html.js .r.in{opacity:1;transform:none}
 	<div class="stage r" aria-hidden="true"><span class="device back"><img src="home-light.png" alt=""></span><span class="device front"><img src="set-dark.png" alt=""></span></div>
 </div></section>
 
-<section class="stmt" id="board"><div class="wrap">
-	<div class="r"><h2>The call, where everyone looks.</h2><p>The stage manager posts it once. It appears at the top of every phone with the time, the room, and the note. The numbers being worked are a tap away.</p></div>
-	<div class="crop top r"><img src="home-light.png" alt=""></div>
+<section class="board" id="board"><div class="wrap">
+	<div class="r"><h2>Posted once, in WordPress.</h2><p class="lede" style="margin-top:20px">The stage manager writes the call the way any post is written: a title, a note, when, where, the numbers being worked. Schedule it for the night before. It lands at the top of every phone, and every number is a tap that starts the track.</p></div>
+	<div class="pair r" aria-hidden="true"><img class="admin" src="admin-call.png" alt=""><span class="device"><img src="home-light.png" alt=""></span></div>
 </div></section>
 
 <section class="dark" id="player"><div class="wrap">

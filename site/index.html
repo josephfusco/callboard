@@ -4,10 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Callboard</title>
-<meta name="description" content="Rehearsal tracks, in the cast's pocket. A WordPress plugin: sets of audio, a player that keeps playing, offline, notices, installable from Safari.">
+<meta name="description" content="A callboard in the cast's pocket. A WordPress plugin: the call posted, the numbers to run, a player that keeps playing, offline, installable from Safari.">
 <meta property="og:title" content="Callboard">
-<meta property="og:description" content="Rehearsal tracks, in the cast's pocket. A WordPress plugin.">
-<meta property="og:image" content="https://josephfusco.github.io/callboard/og.png">
+<meta property="og:description" content="A callboard in the cast's pocket. A WordPress plugin.">
+<meta property="og:image" content="https://josephfus.co/callboard/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://josephfus.co/callboard/">
 <meta name="theme-color" content="#eceae5" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#161616" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
@@ -74,6 +78,20 @@ h2{font-size:clamp(2rem,4.2vw,3.25rem)}
 .how .n{color:var(--ink-3);font-size:.8125rem;display:block;margin-bottom:12px}
 .how h3{margin:0 0 8px;font-size:1.0625rem}
 .how p{margin:0;color:var(--ink-2);font-size:.9375rem}
+/* under the hood: the geek section, four columns of specification links */
+.under{padding:0 0 120px}
+.under .lede a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+.apis{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);margin-top:48px}
+.apis div{padding:28px 28px 28px 0;border-bottom:1px solid var(--line)}
+.apis div+div{border-left:1px solid var(--line);padding-left:28px}
+.apis h3{margin:0 0 12px;font-size:.8125rem;font-weight:600;color:var(--ink-3);letter-spacing:.02em;text-transform:uppercase}
+.apis ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.apis li{font-size:.9375rem;color:var(--ink-2);line-height:1.4;text-wrap:pretty}
+.apis a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);transition:border-color var(--t)}
+.apis a:hover{border-color:var(--ink)}
+.apis code{font:.8125rem ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+@media (max-width:900px){.apis{grid-template-columns:1fr 1fr}.apis div+div{border-left:0;padding-left:0}.apis div:nth-child(even){border-left:1px solid var(--line);padding-left:28px}}
+@media (max-width:560px){.apis{grid-template-columns:1fr}.apis div:nth-child(even){border-left:0;padding-left:0}}
 /* install */
 .install{padding:0 0 120px}
 pre{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;overflow:auto;margin:32px 0 16px;font:.9375rem/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
@@ -94,46 +112,61 @@ html.js .r.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Callboard</a><nav><a href="#player">Player</a><a href="#how">How it works</a><a href="#install">Install</a><a href="https://github.com/josephfusco/callboard">GitHub</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Callboard</a><nav><a href="#board">The board</a><a href="#player">Player</a><a href="#under">Under the hood</a><a href="#install">Install</a><a href="https://github.com/josephfusco/callboard">GitHub</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
 	<div class="r">
-		<h1>Rehearsal tracks for a cast, on their phones.</h1>
-		<p class="lede">Sets of audio served from your own WordPress site. A persistent player, offline saving, lock-screen controls, push notices, and Add to Home Screen on iPhone. No accounts.</p>
+		<h1>The callboard, in the cast's pocket.</h1>
+		<p class="lede">The call posted at the top, the numbers to run underneath, and a player that keeps playing. Served from your own WordPress site, saved for offline, installed from Safari. No accounts, no app store.</p>
 		<div class="cta"><a class="btn" href="#install">Install</a><a class="btn quiet" href="https://github.com/josephfusco/callboard">Source</a></div>
 		<!-- Once the repo is public, add: <a class="btn quiet" href="https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/josephfusco/callboard/main/blueprint.json">Try it in Playground</a> -->
 	</div>
 	<div class="stage r" aria-hidden="true"><span class="device back"><img src="home-light.png" alt=""></span><span class="device front"><img src="set-dark.png" alt=""></span></div>
 </div></section>
 
-<section class="stmt"><div class="wrap">
-	<div class="r"><h2>Playback continues across pages.</h2><p>Moving between sets, locking the phone, or switching apps does not stop the player. Artwork and controls appear on the lock screen and in Control Center.</p></div>
-	<div class="crop bottom r"><img src="set-dark.png" alt=""></div>
+<section class="stmt" id="board"><div class="wrap">
+	<div class="r"><h2>The call is posted where everyone looks.</h2><p>The stage manager writes a call in WordPress and schedules it like any post. It appears pinned at the top of every phone with the time, the room, the note, and the numbers being worked, each one a tap that starts the track. Publishing it sends the push.</p></div>
+	<div class="crop top r"><img src="home-light.png" alt=""></div>
 </div></section>
 
 <section class="stmt flip"><div class="wrap">
-	<div class="r"><h2>Tracks save for offline, per track or per set.</h2><p>Each row shows its own progress and a mark when saved. Saved tracks play without a connection. Removing offline copies requires a second tap.</p></div>
+	<div class="r"><h2>Playback continues across pages.</h2><p>Moving between sets, locking the phone, or switching apps does not stop the player. Artwork and controls appear on the lock screen and in Control Center, and only one tab plays at a time.</p></div>
+	<div class="crop bottom r"><img src="set-dark.png" alt=""></div>
+</div></section>
+
+<section class="stmt"><div class="wrap">
+	<div class="r"><h2>Tracks save for offline, per track or per set.</h2><p>Each row shows its own progress and a mark when saved. Saved tracks play without a connection, seeking included, and a saved set opens from a cold start with no signal in the building. Removing offline copies takes a second tap.</p></div>
 	<div class="crop top r"><img src="set-light.png" alt=""></div>
 </div></section>
 
 <section class="dark" id="player"><div class="wrap">
 	<span class="device r"><img src="set-dark.png" alt="The set page with the player pinned to the bottom"></span>
-	<div class="r"><h2>The player.</h2><p class="lede" style="margin-top:20px">Play and pause morph between shapes. The level bars follow the audio where the platform allows it. The scrubber knob moves with the fill. All motion stops under Reduce Motion.</p></div>
+	<div class="r"><h2>The player.</h2><p class="lede" style="margin-top:20px">A waveform to scrub, drawn from levels measured at import. A filament along the top edge that glows with the music. An A/B loop for the hard eight bars, a speed control that holds the key, a count-in on tracks with a tempo, and lyrics and the director's notes in time with the track. All motion stops under Reduce Motion.</p></div>
 </div></section>
 
-<section class="stmt"><div class="wrap">
-	<div class="r"><h2>Notices reach the cast's phones.</h2><p>Opt-in Web Push. Publishing a set sends a notification. Sets → Notices sends a message with an optional link.</p></div>
-	<div class="crop top r"><img src="home-light.png" alt=""></div>
+<section class="stmt flip"><div class="wrap">
+	<div class="r"><h2>Notices reach the cast's phones.</h2><p>Opt-in Web Push, with a bell on the home page. A new call, a new set, or a message from the stage manager arrives as a notification, on iPhone too once the app is on the Home Screen.</p></div>
+	<div class="crop bottom r"><img src="home-light.png" alt=""></div>
 </div></section>
 
 <section class="how" id="how"><div class="wrap">
 	<div class="r"><h2>Sets are posts. Tracks are attachments.</h2></div>
 	<div class="grid r">
 		<div><span class="n">01</span><h3>Add a set</h3><p>Upload audio to a set in the admin, drop a folder into uploads, or fetch a playlist with WP-CLI where yt-dlp exists.</p></div>
-		<div><span class="n">02</span><h3>Share one link</h3><p>The home page lists every set. Nothing to sign up for.</p></div>
+		<div><span class="n">02</span><h3>Share one link</h3><p>The home page is the board and every set. Nothing to sign up for.</p></div>
 		<div><span class="n">03</span><h3>Add to Home Screen</h3><p>A one-time hint on iPhone. Installed, it opens full screen with its own icon and launch image.</p></div>
-		<div><span class="n">04</span><h3>Post notices</h3><p>Sets → Notices. Everyone who opted in hears about it.</p></div>
+		<div><span class="n">04</span><h3>Post the call</h3><p>Calls, under Sets. When, where, what is being worked. Everyone who opted in hears about it.</p></div>
+	</div>
+</div></section>
+
+<section class="under" id="under"><div class="wrap">
+	<div class="r"><h2>Under the hood.</h2><p class="lede" style="margin-top:20px">One script, one stylesheet, no build step, and as much of the web platform as the phones in a rehearsal room can run. Every capability sits behind a feature check and degrades on its own. The <a href="https://github.com/josephfusco/callboard#apis-it-uses">full list with links to the specifications</a>, and the watchlist of what is next, lives in the README.</p></div>
+	<div class="apis r">
+		<div><h3>Playing</h3><ul><li><a href="https://html.spec.whatwg.org/multipage/media.html">HTML media element</a> with <code>preservesPitch</code></li><li><a href="https://www.w3.org/TR/mediasession/">Media Session</a> for the lock screen</li><li><a href="https://www.w3.org/TR/webaudio/">Web Audio</a> for the meter, the count-in, and a sample-accurate loop</li><li><a href="https://w3c.github.io/audio-session/">Audio Session</a> so iOS treats it as music</li><li><a href="https://www.w3.org/TR/remote-playback/">Remote Playback</a> for AirPlay and Cast</li><li><a href="https://www.w3.org/TR/web-locks/">Web Locks</a>, one tab at a time</li><li><a href="https://html.spec.whatwg.org/multipage/media.html#text-track-api">TextTrack</a> cues for lyrics and notes</li><li><a href="https://www.w3.org/TR/screen-wake-lock/">Wake Lock</a> while a loop runs</li></ul></div>
+		<div><h3>Offline</h3><ul><li><a href="https://w3c.github.io/ServiceWorker/">Service Worker</a> with navigation preload</li><li><a href="https://w3c.github.io/ServiceWorker/#cache-interface">Cache API</a> answering <a href="https://www.rfc-editor.org/rfc/rfc9110.html#name-range-requests">Range requests</a></li><li><a href="https://streams.spec.whatwg.org/">Streams</a>, a <code>tee()</code> counting bytes for the ring</li><li><a href="https://storage.spec.whatwg.org/">Storage</a> estimate and persist</li><li><a href="https://www.w3.org/TR/appmanifest/">Web App Manifest</a> written by the plugin</li><li>Server-rendered fragments swapped in under <a href="https://www.w3.org/TR/css-view-transitions-1/">View Transitions</a></li><li><a href="https://web.dev/articles/bfcache">Back/forward cache</a> restores</li></ul></div>
+		<div><h3>Reaching the cast</h3><ul><li><a href="https://www.w3.org/TR/push-api/">Push API</a> with declarative payloads</li><li><a href="https://notifications.spec.whatwg.org/">Notifications</a> and the <a href="https://www.w3.org/TR/badging/">Badging API</a></li><li><code>pushsubscriptionchange</code> re-registering rotated endpoints</li><li><a href="https://www.w3.org/TR/web-share/">Web Share</a>, the clipboard as fallback</li><li><a href="https://www.rfc-editor.org/rfc/rfc8292">VAPID</a> keys made with OpenSSL, sending through <a href="https://github.com/web-push-libs/web-push-php">web-push-php</a></li></ul></div>
+		<div><h3>Feel</h3><ul><li><a href="https://webkit.org/blog/15054/an-html-switch-control/">WebKit switch</a> haptics on iPhone, <a href="https://www.w3.org/TR/vibration/">Vibration</a> elsewhere</li><li><a href="https://html.spec.whatwg.org/multipage/canvas.html">Canvas 2D</a> waveform with a hover preview</li><li><a href="https://www.w3.org/TR/css-anchor-position-1/">Anchor positioning</a>, <a href="https://www.w3.org/TR/css-contain-3/">container queries</a>, <a href="https://www.w3.org/TR/css-transitions-2/#defining-before-change-style">@starting-style</a>, <a href="https://www.w3.org/TR/scroll-animations-1/">scroll-driven animations</a></li><li><a href="https://www.w3.org/TR/css-inline-3/#text-box-trim">text-box-trim</a>, <a href="https://www.w3.org/TR/css-color-5/#color-mix">color-mix()</a>, <a href="https://www.w3.org/TR/css-text-4/#text-wrap">text-wrap: pretty</a></li><li>Safe-area insets on all four sides, Dynamic Type through the system font</li><li>A CSS <code>d</code> transition morphing play into pause</li></ul></div>
 	</div>
 </div></section>
 
@@ -141,10 +174,10 @@ html.js .r.in{opacity:1;transform:none}
 	<h2>Install</h2>
 	<pre><code>wp plugin install https://github.com/josephfusco/callboard/releases/latest/download/callboard.zip --activate
 wp callboard fetch 'https://www.youtube.com/playlist?list=…' --name="Spring Show"</code></pre>
-	<p class="lede">Or upload the zip under Plugins → Add New. Requires WordPress 6.5 and PHP 8.1. Fetching from YouTube needs <code class="i">yt-dlp</code> and <code class="i">ffmpeg</code> wherever WP-CLI runs.</p>
+	<p class="lede">Or upload the zip under Plugins, Add New. Requires WordPress 6.5 and PHP 8.1. Fetching from YouTube needs <code class="i">yt-dlp</code> and <code class="i">ffmpeg</code> wherever WP-CLI runs.</p>
 </div></section>
 
-<section class="desk"><div class="wrap r"><img src="desktop-dark.png" alt="Callboard on a wide screen"></div></section>
+<section class="desk"><div class="wrap r"><img src="desktop-dark.png" alt="Callboard on a wide screen: the set page with the waveform and the player along the bottom" loading="lazy"></div></section>
 </main>
 
 <footer><div class="wrap"><span>Callboard is free software under the GPL.</span><a href="https://github.com/josephfusco/callboard">Source and issues on GitHub</a></div></footer>

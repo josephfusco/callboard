@@ -12,10 +12,14 @@ $callboard_sets = Callboard\Sets::all();
 ?>
 <main class="app" id="main" tabindex="-1">
 	<header class="masthead">
-		<h1><?php bloginfo( 'name' ); ?></h1>
-		<?php if ( Callboard\Settings::get( 'push' ) && Callboard\Push::available() ) : ?>
-		<div class="actions"><button type="button" class="btn btn-quiet" id="notify" hidden><?php esc_html_e( 'Notify me about new sets', 'callboard' ); ?></button><p class="note small" id="notify-note" hidden></p></div>
-		<?php endif; ?>
+		<div class="masthead-row">
+			<div class="masthead-text">
+				<h1><?php bloginfo( 'name' ); ?></h1>
+			</div>
+			<?php if ( Callboard\Settings::get( 'push' ) && Callboard\Push::available() ) : ?>
+			<button type="button" class="btn btn-quiet btn-icon bell" id="notify" data-state="" aria-pressed="false" aria-label="<?php esc_attr_e( 'Notify me about new sets', 'callboard' ); ?>"><?php echo callboard_icon( 'bell' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
+			<?php endif; ?>
+		</div>
 	</header>
 
 	<?php if ( ! empty( $args['not_found'] ) ) : ?>
@@ -39,7 +43,7 @@ else :
 					<span class="set-mark" aria-hidden="true"><?php echo esc_html( mb_strtoupper( mb_substr( $callboard_s['name'], 0, 1 ) ) ); ?></span><?php endif; ?>
 				<span class="set-text">
 					<span class="set-name" style="view-transition-name:set-<?php echo esc_attr( $callboard_s['slug'] ); ?>"><?php echo esc_html( $callboard_s['name'] ); ?></span>
-					<span class="set-meta"><?php echo esc_html( $callboard_s['meta'] ); ?></span>
+					<span class="set-meta"><?php echo esc_html( $callboard_s['meta'] ); ?><span class="set-resume" data-slug="<?php echo esc_attr( $callboard_s['slug'] ); ?>"></span></span>
 				</span>
 				<span class="set-off" data-slug="<?php echo esc_attr( $callboard_s['slug'] ); ?>" data-state=""><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></span>
 				<span class="set-go" aria-hidden="true"></span>

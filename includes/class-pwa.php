@@ -175,6 +175,7 @@ final class Pwa {
 			'wp_make_link_relative',
 			array(
 				home_url( '/' ),
+				home_url( '/?fragment=1' ), // Home as the script swaps it in; a saved set's fragment is warmed by the page.
 				home_url( '/manifest.json' ),
 				callboard_asset( 'assets/app.js' ),
 				callboard_asset( 'assets/icon-192.png' ),

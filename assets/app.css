@@ -378,7 +378,7 @@ body:not(.has-deck) .a2hs{bottom:calc(var(--safe-b) + 12px)}
 .set-off[data-state="saved"] .dl-track{opacity:1;fill:var(--ink-3);stroke:var(--ink-3)}
 .set-off[data-state="saved"] .dl-check{opacity:1;stroke:var(--bg);stroke-width:2.6}
 /* the set-level control is secondary: quiet text, no chrome */
-#offline,#notify{border-color:var(--line);background:color-mix(in srgb,var(--surface-2) 55%,transparent);color:var(--ink-2);padding-left:14px;padding-right:14px} /* the quiet capsule: the same construction as Share, one rank below Play */
+#offline{border-color:var(--line);background:color-mix(in srgb,var(--surface-2) 55%,transparent);color:var(--ink-2);padding-left:14px;padding-right:14px} /* the quiet capsule: the same construction as Share, one rank below Play */
 #notify.is-done{color:var(--ink-2);pointer-events:auto}
 .masthead-row{display:flex;align-items:center;justify-content:space-between;gap:20px}
 /* The board: the next call pinned at the top with one accent rule, the way a card is pinned to cork */

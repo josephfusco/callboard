@@ -1041,9 +1041,7 @@
 			timers.push( setTimeout( () => done( true ), 4 * beat ) );
 		} );
 	}
-	// The play button is a Magic 8-Ball: the answer you are not looking at sits down in the dark, and the
-	// one you are rises through it into focus. A state on the button drives the two glyphs; the wobble is
-	// the shake.
+	// Play or pause: a state on the button; the stylesheet slides the glyph's points between the two shapes.
 	const morph = ( to ) => {
 		if ( toggle.dataset.state === to ) {
 			return;
@@ -1053,9 +1051,6 @@
 			'aria-label',
 			to === 'pause' ? T.pause : T.resume
 		);
-		if ( ! reduce() ) {
-			retrigger( toggle, 'shake' );
-		}
 	};
 	// ---- One player per site. Playing takes a lock; a tab that starts playing steals it and the loser pauses.
 	// A new track in this same tab also steals from its own earlier request, so a request only pauses the

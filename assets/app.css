@@ -202,15 +202,19 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-controls .ctl.skip{width:56px;height:56px}
 .ctl:active{background:radial-gradient(circle at 50% 42%,var(--surface-2),var(--surface));box-shadow:inset 0 2px 5px var(--dish)} /* pressed: a shallow dish */
 .ctl.play{width:66px;height:66px;color:var(--bg);margin:0 4px;position:relative;isolation:isolate} /* the Plex transport: one solid disc, the glyph cut into it; the skips stay bare */
-.ctl.play .cap{position:absolute;inset:0;border-radius:50%;display:block;background:var(--ink);transition:transform var(--t-fast) var(--ease)}
-.ctl.play:active .cap{transform:scale(.94)} /* pressed: the disc gives a little */
-/* play ⇄ pause: the glyph not in use sinks out of sight; the one called for rises through the glass into place a
-   beat later, and the button gives one short wobble. */
-.ctl.play .pp{position:absolute;inset:0;margin:auto;width:30px;height:30px;fill:currentColor;will-change:transform,opacity;z-index:2}
-.ctl.play .pp{opacity:0;transform:translateY(12px) scale(.35);transition:opacity .2s var(--ease),transform .2s var(--ease)} /* sunk, quickly */
-.ctl.play[data-state="play"] .pp-play,.ctl.play[data-state="pause"] .pp-pause{opacity:1;transform:none;transition:opacity .32s var(--ease) .16s,transform .5s var(--ease-spring) .16s} /* risen, a beat later */
-.ctl.play.shake .cap{animation:shake .6s var(--ease-spring)}
-@keyframes shake{20%{transform:translateY(-1px) rotate(-5deg) scale(1.03)}45%{transform:translateY(-1px) rotate(4deg)}70%{transform:translateY(-1px) rotate(-2deg)}100%{transform:translateY(-1px)}}}}
+.ctl.play .cap{position:absolute;inset:0;border-radius:50%;display:block;background:var(--ink)}
+.ctl.play .pp{position:absolute;inset:0;margin:auto;width:30px;height:30px;fill:currentColor;z-index:2}
+/* play ⇄ pause the way YouTube does it: one path, its points slide from the triangle to the two bars. No press effect. */
+.ctl.play:active{background:transparent;box-shadow:none}
+.ctl.play .glyph-pause{display:none}
+@supports (d:path("M0 0h1")){
+  .ctl.play .glyph{d:path("M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z");transition:d .2s var(--ease)}
+  .ctl.play[data-state="pause"] .glyph{d:path("M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z")}
+}
+@supports not (d:path("M0 0h1")){
+  .ctl.play[data-state="pause"] .glyph{display:none}
+  .ctl.play[data-state="pause"] .glyph-pause{display:block}
+}
 /* soft ring when playback begins */
 .ctl.play::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--accent);opacity:0;pointer-events:none;z-index:-1}
 .ctl.play.ring::after{animation:ring .6s var(--ease) forwards}

@@ -71,7 +71,7 @@ jobs:
     uses: ./.github/workflows/phpcs.yml
 
   # The Playwright suite and Plugin Check run locally, from the pre-commit hook in .githooks, not here:
-  # this is a private repository and both need a full WordPress. Their workflows stay for a manual run.
+  # both need a full WordPress and minutes to run. Their workflows stay for a manual run.
 
   lint-js:
     needs: gate

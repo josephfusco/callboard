@@ -8,7 +8,7 @@ This file is the long-form record of the project: what it does, how it is built,
 
 The landing page is at [josephfus.co/callboard](https://josephfus.co/callboard/). No install needed. Launch a scratch site from `main` with a demo set already imported.
 
-[![Launch in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/josephfusco/callboard/main/blueprint.json)
+[![Launch in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://josephfus.co/callboard/blueprint.json)
 
 Every pull request gets its own Playground link in a sticky comment, built from that PR's commit. To run it locally with wp-env and the Playwright suite, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
@@ -137,8 +137,8 @@ The accent colour is a setting rather than a hook, because it is the customisati
 | `pwa/sw.js` | Service worker source, templated into the site root |
 | `tests/e2e/` | Playwright suites: front end, controls, PWA, admin, privacy, accessibility |
 | `tests/fixtures/` | Demo sets and the `chiptunes.js` generator that renders them |
-| `blueprint.json` | The WordPress Playground demo |
-| `site/` | The GitHub Pages landing page |
+| `blueprint.json` | The WordPress Playground demo; the Pages workflow publishes it with the plugin zip and the demo audio, so it works while the repository is private |
+| `site/` | The GitHub Pages landing page, with the live Playground demo |
 | `scripts/sync-versions.sh` | Writes the release version everywhere WordPress reads it |
 | `.github/` | Workflows, Dependabot, the PR template, CONTRIBUTING |
 

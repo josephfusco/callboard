@@ -199,11 +199,6 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 @keyframes pulse{50%{opacity:.4}}
 .remote-chip:active{background:var(--surface-2)}
 .deck-controls{display:flex;align-items:center;gap:2px;position:relative;z-index:2}
-/* loop and speed: transport controls, the same size as the skips, not chips in the time row */
-.ctl.tool{width:44px;height:44px;color:var(--ink-3);font-size:.875rem;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;position:relative;transition:color var(--t)}
-.ctl.tool svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.ctl.tool:not([data-state=""]){color:var(--accent-text)}
-.ctl.tool[data-state="armed"]::after{content:"";position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1s ease-in-out infinite} /* the start is marked; the control waits for the end */
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:30px;height:30px;fill:currentColor}
 .deck-controls .ctl.skip{width:56px;height:56px}
@@ -268,7 +263,7 @@ body:not(.has-deck) .update{bottom:calc(var(--safe-b) + 12px)}
 .a2hs-x{appearance:none;border:0;background:transparent;width:36px;height:36px;border-radius:50%;font-size:1.25rem;line-height:1;color:var(--ink-3);cursor:pointer;display:grid;place-items:center}
 .a2hs-x:active{background:var(--surface-2)}
 
-@media (max-width:639px){.deck-controls .ctl.skip{width:42px}.deck-controls .ctl.tool{width:40px}.ctl.play{margin:0}.deck-row{gap:6px}.deck-time{gap:6px}.remote-chip{width:28px}} /* phones: the time row needs the width more than the skip targets do; 44px is still a full tap target */
+@media (max-width:639px){.deck-controls .ctl.skip{width:50px}.deck-row{gap:8px}.deck-time{gap:6px}.remote-chip{width:28px}} /* phones: the time row needs the width more than the skip targets do; 44px is still a full tap target */
 @media (min-width:640px){
   :root{--deck-h:154px}
   .app{padding-top:48px}

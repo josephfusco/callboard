@@ -71,13 +71,6 @@ final class Frontend {
 			'notes_sheet'    => __( 'Director notes', 'callboard' ),
 			'show_notes'     => __( 'Show director notes', 'callboard' ),
 			'hide_notes'     => __( 'Hide director notes', 'callboard' ),
-			'loop_clear'     => __( 'Clear loop', 'callboard' ),
-			'loop_set'       => __( 'Set a loop: tap at the start, then at the end', 'callboard' ),
-			'loop_from'      => __( 'From', 'callboard' ),
-			'loop_end'       => __( 'Tap at the end of the loop', 'callboard' ),
-			/* translators: %s: playback speed such as 0.75×. */
-			'rate_label'     => __( 'Playback speed %s, tap to slow down', 'callboard' ),
-			'rate_reset'     => __( 'Playback speed 0.5×, tap for full speed', 'callboard' ),
 			/* translators: %d: beats per minute. */
 			'show_lyrics'    => __( 'Show lyrics', 'callboard' ),
 			'hide_lyrics'    => __( 'Hide lyrics', 'callboard' ),

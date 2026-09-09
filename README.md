@@ -18,7 +18,7 @@ A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the ca
 
 - **Board.** The home page shows the next call: time, place, note, and the numbers being worked. Each number is a tap that starts the track. A call is a post under Sets. Publishing one sends a push notification.
 - **Sets.** A set is a post; its tracks are audio attachments. Fetch a playlist with WP-CLI, or import a folder of audio.
-- **Player.** Waveform scrubbing, A/B loop, speed change that keeps the pitch, count-in, lyrics and director's notes in time with the track, AirPlay, lock-screen controls.
+- **Player.** Previous, play, next. Waveform scrubbing, an A/B loop (two fingers on the wave, or the bracket keys), count-in, lyrics and director's notes in time with the track, AirPlay, lock-screen controls.
 - **Offline.** Save a set once. It plays from the phone with no connection.
 - **Settings.** Site name, accent colour, badge, confetti behind a triple tap on the title. Hooks and template overrides for developers.
 
@@ -173,7 +173,7 @@ Links go to the specifications.
 - [Service Workers](https://w3c.github.io/ServiceWorker/) with navigation preload, [Cache API](https://w3c.github.io/ServiceWorker/#cache-interface), [Fetch](https://fetch.spec.whatwg.org/) with [Range requests](https://www.rfc-editor.org/rfc/rfc9110.html#name-range-requests)
 - [Web App Manifest](https://www.w3.org/TR/appmanifest/), [display-mode](https://www.w3.org/TR/mediaqueries-5/#display-mode), [beforeinstallprompt](https://wicg.github.io/manifest-incubations/#installation-prompts), [Apple web app meta tags](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html)
 - [Push API](https://www.w3.org/TR/push-api/) with declarative payloads and `pushsubscriptionchange`, [Notifications](https://notifications.spec.whatwg.org/), [Badging](https://www.w3.org/TR/badging/)
-- [HTML media element](https://html.spec.whatwg.org/multipage/media.html) with [preservesPitch](https://html.spec.whatwg.org/multipage/media.html#dom-media-preservespitch), [Media Session](https://www.w3.org/TR/mediasession/), [Audio Session](https://w3c.github.io/audio-session/), [Remote Playback](https://www.w3.org/TR/remote-playback/), [TextTrack](https://html.spec.whatwg.org/multipage/media.html#text-track-api) for lyric cues
+- [HTML media element](https://html.spec.whatwg.org/multipage/media.html), [Media Session](https://www.w3.org/TR/mediasession/), [Audio Session](https://w3c.github.io/audio-session/), [Remote Playback](https://www.w3.org/TR/remote-playback/), [TextTrack](https://html.spec.whatwg.org/multipage/media.html#text-track-api) for lyric cues
 - [Web Audio](https://www.w3.org/TR/webaudio/) for the level meter, count-in, and sample-accurate loop
 - [Web Locks](https://www.w3.org/TR/web-locks/) so one tab plays at a time, [Screen Wake Lock](https://www.w3.org/TR/screen-wake-lock/) during loops
 - [Storage](https://storage.spec.whatwg.org/) estimate and persist, [Streams](https://streams.spec.whatwg.org/) with `tee()` for save progress, [AbortController](https://dom.spec.whatwg.org/#interface-abortcontroller), [Web Storage](https://html.spec.whatwg.org/multipage/webstorage.html)

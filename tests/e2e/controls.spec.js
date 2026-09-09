@@ -130,56 +130,13 @@ test.describe( 'Controls', () => {
 		await page.keyboard.press( '[' );
 		await setTime( page, 9 );
 		await page.keyboard.press( ']' );
-		await expect( page.locator( '#loop' ) ).toHaveAttribute(
-			'aria-label',
-			/0:04–0:09/
-		);
+		await expect( page.locator( '#loop-band' ) ).toHaveClass( /on/ );
 		await page.keyboard.press( '\\' );
-		await expect( page.locator( '#loop' ) ).toHaveAttribute(
-			'data-state',
-			''
-		);
+		await expect( page.locator( '#loop-band' ) ).not.toHaveClass( /on/ );
 		await page.evaluate( () => document.getElementById( 'audio' ).pause() ); // no decode leaves paused unsettled
 		await page.keyboard.press( 'Escape' ); // paused, so Escape dismisses the deck
 		await expect( page.locator( '#deck' ) ).toBeHidden();
 		await expect( page.locator( '.track.active' ) ).toHaveCount( 0 );
-	} );
-
-	test( 'the loop chip: arm, set, clear; the band follows', async ( {
-		page,
-	} ) => {
-		await page.locator( '.track' ).first().click();
-		const chip = page.locator( '#loop' );
-		await setTime( page, 3 );
-		await chip.click();
-		await expect( chip ).toHaveAttribute( 'data-state', 'armed' );
-		await expect( chip ).toHaveAttribute( 'aria-label', /From 0:03/ );
-		await setTime( page, 3 ); // the same spot twice clears the arm
-		await chip.click();
-		await expect( chip ).toHaveAttribute( 'data-state', '' );
-		await chip.click();
-		await setTime( page, 12 );
-		await chip.click();
-		await expect( chip ).toHaveAttribute( 'data-state', 'on' );
-		await expect( page.locator( '#loop-band' ) ).toHaveClass( /on/ );
-		await page.locator( '#next' ).click(); // a new track clears the loop
-		await expect( chip ).toHaveAttribute( 'data-state', '' );
-	} );
-
-	test( 'the speed chip cycles and the keyboard steps it', async ( {
-		page,
-	} ) => {
-		await page.locator( '.track' ).first().click();
-		const chip = page.locator( '#rate' );
-		await chip.click();
-		await expect( chip ).toHaveText( '0.85×' );
-		await page.locator( 'h1' ).click();
-		await page.keyboard.press( ',' );
-		await expect( chip ).toHaveText( '0.75×' );
-		await page.keyboard.press( '.' );
-		await expect( chip ).toHaveText( '0.85×' );
-		await page.keyboard.press( '.' );
-		await expect( chip ).toHaveText( '1×' );
 	} );
 
 	test( 'the title button opens and closes the sheet, or finds the track', async ( {

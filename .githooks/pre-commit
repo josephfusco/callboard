@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs before every commit: lint, then the whole Playwright suite against the local wp-env. The suite
-# does not run in GitHub Actions (this is a private repository), so this hook is where it runs.
+# does not run in GitHub Actions (it needs a full WordPress and minutes), so this hook is where it runs.
 # Skip the suite for a commit with CALLBOARD_SKIP_E2E=1, or everything with git commit --no-verify.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"

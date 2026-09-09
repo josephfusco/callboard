@@ -129,7 +129,7 @@ The service worker precaches the shell and the home fragment. Saving a set strea
 | `pwa/sw.js` | Service worker source |
 | `tests/e2e/` | Playwright suites |
 | `tests/fixtures/` | Demo sets and `chiptunes.js`, which generates them |
-| `blueprint.json` | Playground demo. The Pages workflow publishes it with the plugin zip and demo audio |
+| `blueprint.json` | Playground demo. The Pages workflow publishes it with the plugin zip and demo audio, stamped by commit |
 | `site/` | Landing page (GitHub Pages) |
 | `scripts/sync-versions.sh` | Writes the release version into the plugin files |
 | `.github/` | Workflows, Dependabot, PR template, CONTRIBUTING |
@@ -253,7 +253,7 @@ Browser and WordPress features considered for this plugin, with a verdict, so no
 
 ## Tests
 
-Playwright tests in `tests/e2e/` run against wp-env from a pre-commit hook that `npm install` sets up. They do not run in GitHub Actions because the repository is private and the suite needs a full WordPress. Headless Chromium cannot decode mp3, so player tests assert on state, not audio.
+Playwright tests in `tests/e2e/` run against wp-env from a pre-commit hook that `npm install` sets up. They do not run in GitHub Actions: the suite needs a full WordPress and several minutes, so it runs before the commit instead. Headless Chromium cannot decode mp3, so player tests assert on state, not audio.
 
 Fixtures are ten public-domain melodies rendered by `tests/fixtures/chiptunes.js` (needs ffmpeg and ffprobe). Covers are drawn by the plugin's `Art` class.
 

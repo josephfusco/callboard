@@ -32,8 +32,8 @@ jobs:
           args: "-color -verbose"
 
   # zizmor: unpinned actions, excessive permissions, template injection,
-  # dangerous triggers, credential persistence. Plain output rather than SARIF
-  # because code scanning is not available on a private repository.
+  # dangerous triggers, credential persistence. Plain output in the log; findings
+  # fail the job, which is all a small repository needs.
   # See https://github.com/zizmorcore/zizmor
   zizmor:
     name: Zizmor

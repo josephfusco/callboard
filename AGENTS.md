@@ -16,6 +16,6 @@ The Playwright suite runs from the pre-commit hook against the local wp-env site
 
 ## Not bugs
 
-- `blueprint.json` and the README badge load the plugin zip and demo audio from the Pages site, not the repository, so Playground works while the repository is private.
+- `blueprint.json` and the README badge load the plugin zip and demo audio from the Pages site, not the repository. The Pages workflow builds the zip from main and stamps every URL with the commit, so the demo is always the current build.
 - `tests/fixtures/callboard/*/cover-*.png` are WordPress's generated sizes and are gitignored.
 - The dev site's uploads folder is the fixture folder. Deleting files there deletes fixtures.

@@ -4,7 +4,7 @@
 
 A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the call. The cast opens it on their phones, taps a number, and the track plays. Works offline, installs from Safari, needs no accounts.
 
-<p><a href="https://josephfus.co/callboard/">Landing page and live demo</a> · <a href="https://playground.wordpress.net/?blueprint-url=https://josephfus.co/callboard/blueprint.json">Open in WordPress Playground</a> · <a href="https://github.com/josephfusco/callboard/releases/latest">Latest release</a></p>
+<p><a href="https://josephfus.co/callboard/">Landing page and live demo</a> · <a href="https://playground.wordpress.net/?mode=seamless&blueprint-url=https://josephfus.co/callboard/blueprint.json">Open in WordPress Playground</a> · <a href="https://github.com/josephfusco/callboard/releases/latest">Latest release</a></p>
 
 <table>
 <tr>

@@ -20,7 +20,7 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 		<div class="actions">
 			<button type="button" class="btn" id="play-all"><?php esc_html_e( 'Play all', 'callboard' ); ?></button>
 			<?php if ( Callboard\Settings::get( 'offline' ) ) : ?>
-			<button type="button" class="btn btn-quiet" id="offline"><?php echo esc_html( __( 'Save offline', 'callboard' ) . ' · ' . callboard_size( (int) array_sum( array_column( $callboard_set['tracks'], 'bytes' ) ) ) ); ?></button>
+			<button type="button" class="btn btn-quiet" id="offline"><?php esc_html_e( 'Save offline', 'callboard' ); ?><span class="size"> · <?php echo esc_html( callboard_size( (int) array_sum( array_column( $callboard_set['tracks'], 'bytes' ) ) ) ); ?></span></button>
 			<?php endif; ?>
 			<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="<?php esc_attr_e( 'Share a link to this set', 'callboard' ); ?>"><?php echo callboard_icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
 		</div>

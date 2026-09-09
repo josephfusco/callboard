@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1](https://github.com/josephfusco/callboard/compare/v1.6.0...v1.6.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* open Playground in seamless mode so its toolbar stays off the player ([#56](https://github.com/josephfusco/callboard/issues/56)) ([1ab8882](https://github.com/josephfusco/callboard/commit/1ab88827bc1abbb6cb51386d6a0630cf18aa6bca))
+* stamp demo asset URLs with the commit so Pages caching never shows an old build ([#58](https://github.com/josephfusco/callboard/issues/58)) ([bdb1daa](https://github.com/josephfusco/callboard/commit/bdb1daad20000b440b2b7cb74feb3efe1a9867ac))
+
 ## [1.6.0](https://github.com/josephfusco/callboard/compare/v1.5.0...v1.6.0) (2026-09-09)
 
 

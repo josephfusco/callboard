@@ -65,4 +65,62 @@ test.describe( 'PWA and previews', () => {
 			/viewport-fit=cover/
 		);
 	} );
+
+	test( 'a saved set opens and plays with the network off', async ( {
+		page,
+		context,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		// the worker registers at idle and controls the page after a reload
+		await page
+			.waitForFunction( () => navigator.serviceWorker?.controller, null, {
+				timeout: 15000,
+			} )
+			.catch( async () => {
+				await page.reload();
+				await page.waitForFunction(
+					() => navigator.serviceWorker?.controller,
+					null,
+					{ timeout: 15000 }
+				);
+			} );
+		await page.waitForTimeout( 900 ); // the save controls bind shortly after the view does
+		await page.locator( '#offline' ).click();
+		await expect( page.locator( '#offline' ) ).toContainText(
+			/Saved offline/,
+			{ timeout: 30000 }
+		);
+		await page.waitForTimeout( 1500 ); // the set's fragment is warmed into the worker's cache
+
+		await context.setOffline( true );
+		await page.goto( '/' ); // home, from the precached shell
+		const set = page.locator( 'a.set', { hasText: 'Demo Set' } );
+		await expect( set ).toBeVisible();
+		await set.click(); // the set, from its cached fragment
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
+		await page.locator( '.track' ).first().click();
+		await page.waitForTimeout( 2000 );
+		const audio = await page.evaluate( () => {
+			const a = document.getElementById( 'audio' );
+			return {
+				error: a.error ? a.error.code : null,
+				readyState: a.readyState,
+			};
+		} );
+		expect( audio.error ).toBeNull();
+		expect( audio.readyState ).toBeGreaterThanOrEqual( 1 ); // metadata arrived from the cache
+		await context.setOffline( false );
+
+		// leave no copies behind: press and hold asks, the next tap removes
+		await page.locator( '#offline' ).hover();
+		await page.mouse.down();
+		await page.waitForTimeout( 900 );
+		await page.mouse.up();
+		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
+		await page.locator( '#offline' ).click();
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			0
+		);
+	} );
 } );

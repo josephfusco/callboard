@@ -12,7 +12,7 @@ Every pull request includes the template's "Use of AI tools" section with the to
 
 ## Before a commit
 
-The Playwright suite runs from the pre-commit hook against the local wp-env site. It does not run in Actions. Do not skip it for changes under `assets/`, `templates/`, `includes/`, or `pwa/`. Docs and site changes may skip it with `CALLBOARD_SKIP_E2E=1`.
+The Playwright suite runs from the pre-commit hook against the local wp-env site, and again in Actions on the pull request. Do not skip the hook for changes under `assets/`, `templates/`, `includes/`, or `pwa/`. Docs and site changes may skip it with `CALLBOARD_SKIP_E2E=1`.
 
 ## Not bugs
 

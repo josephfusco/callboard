@@ -149,8 +149,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 @media (prefers-reduced-transparency:reduce){.deck-glow-halo{display:none}.deck-glow{box-shadow:none}}
 /* marks on the seek line: ticks above it where singing resumes, pins for notes */
 .seek-marks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
-.seek-marks .tick{position:absolute;top:calc(50% - 19px);width:2px;height:6px;margin-left:-1px;border-radius:1px;background:var(--ink-3);opacity:.85}
-.seek-marks .pin{position:absolute;top:calc(50% - 24px);width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--deck);pointer-events:auto;cursor:pointer;transition:transform var(--t) var(--ease-spring)}
+.seek-marks .tick{position:absolute;top:auto;bottom:3px;width:2px;height:6px;margin-left:-1px;border-radius:1px;background:var(--ink-3);opacity:.85}
+.seek-marks .pin{position:absolute;top:auto;bottom:3px;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--deck);pointer-events:auto;cursor:pointer;transition:transform var(--t) var(--ease-spring)}
 .seek-marks .pin::before{content:"";position:absolute;inset:-12px}
 .seek-marks .pin:active{transform:scale(1.3)}
 /* A-B loop: a band on the line, a quiet chip that clears it */

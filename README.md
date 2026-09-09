@@ -140,7 +140,8 @@ The accent colour is a setting rather than a hook, because it is the customisati
 | `blueprint.json` | The WordPress Playground demo; the Pages workflow publishes it with the plugin zip and the demo audio, so it works while the repository is private |
 | `site/` | The GitHub Pages landing page, with the live Playground demo |
 | `scripts/sync-versions.sh` | Writes the release version everywhere WordPress reads it |
-| `.github/` | Workflows, Dependabot, the PR template, CONTRIBUTING |
+| `.github/` | Workflows, Dependabot, the PR template with its AI disclosure section, CONTRIBUTING |
+| `AGENTS.md` | Guidance for coding agents: the pull request question, the AI disclosure rule, the pre-commit suite |
 
 </details>
 

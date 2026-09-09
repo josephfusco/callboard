@@ -39,10 +39,14 @@ width and on an iPhone viewport, so include both when a change touches layout.
 
 <!--
 Say what tooling you used and how much of the change it wrote. You are
-responsible for reviewing what it generated. Delete the example and fill in
-your own, or write "None".
+responsible for reviewing what it generated. Fill in the lines below, or
+replace them with "AI assistance: No". See the WordPress AI Guidelines:
+https://make.wordpress.org/ai/handbook/ai-guidelines/
 -->
 
-AI assistance: No
+AI assistance: Yes
+Tool(s):
+Model(s):
+Used for:
 
 </details>

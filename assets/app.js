@@ -515,31 +515,17 @@
 		seekWidth = seek.clientWidth - ( seekKnob ? seekKnob.offsetWidth : 0 );
 	};
 	window.addEventListener( 'resize', measureSeek );
-	let lastStep = -1;
-	let lastMask = -1;
+	// Every frame, transforms only. The range input's value is written by paint() once a second: setting it
+	// relayouts the slider's thumb and repaints the deck, which at 60 Hz is what made the whole page stutter.
 	const setProgress = ( ratio ) => {
 		if ( ! seekWidth ) {
 			measureSeek();
 		}
-		const step = Math.round( ratio * 1000 );
-		if ( step !== lastStep ) {
-			lastStep = step;
-			seek.value = step; // the control repaints on a value change, so only when the value changes
-		}
 		seekFill.style.transform = `scaleX(${ ratio })`;
-		if ( wavePlayed ) {
-			const pct = ( ratio * 100 ).toFixed( 2 );
-			wavePlayed.style.clipPath = `inset(0 ${ ( 100 - pct ).toFixed(
-				2
-			) }% 0 0)`;
-			// the playhead is the lamp: bars beside it burn, bars behind it cool toward ember. The mask is a
-			// gradient the browser re-rasterises on every write, so it moves in quarter-percent steps
-			const maskStep = Math.round( ratio * 400 );
-			if ( maskStep !== lastMask ) {
-				lastMask = maskStep;
-				wavePlayed.style.maskImage = `linear-gradient(90deg, rgba(0,0,0,.42), #000 ${ pct }%)`;
-				wavePlayed.style.webkitMaskImage = wavePlayed.style.maskImage;
-			}
+		if ( waveReveal ) {
+			const off = ( ( 1 - ratio ) * 100 ).toFixed( 3 );
+			waveReveal.style.transform = `translateX(-${ off }%)`;
+			wavePlayed.style.transform = `translateX(${ off }%)`;
 		}
 		if ( seekKnob ) {
 			seekKnob.style.transform = `translateX(${ (
@@ -551,7 +537,8 @@
 	// base and played, drawn once per track and resize; progress only moves a clip-path on the played copy.
 	const waveBase = $( 'wave-base' ),
 		waveHover = $( 'wave-hover' ),
-		wavePlayed = $( 'wave-played' );
+		wavePlayed = $( 'wave-played' ),
+		waveReveal = $( 'wave-reveal' );
 	function drawWave() {
 		if ( ! waveBase || ! wavePlayed ) {
 			return;
@@ -645,6 +632,7 @@
 		}
 		lastSec = sec;
 		if ( ! seeking ) {
+			seek.value = Math.round( ( d ? now / d : 0 ) * 1000 );
 			cur.textContent = fmt( now );
 			if ( d ) {
 				seek.setAttribute(

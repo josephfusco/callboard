@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.6.0](https://github.com/josephfusco/callboard/compare/v1.5.0...v1.6.0) (2026-09-09)
+
+
+### Features
+
+* a refinement pass on the deck and lists ([#32](https://github.com/josephfusco/callboard/issues/32)) ([9bac90e](https://github.com/josephfusco/callboard/commit/9bac90eb68ba6c04e91aba3ba5f38954015d0fe1))
+* an accent colour, and a small developer API ([#47](https://github.com/josephfusco/callboard/issues/47)) ([1542d73](https://github.com/josephfusco/callboard/commit/1542d738445297b9364da20ddc61ae67552e7bda))
+* the board ([#40](https://github.com/josephfusco/callboard/issues/40)) ([c72f044](https://github.com/josephfusco/callboard/commit/c72f04481c79cc2212edaa9df6532b10182ad43a))
+* the filament behaves like one ([#26](https://github.com/josephfusco/callboard/issues/26)) ([c90b000](https://github.com/josephfusco/callboard/commit/c90b0005715793f649967f4dd0577ba9bbe07d3a))
+* the landing page runs a live copy in WordPress Playground ([#49](https://github.com/josephfusco/callboard/issues/49)) ([c2f8dc6](https://github.com/josephfusco/callboard/commit/c2f8dc6d3720c60c96d53da792f2584d1f848ee0))
+* the play button answers like a Magic 8-Ball ([#30](https://github.com/josephfusco/callboard/issues/30)) ([329ab25](https://github.com/josephfusco/callboard/commit/329ab25c9c6e0690c9fae9721221f2104e69c8ec))
+
+
+### Bug Fixes
+
+* an iOS Safari pass on the front end ([#37](https://github.com/josephfusco/callboard/issues/37)) ([0fc0fd7](https://github.com/josephfusco/callboard/commit/0fc0fd725bb4b04c7fd885d494a9dd4b3470e280))
+* play and pause the way YouTube does it ([#39](https://github.com/josephfusco/callboard/issues/39)) ([ecce724](https://github.com/josephfusco/callboard/commit/ecce7246e6bba225b4214d0984401a2b998f9dcc))
+* switching tracks no longer pauses the new one ([#29](https://github.com/josephfusco/callboard/issues/29)) ([ad4800b](https://github.com/josephfusco/callboard/commit/ad4800b617ec3ac57d111a53a3363259c555aa07))
+* the 8-Ball has a real viewing window ([#31](https://github.com/josephfusco/callboard/issues/31)) ([69449de](https://github.com/josephfusco/callboard/commit/69449dee8ffcbbc8aaafdd2b3aff0cf89c963d09))
+* the board is a list, not a stack of cards ([#51](https://github.com/josephfusco/callboard/issues/51)) ([9184dea](https://github.com/josephfusco/callboard/commit/9184dea47bb3fdaef7e82cf46207896ceeb28474))
+* the filament is the deck's top edge again, and the wave sits flush beneath it ([#34](https://github.com/josephfusco/callboard/issues/34)) ([a65f810](https://github.com/josephfusco/callboard/commit/a65f810547b066b61c8bd88d3270a646a0f88063))
+* the play key is a solid disc again ([#35](https://github.com/josephfusco/callboard/issues/35)) ([c4cf101](https://github.com/josephfusco/callboard/commit/c4cf1013598478bb31fe58ebf9fa72cbbef32485))
+* the set header keeps to one line on small phones ([#50](https://github.com/josephfusco/callboard/issues/50)) ([27838dc](https://github.com/josephfusco/callboard/commit/27838dcf29197f7d7be9bccf361bc348c725aec0))
+
+
+### Performance Improvements
+
+* playback moves only compositor transforms ([#52](https://github.com/josephfusco/callboard/issues/52)) ([02e5dfa](https://github.com/josephfusco/callboard/commit/02e5dfa1b4160018119bd31a1dfe926d3823c971))
+
 ## [1.5.0](https://github.com/josephfusco/callboard/compare/v1.4.2...v1.5.0) (2026-09-07)
 
 

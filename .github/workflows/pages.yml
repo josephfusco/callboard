@@ -53,8 +53,14 @@ jobs:
           set -euo pipefail
           mkdir -p out/demo
           cp -R site/. out/
-          cp build/callboard.zip blueprint.json out/
+          cp build/callboard.zip out/
           find tests/fixtures/callboard/demo-set -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} out/demo/ \;
+          # Pages caches for four hours. Stamp every asset URL with the commit so a deploy is always a new URL:
+          # the page's images and its blueprint fetch, and the blueprint's zip and demo files.
+          V="${GITHUB_SHA::7}"
+          sed -i -E "s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(content=\"https://josephfus.co/callboard/og\.png)\"#\1?v=${V}\"#; s#fetch\( 'blueprint\.json' \)#fetch( 'blueprint.json?v=${V}' )#" out/index.html
+          jq --arg v "$V" '(.steps[] | (.pluginData?, .data?) | select(. != null and .resource? == "url") | .url) |= (. + "?v=" + $v)' blueprint.json > out/blueprint.json
+          grep -c "?v=${V}" out/index.html out/blueprint.json
           ls -la out out/demo
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

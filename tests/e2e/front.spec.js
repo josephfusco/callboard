@@ -352,10 +352,14 @@ test.describe( 'Front end', () => {
 			el.value = 500;
 			el.dispatchEvent( new Event( 'input', { bubbles: true } ) );
 		} );
+		await expect( page.locator( '#wave-reveal' ) ).toHaveAttribute(
+			'style',
+			/translateX\(-50(\.0+)?%\)/
+		); // the reveal window slides to the middle; the canvas inside slides back the same amount
 		await expect( page.locator( '#wave-played' ) ).toHaveAttribute(
 			'style',
-			/inset\(0(px)? 50(\.\d+)?% 0(px)? 0(px)?\)/ // the browser serializes 0 as 0px
-		); // the played copy is clipped to the left half
+			/translateX\(50(\.0+)?%\)/
+		);
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click(); // levels, no lyrics or notes
 		const without = (

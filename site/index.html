@@ -62,14 +62,26 @@ h2{font-size:clamp(2rem,4.2vw,3.25rem)}
 .crop img{position:absolute;left:50%;transform:translateX(-50%);width:min(100%,420px);border-radius:24px 24px 0 0;box-shadow:0 30px 70px -20px rgba(0,0,0,.35)}
 .crop.top img{top:8%}
 .crop.bottom img{bottom:-12%;top:auto;border-radius:24px}
-/* make it yours: the same app three times, each one someone else's */
+/* make it yours: a live copy in a phone, and three presets that change only settings */
 .yours{padding:120px 0 40px}
 .yours .lede{max-width:40rem}
-.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:start;margin-top:56px;max-width:1040px}
-.trio .device{display:block;width:100%}
-.trio .device:nth-child(2){transform:translateY(32px)}
-@media (max-width:900px){.yours{padding:80px 0 20px}.trio{grid-template-columns:1fr 1fr;gap:20px}.trio .device:nth-child(3){grid-column:1 / -1;width:50%;margin:0 auto}}
-@media (max-width:560px){.trio{grid-template-columns:1fr;max-width:280px;margin:40px auto 0}.trio .device:nth-child(2){transform:none}.trio .device:nth-child(3){width:100%}}
+.demo{margin-top:48px;display:grid;justify-items:center;gap:22px}
+.presets{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.chip{appearance:none;border:1px solid var(--line);background:transparent;color:var(--ink-2);border-radius:999px;height:40px;padding:0 16px;font:inherit;font-size:.9375rem;font-weight:600;cursor:pointer;transition:color var(--t),border-color var(--t),background var(--t)}
+.chip:hover{color:var(--ink);border-color:var(--ink)}
+.chip.is-on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip[disabled]{opacity:.5;cursor:progress}
+.phone{width:min(390px,100%);padding:10px;border-radius:46px;background:#0d0d0d;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 40px 90px -20px rgba(0,0,0,.45)}
+.screen{position:relative;aspect-ratio:390/844;border-radius:36px;overflow:hidden;background:#161616}
+.screen img,.screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;object-fit:cover}
+.screen iframe[hidden]{display:none}
+.demo-cover{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:14px;background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);transition:opacity var(--t-slow) var(--ease)}
+.demo-cover.is-gone{opacity:0;pointer-events:none}
+.demo-cover .btn{background:#f2f1ee;color:#1c1c1c;border-color:#f2f1ee}
+.demo-note{margin:0;color:#f2f1ee;font-size:.9375rem;text-align:center;max-width:16rem;text-wrap:pretty}
+.demo-foot{margin:0;max-width:40rem;text-align:center;color:var(--ink-3);font-size:.9375rem;text-wrap:pretty}
+.demo-foot a{color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+@media (max-width:900px){.yours{padding:80px 0 20px}}
 /* the board: the editor doing the work, the phone showing the result */
 .board{padding:120px 0 96px}
 .board .lede{max-width:40rem}
@@ -111,8 +123,22 @@ html.js .r.in{opacity:1;transform:none}
 </div></section>
 
 <section class="yours" id="yours"><div class="wrap">
-	<div class="r"><h2>Make it yours.</h2><p class="lede" style="margin-top:20px">Your name on the door. Your colour on the wave. Your badge on the track that is playing. Your lucky number in the confetti. Every one is a setting, not code, and for the ones who want code, a handful of WordPress hooks and template overrides. Underneath, a self-hosted player: any folder of audio becomes a set, for a cast, a choir, a band, or one kid's favourite songs.</p></div>
-	<div class="trio r" aria-hidden="true"><span class="device"><img src="yours-1.png" alt=""></span><span class="device"><img src="yours-2.png" alt=""></span><span class="device"><img src="yours-3.png" alt=""></span></div>
+	<div class="r"><h2>Make it yours.</h2><p class="lede" style="margin-top:20px">Your name on the door. Your colour on the wave. Your badge on the track that is playing. Your lucky number in the confetti. Every one is a setting, not code. Try three of them on a real copy, running in your browser.</p></div>
+	<div class="demo r">
+		<div class="presets" role="group" aria-label="Presets">
+			<button type="button" class="chip is-on" data-preset="show">Spring Show</button>
+			<button type="button" class="chip" data-preset="choir">Chamber Choir</button>
+			<button type="button" class="chip" data-preset="maya">Maya Sings</button>
+		</div>
+		<div class="phone">
+			<div class="screen">
+				<img id="demo-still" src="yours-1.png" alt="">
+				<iframe id="demo" title="Callboard, running in WordPress Playground" hidden></iframe>
+				<div class="demo-cover" id="demo-cover"><button type="button" class="btn" id="demo-start">Try it live</button><p class="demo-note" id="demo-note" hidden>Starting WordPress in your browser. About half a minute.</p></div>
+			</div>
+		</div>
+		<p class="demo-foot">A full WordPress with the plugin, in <a href="https://playground.wordpress.net/?blueprint-url=https://josephfus.co/callboard/blueprint.json">WordPress Playground</a>. Nothing is installed on your machine, and it is gone when you leave. Under the hood it is a self-hosted player: any folder of audio becomes a set, for a cast, a choir, a band, or one kid's favourite songs.</p>
+	</div>
 </div></section>
 
 <section class="board" id="board"><div class="wrap">
@@ -137,6 +163,55 @@ html.js .r.in{opacity:1;transform:none}
 	if ( 'IntersectionObserver' in window && ! matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) document.documentElement.classList.add( 'js' );
 	const io = new IntersectionObserver( ( es ) => es.forEach( ( e ) => { if ( e.isIntersecting ) { e.target.classList.add( 'in' ); io.unobserve( e.target ); } } ), { rootMargin: '0px 0px -5% 0px', threshold: 0.01 } );
 	document.querySelectorAll( '.r' ).forEach( ( el ) => io.observe( el ) );
+</script>
+<script type="module">
+	// The live copy boots only when asked: a whole WordPress is a lot to download for a page you may just be reading.
+	const PRESETS = {
+		show:  { name: 'Spring Show',   accent: '',        badge: '★', confetti: '',   hearts: false },
+		choir: { name: 'Chamber Choir', accent: '#3b82f6', badge: '♪', confetti: '',   hearts: false },
+		maya:  { name: 'Maya Sings',    accent: '#e0457b', badge: '♥', confetti: '22', hearts: true },
+	};
+	const iframe = document.getElementById( 'demo' ), cover = document.getElementById( 'demo-cover' ), note = document.getElementById( 'demo-note' ), startBtn = document.getElementById( 'demo-start' ), chips = [ ...document.querySelectorAll( '.chip' ) ];
+	let client = null, starting = null;
+	function start() {
+		if ( starting ) return starting;
+		note.hidden = false; startBtn.hidden = true; chips.forEach( ( c ) => ( c.disabled = true ) );
+		starting = ( async () => {
+			const [ { startPlaygroundWeb }, blueprint ] = await Promise.all( [
+				import( 'https://playground.wordpress.net/client/index.js' ),
+				fetch( 'blueprint.json' ).then( ( r ) => r.json() ),
+			] );
+			iframe.hidden = false;
+			client = await startPlaygroundWeb( { iframe, remoteUrl: 'https://playground.wordpress.net/remote.html', blueprint } );
+			await client.isReady();
+			cover.classList.add( 'is-gone' );
+			chips.forEach( ( c ) => ( c.disabled = false ) );
+			return client;
+		} )().catch( ( e ) => {
+			note.textContent = 'The live copy could not start here. The link below opens it in a new tab.';
+			chips.forEach( ( c ) => ( c.disabled = false ) );
+			starting = null;
+			throw e;
+		} );
+		return starting;
+	}
+	async function apply( key ) {
+		const p = PRESETS[ key ];
+		chips.forEach( ( c ) => c.classList.toggle( 'is-on', c.dataset.preset === key ) );
+		const c = await start();
+		chips.forEach( ( x ) => ( x.disabled = true ) );
+		await c.run( { code: `<?php require '/wordpress/wp-load.php';
+			update_option( 'blogname', ${ JSON.stringify( p.name ) } );
+			update_option( 'callboard_settings', array_merge( (array) get_option( 'callboard_settings' ), array(
+				'accent' => ${ JSON.stringify( p.accent ) }, 'badge' => ${ JSON.stringify( p.badge ) },
+				'confetti' => ${ JSON.stringify( p.confetti ) }, 'hearts' => ${ p.hearts ? 'true' : 'false' },
+			) ) );
+			Callboard\\Sets::flush();` } );
+		await c.goTo( '/' );
+		chips.forEach( ( x ) => ( x.disabled = false ) );
+	}
+	startBtn.addEventListener( 'click', () => start().catch( () => {} ) );
+	chips.forEach( ( c ) => c.addEventListener( 'click', () => apply( c.dataset.preset ).catch( () => {} ) ) );
 </script>
 </body>
 </html>

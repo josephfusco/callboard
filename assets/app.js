@@ -2292,17 +2292,25 @@
 					.reduce( ( a, t ) => a + ( t.bytes || 0 ), 0 )
 			);
 			offBtn.dataset.some = have.size ? '1' : '';
-			offBtn.textContent = busy
-				? tpl( T.saving, have.size, tracks.length )
-				: have.size === tracks.length
-				? T.saved
-				: have.size
-				? `${ tpl(
-						T.save_rest,
-						have.size,
-						tracks.length
-				  ) } · ${ rest }`
-				: `${ T.save } · ${ total }`;
+			// the size sits in its own span so a narrow column can drop it and keep the words
+			const label = ( words, size ) => {
+				offBtn.textContent = words;
+				if ( size ) {
+					const s = document.createElement( 'span' );
+					s.className = 'size';
+					s.textContent = ` · ${ size }`;
+					offBtn.append( s );
+				}
+			};
+			if ( busy ) {
+				label( tpl( T.saving, have.size, tracks.length ) );
+			} else if ( have.size === tracks.length ) {
+				label( T.saved );
+			} else if ( have.size ) {
+				label( tpl( T.save_rest, have.size, tracks.length ), rest );
+			} else {
+				label( T.save, total );
+			}
 			offBtn.setAttribute(
 				'aria-label',
 				have.size === tracks.length && ! busy ? T.saved_hint : ''

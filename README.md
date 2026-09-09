@@ -1,31 +1,47 @@
+<p align="center"><img src="site/banner.png" alt="Callboard: the callboard, in the cast's pocket. Two phones show the posted call and a set with the player." width="100%"></p>
+
 # Callboard
 
-Rehearsal tracks for a cast. A WordPress plugin that turns a site into a small, private music app: sets of audio, a player that keeps playing while you move around, lock-screen controls, offline saving, Web Push notices, and an "Add to Home Screen" flow on iPhone. The plugin renders the whole front end, whatever theme is active, and keeps the site out of search engines.
+A WordPress plugin that turns a site into a cast's callboard and rehearsal player. The stage manager posts the call; the cast opens it on their phones, taps a number, and the track plays, keeps playing, and works with no signal in the building. Installed from Safari, no accounts, no app store.
 
-This file is the long-form record of the project: what it does, how it is built, which platform capabilities it leans on, and which ones were weighed and set aside. It is written so that someone arriving years from now can understand the decisions without reading the history.
+<p><a href="https://josephfus.co/callboard/">Landing page and live demo</a> · <a href="https://playground.wordpress.net/?blueprint-url=https://josephfus.co/callboard/blueprint.json">Open in WordPress Playground</a> · <a href="https://github.com/josephfusco/callboard/releases/latest">Latest release</a></p>
 
-## Try it
+<table>
+<tr>
+<td align="center" width="33%"><img src="site/home-light.png" alt="The home screen: the next call pinned at the top with its time, room, note, and numbers, then the sets, with the player along the bottom" width="260"><br><sub>The board</sub></td>
+<td align="center" width="33%"><img src="site/set-dark.png" alt="A set: numbered tracks with lyrics marks and a tempo, the waveform, and the transport" width="260"><br><sub>A set and the player</sub></td>
+<td align="center" width="33%"><img src="site/admin-call.png" alt="Posting a call in WordPress: title, note, when, where, and the numbers being worked" width="400"><br><sub>Posting a call in WordPress</sub></td>
+</tr>
+</table>
 
-The landing page is at [josephfus.co/callboard](https://josephfus.co/callboard/). No install needed. Launch a scratch site from `main` with a demo set already imported.
+## In one minute
 
-[![Launch in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://josephfus.co/callboard/blueprint.json)
+- **The board.** The home page opens with the next call: time, place, note, and the numbers being worked as taps that start the track. A call is a post under Sets, written and scheduled like any post; publishing it sends a push.
+- **Sets and numbers.** A set is a post, its tracks are audio attachments. Fetch a playlist with WP-CLI where `yt-dlp` exists, or import a folder of audio.
+- **The player.** One persistent deck: a waveform to scrub, an A/B loop, speed with the pitch held, a count-in on tracks with a tempo, lyrics and director's notes in time, AirPlay, lock-screen controls.
+- **Offline.** Save a set once and it plays from the phone, seeking included, from a cold start.
+- **Yours.** Name, accent colour, badge, confetti behind a triple tap on the title, all settings. A handful of hooks and template overrides for the ones who want code.
 
-Every pull request gets its own Playground link in a sticky comment, built from that PR's commit. To run it locally with wp-env and the Playwright suite, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+## Getting started
 
-## What it does
+1. Install `callboard.zip` from the [latest release](https://github.com/josephfusco/callboard/releases/latest) under Plugins, or `wp plugin install <zip url> --activate`. WordPress 6.5 and PHP 8.1 or later.
+2. Add a set. With `yt-dlp` and `ffmpeg` on the machine running WP-CLI: `wp callboard fetch '<playlist url>' --name="Spring Show"`. Without them, drop a folder of audio and a `manifest.json` into `wp-content/uploads/callboard/<slug>/` and use Import under Sets. `wp callboard doctor` says what is available.
+3. Post a call. Calls, under Sets: a title, a note, when, where, and the numbers being worked. Publish it, or schedule it for the night before.
+4. Share the home page link. On iPhone the cast adds it to the Home Screen; the bell on the home page turns on notifications.
+5. Settings, under Sets, for the name on the door, the accent colour, the badge, the confetti, and the switches.
 
-- **The board.** The home page opens with what is posted: the next call pinned at the top with its time, place, and note, then anything else the stage manager has put up. A call is a post, written and scheduled like any post under Sets, and publishing one sends the push. The numbers being worked are taps that start the track.
-- **Sets are posts.** A set is a `callboard_set` post. Its tracks are audio attachments parented to it, ordered and retitled in the set's edit screen. The featured image is the lock-screen cover.
-- **Fetch from YouTube with WP-CLI** wherever `yt-dlp` exists: `wp callboard fetch '<url>' --name="Spring Show"`. Or queue URLs in the admin and let a machine with the tools drain the queue with `wp callboard run`.
-- **Import a folder** of audio plus `manifest.json` from `wp-content/uploads/callboard/<slug>/`, for hosts that cannot run binaries.
-- **Player.** One persistent deck: waveform scrubber, A/B loop, speed with the pitch held, count-in on tracks with a tempo, lyrics in time, timestamped director's notes, AirPlay and Cast, lock-screen controls, one tab playing at a time.
-- **Offline.** Each set offers "Save offline". Saved audio plays from the service worker, seeks included, with no network.
-- **Notices.** The cast opts in from the home page. You send messages from the Notices screen under Sets, and new sets announce themselves.
-- **Settings**, under Sets: tagline, footer note, an accent colour, an emoji badge on the playing track, confetti text (and optional hearts) behind a triple tap on the title, the iPhone install hint, and switches for offline saving, notifications, new-set and new-call notices, and the count-in.
+## Contents
+
+The rest of this file is the long-form record of the project, written so that someone arriving years from now can understand the decisions without reading the history.
+
+- [How it is built](#how-it-is-built): request flow, the no-build front end, data model, import, offline, push, privacy, artwork, developer API, repository map
+- [WP-CLI](#wp-cli)
+- [APIs it uses](#apis-it-uses) and the [web platform watchlist](#web-platform-watchlist)
+- [Tests](#tests) and [releases](#releases); [CONTRIBUTING](.github/CONTRIBUTING.md) for local setup
 
 ## How it is built
 
-<details open>
+<details>
 <summary>Request flow</summary>
 
 `Router` registers two routes, the home page and `/<set-slug>/`. Anything else falls back to home with a note. On `template_redirect`, `Frontend` renders the page from the templates in `templates/` and sends only the plugin's own stylesheet and script, so the active theme never shows through.
@@ -160,7 +176,7 @@ The accent colour is a setting rather than a hook, because it is the customisati
 
 Everything below is in use today. Web platform links go to the specification, WordPress links to the developer handbook, PHP links to the manual. The watchlist that follows tracks what is next.
 
-<details open>
+<details>
 <summary>Web platform</summary>
 
 - [x] [Service Workers](https://w3c.github.io/ServiceWorker/) for the app shell, offline audio, and push handling in `pwa/sw.js`, with navigation preload

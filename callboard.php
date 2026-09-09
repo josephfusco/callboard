@@ -5,7 +5,9 @@
  * Version: 1.6.0
  * Requires at least: 6.5
  * Requires PHP: 8.1
- * Author: Callboard
+ * Plugin URI: https://josephfus.co/callboard/
+ * Author: Joe Fusco
+ * Author URI: https://josephfus.co/
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: callboard

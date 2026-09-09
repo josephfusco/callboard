@@ -34,5 +34,13 @@
     "@wordpress/env": "^11.14.0",
     "@wordpress/scripts": "^34.2.0",
     "globals": "^16.5.0"
+  },
+  "homepage": "https://josephfus.co/callboard/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josephfusco/callboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/josephfusco/callboard/issues"
   }
 }

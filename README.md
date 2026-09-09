@@ -257,6 +257,10 @@ Playwright tests in `tests/e2e/` run against wp-env from a pre-commit hook that 
 
 Fixtures are ten public-domain melodies rendered by `tests/fixtures/chiptunes.js` (needs ffmpeg and ffprobe). Covers are drawn by the plugin's `Art` class.
 
+## Source and maintainer
+
+Source, issues, and releases live on [GitHub](https://github.com/josephfusco/callboard). Made by [Joe Fusco](https://josephfus.co/). Security reports go through [private vulnerability reporting](https://github.com/josephfusco/callboard/security/advisories/new).
+
 ## Releases
 
 Pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/). [release-please](https://github.com/googleapis/release-please) creates the version, changelog, and GitHub Release with `callboard.zip` attached. See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the rest of the automation.

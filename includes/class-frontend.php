@@ -50,7 +50,7 @@ final class Frontend {
 			'copied'         => __( 'Link copied', 'callboard' ),
 			'pause'          => __( 'Pause', 'callboard' ),
 			'resume'         => __( 'Play', 'callboard' ),
-			'install'        => __( 'Add this to your Home Screen to keep it on your phone.', 'callboard' ),
+			'install'        => __( 'Install this as an app to keep it a tap away.', 'callboard' ),
 			'install_go'     => __( 'Add', 'callboard' ),
 			'open_safari'    => __( 'Open this in Safari to add it to your Home Screen.', 'callboard' ),
 			'open_safari_go' => __( 'Open in Safari', 'callboard' ),

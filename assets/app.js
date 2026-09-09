@@ -201,50 +201,6 @@
 	const onQueuePage = () => !! queue && view() === queue.slug;
 	const key = () => `callboard:${ queue.slug }`;
 
-	// ---- Speed. HTMLMediaElement.preservesPitch keeps the key while the tempo drops, which is what a
-	// rehearsal wants; the chip steps down through the presets and comes back round to full speed.
-	const RATES = [ 1, 0.85, 0.75, 0.6, 0.5 ];
-	const rateChip = $( 'rate' );
-	let rate = RATES.includes( ls.get( 'callboard:rate' ) )
-		? ls.get( 'callboard:rate' )
-		: 1;
-	const rateText = ( r ) => `${ r }×`;
-	function setRate( r, save = true ) {
-		rate = r;
-		try {
-			audio.preservesPitch = true;
-			audio.webkitPreservesPitch = true;
-		} catch {}
-		audio.defaultPlaybackRate = r; // a new src resets playbackRate to this
-		audio.playbackRate = r;
-		looperStop(); // Web Audio has no preservesPitch; the element's loop takes over
-		if ( rateChip ) {
-			rateChip.textContent = rateText( r );
-			rateChip.dataset.state = r === 1 ? '' : 'on';
-			rateChip.setAttribute(
-				'aria-label',
-				r === RATES[ RATES.length - 1 ]
-					? T.rate_reset
-					: tpl( T.rate_label, rateText( r ) )
-			);
-		}
-		if ( save ) {
-			ls.set( 'callboard:rate', r );
-		}
-		positionState();
-	}
-	const stepRate = ( dir = 1 ) =>
-		setRate(
-			RATES[
-				( RATES.indexOf( rate ) + dir + RATES.length ) % RATES.length
-			]
-		);
-	rateChip?.addEventListener( 'click', () => {
-		haptic();
-		stepRate( 1 );
-	} );
-	setRate( rate, false ); // the chip reads the remembered speed before anything is loaded
-
 	let analyser = null,
 		eqRaf = 0;
 	const ensureAnalyser = () => {
@@ -698,7 +654,6 @@
 		i = ( n + queue.tracks.length ) % queue.tracks.length;
 		const t = queue.tracks[ i ];
 		audio.src = t.url;
-		setRate( rate, false );
 		if ( at ) {
 			audio.currentTime = at;
 		}
@@ -991,7 +946,7 @@
 	}
 	function countIn( bpm ) {
 		countStop();
-		const beat = 60000 / bpm / rate; // the count-in keeps time with the slowed track
+		const beat = 60000 / bpm;
 		return new Promise( ( resolve ) => {
 			const timers = [];
 			deck.classList.add( 'counting' );
@@ -1248,9 +1203,7 @@
 	// and background play are exactly what they were; when the tab hides, the speed changes or the loop
 	// clears, the element takes the sound back at the looper's position.
 	const canLoopGapless = () =>
-		'AudioContext' in window &&
-		rate === 1 &&
-		document.visibilityState === 'visible';
+		'AudioContext' in window && document.visibilityState === 'visible';
 	const playhead = () => {
 		if ( ! looper || ! loop ) {
 			return audio.currentTime;
@@ -1351,12 +1304,10 @@
 			2
 		) }%) scaleX(${ ( ( b - a ) / d ).toFixed( 4 ) })`;
 		loopBand.classList.add( 'on' );
-		loopChip.dataset.state = 'on';
+		if ( loopChip ) {
+			loopChip.dataset.state = 'on';
+		}
 		requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
-		loopChip.setAttribute(
-			'aria-label',
-			`${ T.loop_clear }: ${ fmt( a ) }–${ fmt( b ) }`
-		);
 		if ( audio.currentTime < a || audio.currentTime > b ) {
 			audio.currentTime = a;
 		}
@@ -1378,8 +1329,9 @@
 		loopFrom = null;
 		if ( loopBand ) {
 			loopBand.classList.remove( 'on' );
-			loopChip.dataset.state = '';
-			loopChip.setAttribute( 'aria-label', T.loop_set );
+			if ( loopChip ) {
+				loopChip.dataset.state = '';
+			}
 			requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
 		}
 	}
@@ -1391,11 +1343,9 @@
 		if ( loopFrom === null ) {
 			haptic();
 			loopFrom = audio.currentTime;
-			loopChip.dataset.state = 'armed';
-			loopChip.setAttribute(
-				'aria-label',
-				`${ T.loop_from } ${ fmt( loopFrom ) } · ${ T.loop_end }`
-			);
+			if ( loopChip ) {
+				loopChip.dataset.state = 'armed';
+			}
 			return;
 		}
 		const a = Math.min( loopFrom, audio.currentTime ),
@@ -1513,10 +1463,6 @@
 			setLoop( loop ? loop.a : 0, audio.currentTime );
 		} else if ( e.key === '\\' ) {
 			clearLoop();
-		} else if ( e.key === ',' ) {
-			stepRate( 1 );
-		} else if ( e.key === '.' ) {
-			stepRate( -1 );
 		} else if ( e.key === 'Escape' && ! lyricsSheet.hidden ) {
 			hideLyrics();
 		} else if ( e.key === 'Escape' && audio.paused && i >= 0 ) {

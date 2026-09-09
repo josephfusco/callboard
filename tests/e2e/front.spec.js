@@ -253,7 +253,7 @@ test.describe( 'Front end', () => {
 		).toBe( 0 );
 	} );
 
-	test( 'an A-B loop from the keyboard shows a chip and clears', async ( {
+	test( 'an A-B loop from the keyboard shows the band and clears', async ( {
 		page,
 	} ) => {
 		await page.goto( '/long-set/' );
@@ -266,73 +266,9 @@ test.describe( 'Front end', () => {
 			document.getElementById( 'audio' ).currentTime = 6;
 		} );
 		await page.keyboard.press( ']' );
-		await expect( page.locator( '#loop' ) ).toHaveAttribute(
-			'aria-label',
-			/0:02–0:06/
-		);
 		await expect( page.locator( '#loop-band' ) ).toHaveClass( /on/ );
-		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveAttribute(
-			'data-state',
-			''
-		);
-		// and from the control alone: start, end, clear
-		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveAttribute(
-			'aria-label',
-			/From 0:0\d/
-		);
-		await page.evaluate( () => {
-			document.getElementById( 'audio' ).currentTime = 8;
-		} );
-		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveAttribute(
-			'aria-label',
-			/0:0\d–0:08/
-		);
-		await page.locator( '#loop' ).click();
-		await expect( page.locator( '#loop' ) ).toHaveAttribute(
-			'data-state',
-			''
-		);
-	} );
-
-	test( 'the speed chip slows playback and keeps the pitch', async ( {
-		page,
-	} ) => {
-		await page.goto( '/demo-set/' );
-		await page.locator( '.track' ).first().click();
-		const chip = page.locator( '#rate' );
-		await expect( chip ).toHaveText( '1×' );
-		await chip.click();
-		await expect( chip ).toHaveText( '0.85×' );
-		await expect( chip ).toHaveAttribute( 'data-state', 'on' );
-		const state = await page.evaluate( () => {
-			const a = document.getElementById( 'audio' );
-			return {
-				rate: a.playbackRate,
-				def: a.defaultPlaybackRate,
-				pitch: a.preservesPitch,
-			};
-		} );
-		expect( state.rate ).toBeCloseTo( 0.85 );
-		expect( state.def ).toBeCloseTo( 0.85 );
-		expect( state.pitch ).toBe( true );
-		await page.locator( '.track' ).nth( 1 ).click(); // a new track keeps the speed
-		expect(
-			await page.evaluate(
-				() => document.getElementById( 'audio' ).playbackRate
-			)
-		).toBeCloseTo( 0.85 );
-		await page.reload(); // and so does the next visit
-		await expect( chip ).toHaveText( '0.85×' );
-		await page.keyboard.press( '.' ); // faster
-		await expect( chip ).toHaveText( '1×' );
-		await expect( chip ).toHaveAttribute( 'data-state', '' );
-		for ( let k = 0; k < 5; k++ ) {
-			await chip.click(); // round the presets and back to full speed
-		}
-		await expect( chip ).toHaveText( '1×' );
+		await page.keyboard.press( '\\' );
+		await expect( page.locator( '#loop-band' ) ).not.toHaveClass( /on/ );
 	} );
 
 	test( 'the deck draws the waveform and keeps one height with or without lyrics', async ( {

@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 			<button type="button" class="deck-open" id="open-lyrics" aria-expanded="false" aria-controls="lyrics" aria-label="<?php esc_attr_e( 'Show current track', 'callboard' ); ?>">
 				<span class="deck-title" id="now-title" aria-live="polite"><span class="mq"><span><?php esc_html_e( 'Choose a track', 'callboard' ); ?></span></span></span>
 			</button>
-			<span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><span id="dur">0:00</span><button type="button" class="remote-chip is-away" id="remote" data-state="" aria-label="<?php esc_attr_e( 'Play on another device', 'callboard' ); ?>"><?php echo callboard_icon( 'cast' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button></span>
+			<span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><button type="button" class="remote-chip is-away" id="remote" data-state="" aria-label="<?php esc_attr_e( 'Play on another device', 'callboard' ); ?>"><?php echo callboard_icon( 'cast' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><span id="dur">0:00</span></span>
 		</div>
 	</div>
 	<div class="seek-wrap">

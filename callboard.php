@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Callboard
  * Description: Rehearsal tracks for a cast. Sets of audio, a persistent player, installable as a home-screen app.
- * Version: 1.6.1
+ * Version: 2.0.0
  * Requires at least: 6.5
  * Requires PHP: 8.1
  * Plugin URI: https://josephfus.co/callboard/
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CALLBOARD_VERSION', '1.6.1' );
+define( 'CALLBOARD_VERSION', '2.0.0' );
 define( 'CALLBOARD_FILE', __FILE__ );
 define( 'CALLBOARD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CALLBOARD_URL', plugin_dir_url( __FILE__ ) );

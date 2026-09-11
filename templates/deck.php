@@ -7,11 +7,11 @@
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<section class="deck<?php echo 'matrix' === Callboard\Settings::get( 'display' ) ? ' matrix' : ''; ?>" id="deck" aria-label="<?php esc_attr_e( 'Player', 'callboard' ); ?>" hidden>
+<section class="deck" id="deck" aria-label="<?php esc_attr_e( 'Player', 'callboard' ); ?>" hidden>
 	<i class="deck-glow-halo" id="deck-glow-halo" aria-hidden="true"></i><i class="deck-glow" id="deck-glow" aria-hidden="true"></i><i class="deck-glow-hot" id="deck-glow-hot" aria-hidden="true"></i>
 	<div class="deck-inner deck-display">
 		<div class="deck-text">
-			<button type="button" class="deck-open" id="open-lyrics" aria-expanded="false" aria-controls="lyrics" aria-label="<?php esc_attr_e( 'Show current track', 'callboard' ); ?>"><span class="matrix-window" id="matrix-window" aria-hidden="true"><canvas class="matrix-grid" id="matrix-grid"></canvas><canvas class="matrix-text" id="matrix"></canvas></span>
+			<button type="button" class="deck-open" id="open-lyrics" aria-expanded="false" aria-controls="lyrics" aria-label="<?php esc_attr_e( 'Show current track', 'callboard' ); ?>">
 				<span class="deck-title" id="now-title" aria-live="polite"><span class="mq"><span><?php esc_html_e( 'Choose a track', 'callboard' ); ?></span></span></span>
 			</button>
 			<span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><span id="dur">0:00</span><button type="button" class="remote-chip is-away" id="remote" data-state="" aria-label="<?php esc_attr_e( 'Play on another device', 'callboard' ); ?>"><?php echo callboard_icon( 'cast' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button></span>

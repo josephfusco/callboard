@@ -536,7 +536,7 @@
 				for ( let x = from; x < to; x++ ) {
 					peak = Math.max( peak, +lv[ x ] || 0 );
 				}
-				// SoundCloud's form: the bar stands on a line two-thirds down, and a fainter reflection hangs below it
+				// each bar stands on a line two-thirds down, and a fainter reflection hangs below it
 				const full = Math.max( 2, ( peak / 9 ) * h ),
 					up = Math.max( 1, Math.round( full * 0.64 ) ),
 					down = Math.max( 1, Math.round( full * 0.36 ) - 1 ),

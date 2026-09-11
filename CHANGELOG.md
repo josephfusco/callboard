@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.0.0](https://github.com/josephfusco/callboard/compare/v1.6.1...v2.0.0) (2026-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove the dot-matrix display ([#71](https://github.com/josephfusco/callboard/issues/71))
+* the transport is previous, play, next ([#62](https://github.com/josephfusco/callboard/issues/62))
+
+### Features
+
+* remove the dot-matrix display ([#71](https://github.com/josephfusco/callboard/issues/71)) ([c0fa513](https://github.com/josephfusco/callboard/commit/c0fa5133bb9c4217993907ecca2f1efebef9b2db))
+* the deck reads like a dashboard, with a dot-matrix display option ([#67](https://github.com/josephfusco/callboard/issues/67)) ([ef6d468](https://github.com/josephfusco/callboard/commit/ef6d468d80c154dad6689f38ffe38f0f8bf3ef37))
+* the dot-matrix display draws its own glyphs, a spectrum, and a swimmer ([#68](https://github.com/josephfusco/callboard/issues/68)) ([6b9b085](https://github.com/josephfusco/callboard/commit/6b9b085cbc00fc6ef8a14c03813518bdbbf5c17c))
+* the transport is previous, play, next ([#62](https://github.com/josephfusco/callboard/issues/62)) ([f9fc59d](https://github.com/josephfusco/callboard/commit/f9fc59d0965bc5c1a45ebb5b60b7ceef0365c228))
+
+
+### Bug Fixes
+
+* re-importing a set no longer deletes its cover ([#65](https://github.com/josephfusco/callboard/issues/65)) ([230150d](https://github.com/josephfusco/callboard/commit/230150df019dd3256d50185c25626c9f7632a2f7))
+* the deck as one system ([#69](https://github.com/josephfusco/callboard/issues/69)) ([c8acc53](https://github.com/josephfusco/callboard/commit/c8acc53c8500b5df17b6d8331f5001688b9fa471))
+* the list and the deck share one right edge ([#70](https://github.com/josephfusco/callboard/issues/70)) ([e778dc3](https://github.com/josephfusco/callboard/commit/e778dc3bc2c4ae9a8b79f335f510df3fc6bd3fc2))
+* the waveform is bars alone, centred, no reflection ([#66](https://github.com/josephfusco/callboard/issues/66)) ([6350082](https://github.com/josephfusco/callboard/commit/6350082375eac029f9411c222ce079efc1bd3695))
+
 ## [1.6.1](https://github.com/josephfusco/callboard/compare/v1.6.0...v1.6.1) (2026-09-09)
 
 

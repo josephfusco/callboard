@@ -20,7 +20,7 @@ A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the ca
 - **Sets.** A set is a post; its tracks are audio attachments. Fetch a playlist with WP-CLI, or import a folder of audio.
 - **Player.** Previous, play, next. Waveform scrubbing, an A/B loop (two fingers on the wave, or the bracket keys), count-in, lyrics and director's notes in time with the track, AirPlay, lock-screen controls.
 - **Offline.** Save a set once. It plays from the phone with no connection.
-- **Settings.** Site name, accent colour, badge, confetti behind a triple tap on the title, and a dot-matrix display style for the deck. Hooks and template overrides for developers.
+- **Settings.** Site name, accent colour, badge, confetti behind a triple tap on the title. Hooks and template overrides for developers.
 
 ## Getting started
 

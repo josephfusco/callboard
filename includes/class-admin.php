@@ -227,7 +227,6 @@ final class Admin {
 			'tagline'         => array( __( 'Tagline', 'callboard' ), 'text', __( 'Shown under the title and in link previews.', 'callboard' ) ),
 			'footer_note'     => array( __( 'Home page footer', 'callboard' ), 'text', __( 'A short disclosure, e.g. "For rehearsal use only."', 'callboard' ) ),
 			'badge'           => array( __( 'Badge on the playing track', 'callboard' ), 'text', __( 'An emoji, or leave empty.', 'callboard' ) ),
-			'display'         => array( __( 'Display', 'callboard' ), 'select', __( 'How the playing title is drawn in the deck. Dot matrix draws it as lit dots that scroll, like a car stereo.', 'callboard' ) ),
 			'accent'          => array( __( 'Accent colour', 'callboard' ), 'color', __( 'A hex colour such as #3b82f6 for the played wave, the filament, and the marks. Empty keeps the house orange.', 'callboard' ) ),
 			'confetti'        => array( __( 'Confetti text', 'callboard' ), 'text', __( 'Triple-tap the big title to release it. A lucky number, a name. Empty turns it off.', 'callboard' ) ),
 			'hearts'          => array( __( 'Mix hearts into the confetti', 'callboard' ), 'checkbox', '' ),
@@ -263,21 +262,6 @@ final class Admin {
 	public static function field( array $args ): void {
 		$value = Settings::get( $args['key'] );
 		$name  = Settings::OPTION . '[' . $args['key'] . ']';
-		if ( 'select' === $args['type'] ) {
-			$options = array(
-				'plain'  => __( 'Plain text', 'callboard' ),
-				'matrix' => __( 'Dot matrix', 'callboard' ),
-			);
-			printf( '<select id="callboard-%1$s" name="%2$s">', esc_attr( $args['key'] ), esc_attr( $name ) );
-			foreach ( $options as $option => $label ) {
-				printf( '<option value="%1$s" %2$s>%3$s</option>', esc_attr( $option ), selected( (string) $value, $option, false ), esc_html( $label ) );
-			}
-			echo '</select>';
-			if ( $args['help'] ) {
-				echo '<p class="description">' . esc_html( $args['help'] ) . '</p>';
-			}
-			return;
-		}
 		if ( 'checkbox' === $args['type'] ) {
 			printf( '<input type="checkbox" id="callboard-%1$s" name="%2$s" value="1" %3$s>', esc_attr( $args['key'] ), esc_attr( $name ), checked( (bool) $value, true, false ) );
 		} elseif ( 'color' === $args['type'] ) {

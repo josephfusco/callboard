@@ -18,7 +18,6 @@ test.describe( 'Admin', () => {
 		await page.fill( '#callboard-confetti', '22' );
 		await page.check( '#callboard-hearts' );
 		await page.fill( '#callboard-accent', '#3b82f6' );
-		await page.selectOption( '#callboard-display', 'matrix' );
 		await page.click( '#submit' );
 		await expect(
 			page
@@ -38,22 +37,12 @@ test.describe( 'Admin', () => {
 					.trim()
 			)
 		).toBe( '#3b82f6' );
-		await page.goto( '/demo-set/' );
-		await page.locator( '.track' ).first().click();
-		await expect( page.locator( '#deck' ) ).toHaveClass( /matrix/ );
-		await expect( page.locator( '#matrix' ) ).toBeVisible(); // the title drawn as dots
-		expect(
-			await page.evaluate(
-				() => document.getElementById( 'matrix' ).width
-			)
-		).toBeGreaterThan( 100 );
-		// back to the house colour and plain text, so the other tests and the screenshots see them
+		// back to the house colour, so the other tests and the screenshots see it
 		await admin.visitAdminPage(
 			'edit.php',
 			'post_type=callboard_set&page=callboard-settings'
 		);
 		await page.fill( '#callboard-accent', '' );
-		await page.selectOption( '#callboard-display', 'plain' );
 		await page.click( '#submit' );
 		await page.goto( '/' );
 		await expect( page.locator( '#callboard-accent' ) ).toHaveCount( 0 );

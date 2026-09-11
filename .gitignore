@@ -21,3 +21,6 @@ undefined/
 !site/*.png
 !tests/fixtures/**/*.png
 tests/fixtures/callboard/*/cover-*.png
+
+# Written by .github/scripts/detect-public-surface.js when run locally.
+comment.md

@@ -642,6 +642,10 @@
 		if ( ! deck.classList.contains( 'matrix' ) || deck.hidden ) {
 			return;
 		}
+		if ( mx.last && now - mx.last < 30 ) {
+			mx.raf = requestAnimationFrame( matrixFrame ); // thirty frames a second is plenty for dots
+			return;
+		}
 		const dt = mx.last ? Math.min( 0.1, ( now - mx.last ) / 1000 ) : 0.016;
 		mx.last = now;
 		const W = matrixWin.clientWidth,

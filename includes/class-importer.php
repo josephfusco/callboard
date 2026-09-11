@@ -243,6 +243,17 @@ final class Importer {
 		if ( $current && get_post_meta( $current, '_callboard_source_mtime', true ) === $mtime ) {
 			return;
 		}
+		if ( $current && get_attached_file( $current ) === $file ) {
+			// The attachment points at this very file, so the file has been replaced under it. Deleting the
+			// attachment would delete the new file too. Refresh its sizes in place instead.
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+			wp_update_attachment_metadata( $current, wp_generate_attachment_metadata( $current, $file ) );
+			update_post_meta( $current, '_callboard_source_mtime', $mtime );
+			if ( 'cover' === $role ) {
+				set_post_thumbnail( $set, $current );
+			}
+			return;
+		}
 		if ( $current ) {
 			wp_delete_attachment( $current, true );
 		}

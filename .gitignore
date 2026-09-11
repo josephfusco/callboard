@@ -20,3 +20,4 @@ undefined/
 !assets/*.png
 !site/*.png
 !tests/fixtures/**/*.png
+tests/fixtures/callboard/*/cover-*.png

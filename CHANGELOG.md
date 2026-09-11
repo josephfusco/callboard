@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/josephfusco/callboard/compare/v2.0.0...v2.0.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* drop a stray screenshot that shipped in the package ([#72](https://github.com/josephfusco/callboard/issues/72)) ([6b30513](https://github.com/josephfusco/callboard/commit/6b30513800080400e9e0ff7351296cfab186a9c7))
+
 ## [2.0.0](https://github.com/josephfusco/callboard/compare/v1.6.1...v2.0.0) (2026-09-11)
 
 

@@ -92,7 +92,8 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .track.active .digits{visibility:hidden}
 .track.active:not(.playing) .eq i{background:var(--ink-3)}
 .track .title{font-size:1.0625rem;font-weight:500;letter-spacing:-.01em;line-height:1.3;display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-wrap:pretty}
-.track .has-lyrics{font-size:.75rem;font-weight:500;color:var(--ink-3);border:1px solid var(--line-strong);border-radius:4px;padding:0 5px;line-height:1.5}
+.track .has-lyrics{font-size:.8125rem;font-weight:400;color:var(--ink-3);margin-left:6px} /* a word, not a badge */
+.track .has-lyrics::before{content:"·";margin-right:6px}
 .track .len{color:var(--ink-3);font-size:.875rem;display:inline-flex;align-items:center;gap:8px}
 .track .hh{font-size:1.05rem;line-height:1;opacity:0;transition:opacity var(--t-fast)}
 .track.active .hh{opacity:1}
@@ -109,8 +110,8 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .deck{will-change:transform;position:fixed;left:0;right:0;bottom:-120px;z-index:20;border-top:1px solid var(--line);padding-bottom:calc(var(--safe-b) + 120px);background-image:linear-gradient(180deg,var(--deck-hi),var(--deck-bg) 56px);box-shadow:inset 0 1px 0 var(--gloss)} /* a pane of glass: light catches the top edge, the panel deepens toward the controls */ /* runs past the viewport edge so the browser's bottom bar sits on deck color, not page color */
 .deck-inner{max-width:640px;margin:0 auto;padding:0 max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px))}
 /* The deck reads top down like a dashboard: the filament, then the display line (what is playing, the time), then the wave, then the transport */
-.deck-display{padding-top:14px;padding-bottom:2px}
-.deck-transport{padding-top:4px;padding-bottom:10px}
+.deck-display{padding-top:12px;padding-bottom:6px}
+.deck-transport{padding-top:8px;padding-bottom:12px}
 /* Dot matrix: an optional display style. The title is drawn as lit dots on a faint grid and scrolls when it is long. */
 .matrix-window{display:none;position:relative;width:100%;height:30px;overflow:hidden;border-radius:4px}
 .deck.matrix .matrix-window{display:block}
@@ -174,12 +175,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 @keyframes beat{35%{transform:scale(1.09)}100%{transform:none}}
 .lyrics-lines li time{color:var(--ink-3);font-size:1rem;font-weight:500;margin-right:12px;font-variant-numeric:tabular-nums}
 .lyrics-lines li small{display:block;font-size:.8125rem;font-weight:500;color:var(--ink-3);margin-top:2px}
-.deck-text{padding:0;min-width:0;display:grid;grid-template-columns:1fr auto;align-items:end;gap:12px}
+.deck-text{padding:0;min-width:0;display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:12px}
 .deck-open{appearance:none;background:transparent;border:0;padding:0;text-align:left;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:3px;cursor:pointer;color:inherit;border-radius:8px}
 .deck-open:active .deck-title{opacity:.6}
 .deck-open::after{content:attr(data-line);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* the sheet's name, or the set's: never blank, so the deck's constant height is honest */
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
-.deck-time{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:hidden;padding-bottom:2px} /* clipped, never under the controls */
+.deck-time{display:inline-flex;align-items:baseline;gap:8px;min-width:0;max-width:100%;overflow:hidden} /* clipped, never under the controls */
 .deck-time :focus-visible{outline-offset:-2px} /* rings stay inside the clip */
 /* the time row is a container: when the chips would not fit beside the total, the total goes; the track list still shows it.
    Safari always shows the AirPlay chip (no availability watcher for audio) and an armed or set loop reads wider than "Loop". */
@@ -207,14 +208,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .remote-chip[data-state="connecting"]{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.4}}
 .remote-chip:active{background:var(--surface-2)}
-.deck-controls{display:flex;align-items:center;justify-content:center;gap:2px;position:relative;z-index:2}
+.deck-controls{display:flex;align-items:center;justify-content:center;gap:24px;position:relative;z-index:2} /* three equal targets at one spacing: a unit, not three things */
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
-.ctl svg{width:30px;height:30px;fill:currentColor}
-.deck-controls .ctl.skip{width:56px;height:56px}
+.ctl svg{width:26px;height:26px;fill:currentColor}
+.deck-controls .ctl.skip{width:52px;height:52px}
 .ctl:active{background:radial-gradient(circle at 50% 42%,var(--surface-2),var(--surface));box-shadow:inset 0 2px 5px var(--dish)} /* pressed: a shallow dish */
-.ctl.play{width:66px;height:66px;color:var(--bg);margin:0 4px;position:relative;isolation:isolate} /* one solid disc with the glyph cut into it; the skips stay bare */
+.ctl.play{width:52px;height:52px;color:var(--bg);margin:0;position:relative;isolation:isolate} /* one solid disc with the glyph cut into it; the skips stay bare */
 .ctl.play .cap{position:absolute;inset:0;border-radius:50%;display:block;background:var(--ink)}
-.ctl.play .pp{position:absolute;inset:0;margin:auto;width:30px;height:30px;fill:currentColor;z-index:2}
+.ctl.play .pp{position:absolute;inset:0;margin:auto;width:26px;height:26px;fill:currentColor;z-index:2}
 /* play ⇄ pause as one path whose points slide from the triangle to the two bars. No press effect. */
 .ctl.play:active{background:transparent;box-shadow:none}
 .ctl.play .glyph-pause{display:none}
@@ -272,11 +273,10 @@ body:not(.has-deck) .update{bottom:calc(var(--safe-b) + 12px)}
 .a2hs-x{appearance:none;border:0;background:transparent;width:36px;height:36px;border-radius:50%;font-size:1.25rem;line-height:1;color:var(--ink-3);cursor:pointer;display:grid;place-items:center}
 .a2hs-x:active{background:var(--surface-2)}
 
-@media (max-width:639px){.deck-controls .ctl.skip{width:50px}.deck-row{gap:8px}.deck-time{gap:6px}.remote-chip{width:28px}} /* phones: the time row needs the width more than the skip targets do; 44px is still a full tap target */
+@media (max-width:639px){.deck-time{gap:6px}.remote-chip{width:28px}} /* phones: the time row needs the width more than the skip targets do; 44px is still a full tap target */
 @media (min-width:640px){
   :root{--deck-h:196px}
   .app{padding-top:48px}
-  .ctl.play{width:60px;height:60px}
   h1{font-size:2.5rem}
   .set:hover,.tracks li:hover{background:var(--surface)}
   .ctl:not(.play):hover{background:var(--surface-2)}

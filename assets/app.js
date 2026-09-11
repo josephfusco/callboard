@@ -536,25 +536,16 @@
 				for ( let x = from; x < to; x++ ) {
 					peak = Math.max( peak, +lv[ x ] || 0 );
 				}
-				// each bar stands on a line two-thirds down, and a fainter reflection hangs below it
-				const full = Math.max( 2, ( peak / 9 ) * h ),
-					up = Math.max( 1, Math.round( full * 0.64 ) ),
-					down = Math.max( 1, Math.round( full * 0.36 ) - 1 ),
+				// one bar per slice, centred on the band's middle line
+				const full = Math.max( 2, Math.round( ( peak / 9 ) * h ) ),
 					x = b * ( bar + gap ),
-					base = Math.round( h * 0.66 );
-				ctx.globalAlpha = 1;
+					y = Math.round( ( h - full ) / 2 );
 				if ( ctx.roundRect ) {
 					ctx.beginPath();
-					ctx.roundRect( x, base - up, bar, up, 1 );
-					ctx.fill();
-					ctx.globalAlpha = 0.42;
-					ctx.beginPath();
-					ctx.roundRect( x, base + 1, bar, down, 1 );
+					ctx.roundRect( x, y, bar, full, 1 );
 					ctx.fill();
 				} else {
-					ctx.fillRect( x, base - up, bar, up );
-					ctx.globalAlpha = 0.42;
-					ctx.fillRect( x, base + 1, bar, down );
+					ctx.fillRect( x, y, bar, full );
 				}
 			}
 		} );

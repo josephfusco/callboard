@@ -92,8 +92,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .track.active .digits{visibility:hidden}
 .track.active:not(.playing) .eq i{background:var(--ink-3)}
 .track .title{font-size:1.0625rem;font-weight:500;letter-spacing:-.01em;line-height:1.3;display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-wrap:pretty}
-.track .has-lyrics{font-size:.8125rem;font-weight:400;color:var(--ink-3);margin-left:6px} /* a word, not a badge */
-.track .has-lyrics::before{content:"·";margin-right:6px}
+.track .has-lyrics{font-size:.8125rem;font-weight:400;color:var(--ink-3);margin-left:10px} /* a word, not a badge */
 .track .len{color:var(--ink-3);font-size:.875rem;display:inline-flex;align-items:center;gap:8px}
 .track .hh{font-size:1.05rem;line-height:1;opacity:0;transition:opacity var(--t-fast)}
 .track.active .hh{opacity:1}
@@ -361,7 +360,7 @@ body:not(.has-deck) .a2hs{bottom:calc(var(--safe-b) + 12px)}
 
 /* per-track offline: silent until something happens. A small ring while saving, a small muted mark once saved.
    Idle shows nothing; on pointer devices the control appears on row hover or focus. */
-.dl{appearance:none;border:0;background:transparent;width:32px;height:44px;margin-right:-8px;display:grid;place-items:center;cursor:pointer;color:var(--ink-3);--p:0;transition:opacity var(--t-fast)}
+.dl{appearance:none;border:0;background:transparent;width:32px;height:44px;position:absolute;right:-16px;top:50%;transform:translateY(-50%);display:grid;place-items:center;cursor:pointer;color:var(--ink-3);--p:0;transition:opacity var(--t-fast)} /* in the gutter beside the row, like the eq bars on the left: the durations keep the column's edge */
 .dl svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .dl .dl-track{opacity:.35}
 .dl .dl-ring{stroke-dasharray:56.55;stroke-dashoffset:calc(56.55 * (1 - var(--p)));transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset var(--t) linear;stroke:var(--accent);opacity:0}

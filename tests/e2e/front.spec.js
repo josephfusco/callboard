@@ -280,9 +280,8 @@ test.describe( 'Front end', () => {
 		expect(
 			await page.locator( '#wave-base' ).evaluate( ( c ) => c.width )
 		).toBeGreaterThan( 0 );
-		const withLyrics = (
-			await page.locator( '#deck .deck-inner' ).boundingBox()
-		).height;
+		const withLyrics = ( await page.locator( '#deck' ).boundingBox() )
+			.height;
 		await page.locator( '#seek' ).evaluate( ( el ) => {
 			// drag to the middle: headless Chromium cannot decode the mp3, so drive the control, not the media
 			el.value = 500;
@@ -298,9 +297,7 @@ test.describe( 'Front end', () => {
 		);
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click(); // levels, no lyrics or notes
-		const without = (
-			await page.locator( '#deck .deck-inner' ).boundingBox()
-		).height;
+		const without = ( await page.locator( '#deck' ).boundingBox() ).height;
 		expect( Math.abs( withLyrics - without ) ).toBeLessThan( 1 );
 	} );
 

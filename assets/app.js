@@ -454,6 +454,104 @@
 			nowTitle.classList.add( 'marquee' );
 		}
 		retrigger( nowTitle, 'swap' );
+		paintMatrix( detail ? `${ text }  ${ detail }` : text );
+	}
+
+	// ---- Dot matrix. The title rendered once as lit dots on a faint grid, the way a car stereo's display
+	// drew it. Glyphs come from the system font sampled at two pixels per dot, so any title works. A long
+	// title is drawn twice and slides as one transform; the grid never repaints.
+	const matrixWin = $( 'matrix-window' ),
+		matrixGrid = $( 'matrix-grid' ),
+		matrixText = $( 'matrix' ),
+		PITCH = 3, // one dot every 3 css px: a 2px dot and a 1px gap
+		ROWS = 8,
+		MATRIX_FONT =
+			'bold 16px -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", Arial, sans-serif';
+	function paintMatrix( text ) {
+		if ( ! matrixWin || ! deck.classList.contains( 'matrix' ) ) {
+			return;
+		}
+		const W = matrixWin.clientWidth,
+			H = matrixWin.clientHeight;
+		if ( ! W ) {
+			return;
+		}
+		const dpr = window.devicePixelRatio || 1,
+			accent = getComputedStyle( deck )
+				.getPropertyValue( '--accent' )
+				.trim(),
+			cols = Math.floor( W / PITCH ),
+			top = Math.round( ( H - ROWS * PITCH ) / 2 );
+		// the grid: every dot, unlit
+		matrixGrid.width = Math.round( W * dpr );
+		matrixGrid.height = Math.round( H * dpr );
+		matrixGrid.style.width = `${ W }px`;
+		const g = matrixGrid.getContext( '2d' );
+		g.scale( dpr, dpr );
+		g.globalAlpha = 0.16;
+		g.fillStyle = accent;
+		for ( let r = 0; r < ROWS; r++ ) {
+			for ( let k = 0; k < cols; k++ ) {
+				g.fillRect( k * PITCH, top + r * PITCH, 2, 2 );
+			}
+		}
+		// the text, sampled: 16px glyphs read at 2px steps give an 8-row matrix
+		const probe = document.createElement( 'canvas' ),
+			p = probe.getContext( '2d' );
+		p.font = MATRIX_FONT;
+		const w = Math.ceil( p.measureText( text ).width ) + 2;
+		probe.width = w;
+		probe.height = ROWS * 2;
+		p.font = MATRIX_FONT;
+		p.fillStyle = '#000';
+		p.fillText( text, 1, 13 );
+		const px = p.getImageData( 0, 0, w, ROWS * 2 ).data,
+			lit = [];
+		let dots = Math.ceil( w / 2 );
+		for ( let k = 0; k < dots; k++ ) {
+			for ( let r = 0; r < ROWS; r++ ) {
+				let a = 0;
+				for ( let dy = 0; dy < 2; dy++ ) {
+					for ( let dx = 0; dx < 2; dx++ ) {
+						a +=
+							px[ ( ( r * 2 + dy ) * w + k * 2 + dx ) * 4 + 3 ] ||
+							0;
+					}
+				}
+				if ( a > 300 ) {
+					lit.push( [ k, r ] );
+				}
+			}
+		}
+		while ( dots > 1 && ! lit.some( ( [ k ] ) => k === dots - 1 ) ) {
+			dots--; // trim the blank columns after the last glyph
+		}
+		const scroll = dots > cols,
+			gap = 8,
+			span = scroll ? dots + gap : cols,
+			copies = scroll ? 2 : 1,
+			cw = span * copies * PITCH;
+		matrixText.width = Math.round( cw * dpr );
+		matrixText.height = Math.round( H * dpr );
+		matrixText.style.width = `${ cw }px`;
+		const m = matrixText.getContext( '2d' );
+		m.scale( dpr, dpr );
+		m.fillStyle = accent;
+		for ( let copy = 0; copy < copies; copy++ ) {
+			for ( const [ k, r ] of lit ) {
+				m.fillRect(
+					( copy * span + k ) * PITCH,
+					top + r * PITCH,
+					2,
+					2
+				);
+			}
+		}
+		matrixText.classList.toggle( 'scroll', scroll );
+		matrixText.style.setProperty(
+			'--mq-dur',
+			`${ Math.max( 8, ( span * PITCH ) / 28 ) }s`
+		);
 	}
 	window.addEventListener( 'resize', () => {
 		if ( i >= 0 ) {
@@ -553,7 +651,12 @@
 	window.addEventListener( 'resize', drawWave );
 	window
 		.matchMedia( '(prefers-color-scheme: dark)' )
-		.addEventListener( 'change', drawWave );
+		.addEventListener( 'change', () => {
+			drawWave();
+			if ( i >= 0 ) {
+				setTitle( queue.tracks[ i ].title );
+			}
+		} );
 
 	// The seek line follows the audio every frame while it plays (compositor transforms only); nothing trails.
 	let progressRaf = 0;

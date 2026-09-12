@@ -358,22 +358,28 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '.track .bpm' ) ).toHaveText( '♩ 96' );
 		await page.locator( '.track' ).nth( 2 ).click(); // 96 BPM: off by default, it just plays
 		await expect( page.locator( '#deck' ) ).not.toHaveClass( /counting/ );
-		await settings( true );
-		await page.goto( '/demo-set/' );
-		await page.evaluate( () => localStorage.clear() ); // forget the position, or the same row just toggles play
-		await page.reload();
-		await page.locator( '.track' ).nth( 2 ).click();
-		await expect( page.locator( '#deck' ) ).toHaveClass( /counting/ );
-		await expect( page.locator( '#now-title' ) ).toHaveText(
-			/^1(\s+[2-4])*$/
-		);
-		await expect( page.locator( '#deck' ) ).not.toHaveClass( /counting/, {
-			timeout: 4000,
-		} );
-		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Sonnets 21–30'
-		);
-		await settings( false ); // back off for the other tests
+		try {
+			await settings( true );
+			await page.goto( '/demo-set/' );
+			await page.evaluate( () => localStorage.clear() ); // forget the position, or the same row just toggles play
+			await page.reload();
+			await page.locator( '.track' ).nth( 2 ).click();
+			await expect( page.locator( '#deck' ) ).toHaveClass( /counting/ );
+			await expect( page.locator( '#now-title' ) ).toHaveText(
+				/^1(\s+[2-4])*$/
+			);
+			await expect( page.locator( '#deck' ) ).not.toHaveClass(
+				/counting/,
+				{
+					timeout: 4000,
+				}
+			);
+			await expect( page.locator( '#now-title' ) ).toContainText(
+				'Sonnets 21–30'
+			);
+		} finally {
+			await settings( false ); // back off for the other tests, whether this one passed or not
+		}
 	} );
 
 	test( 'the deck offers AirPlay or Cast only while a device is in reach', async ( {
@@ -728,7 +734,9 @@ test.describe( 'The filament', () => {
 			await page.locator( 'a.back' ).click();
 			await expect( page.locator( 'a.set' ).first() ).toBeVisible();
 			await page.locator( '#open-lyrics' ).click();
-			await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
+			await expect( page.locator( '#deck' ) ).toHaveClass(
+				/is-expanded/
+			);
 			await expectBurning( page );
 			await page.locator( '#deck-down' ).click();
 			await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
@@ -796,7 +804,9 @@ test.describe( 'The filament', () => {
 			} );
 			await page.goto( '/demo-set/' );
 			await page.locator( '.track' ).first().click();
-			await expect.poll( () => glowOpacity( page ) ).toBeGreaterThan( 0.95 );
+			await expect
+				.poll( () => glowOpacity( page ) )
+				.toBeGreaterThan( 0.95 );
 			// Every frame from the tap until half a second after home has landed.
 			const lowest = await wire( page ).evaluate(
 				( g ) =>
@@ -805,7 +815,10 @@ test.describe( 'The filament', () => {
 							landed = 0;
 						const t0 = performance.now();
 						const step = ( now ) => {
-							low = Math.min( low, +getComputedStyle( g ).opacity );
+							low = Math.min(
+								low,
+								+getComputedStyle( g ).opacity
+							);
 							if ( ! landed && ! document.body.dataset.slug ) {
 								landed = now;
 							}

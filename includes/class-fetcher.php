@@ -46,11 +46,11 @@ final class Fetcher {
 	/**
 	 * Format selector for yt-dlp's `-f`: an already-AAC track first — by codec, not container,
 	 * since a container extension is not proof of what is inside it — so the common case
-	 * downloads exactly what YouTube serves with nothing to re-encode. `ba` is yt-dlp's own
+	 * downloads exactly what YouTube serves with nothing to re-encode. `bestaudio` is yt-dlp's own
 	 * shorthand for bestaudio; this is the same selector yt-dlp ships as its built-in `-t aac`
 	 * alias, not a homemade one.
 	 */
-	private const AAC_FIRST = 'ba[acodec^=aac]/ba[acodec^=mp4a.40.]/ba/b';
+	private const AAC_FIRST = 'bestaudio[acodec^=aac]/bestaudio[acodec^=mp4a.40.]/bestaudio/best';
 
 	/**
 	 * Fetch a playlist, video, or search into <import dir>/<slug>/ and return the manifest.

@@ -2,9 +2,9 @@
 /**
  * Database configuration for the PHPUnit suite.
  *
- * wp-env's own wp-tests-config.php points the test suite at the same database *and* the same table
- * prefix as the site on :8893, and the WordPress test suite starts by emptying every table it can
- * see. Left that way, running the unit tests wipes the site the E2E suite and the browser are using.
+ * The config wp-env ships points the test suite at the same database *and* the same table prefix as
+ * the site on :8893, and the WordPress test suite starts by emptying every table it can see. Left
+ * that way, running the unit tests wipes the site the E2E suite and the browser are using.
  *
  * The prefix here is the fix: the suite installs its own tables beside the site's and truncates only
  * those. Everything else is read from the container's environment so this file carries no

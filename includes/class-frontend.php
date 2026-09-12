@@ -100,6 +100,13 @@ final class Frontend {
 			'notify_on'      => __( 'Notifications on', 'callboard' ),
 			'notify_home'    => __( 'Add to Home Screen first, then turn on notifications from there.', 'callboard' ),
 			'notify_denied'  => __( 'Notifications are blocked in your browser settings.', 'callboard' ),
+			// Keyed by the tier callboard_quality_tier() returns, so the script never spells one itself.
+			'tiers'          => array(
+				'max'  => callboard_quality_tier_label( 'max' ),
+				'hifi' => callboard_quality_tier_label( 'hifi' ),
+				'high' => callboard_quality_tier_label( 'high' ),
+				'low'  => callboard_quality_tier_label( 'low' ),
+			),
 		);
 		/**
 		 * Everything the front end knows: site, sets, settings, text. Add a field here and it is on window.CALLBOARD.

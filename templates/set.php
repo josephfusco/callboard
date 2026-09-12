@@ -24,9 +24,9 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 			<?php endif; ?>
 			<button type="button" class="btn btn-quiet btn-icon" id="share" aria-label="<?php esc_attr_e( 'Share a link to this set', 'callboard' ); ?>"><?php echo callboard_icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
 			<?php if ( Callboard\Settings::get( 'offline' ) ) : ?>
-				<?php // Filling the cache from a file needs the Cache API; the script shows this once it knows there is one. ?>
-			<label class="btn btn-quiet load-files" id="load-label" for="load-files" hidden><?php esc_html_e( 'Load from files', 'callboard' ); ?></label>
-			<input type="file" id="load-files" class="load-input" multiple accept="audio/*">
+				<?php // Rendered, not revealed: a label hidden until the script runs leaves the input with no accessible name. The script hides it where there is no cache to fill. ?>
+				<label class="btn btn-quiet load-files" id="load-label" for="load-files"><?php esc_html_e( 'Load from files', 'callboard' ); ?></label>
+				<input type="file" id="load-files" class="load-input" multiple accept="audio/*">
 			<?php endif; ?>
 		</div>
 		<?php endif; ?>

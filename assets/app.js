@@ -2239,6 +2239,10 @@
 		}
 		if ( ! ( 'caches' in window ) || ! ( 'serviceWorker' in navigator ) ) {
 			offBtn.hidden = true; // no store to save into: the one case the button leaves
+			const noCache = $( 'load-label' );
+			if ( noCache ) {
+				noCache.hidden = true; // nothing to load into either
+			}
 			return;
 		}
 		const tracks = set.tracks.map( ( t, idx ) => ( { ...t, _i: idx } ) );
@@ -2307,7 +2311,6 @@
 		const loadInput = $( 'load-files' );
 		const loadLabel = $( 'load-label' );
 		if ( loadInput && loadLabel ) {
-			loadLabel.hidden = false;
 			loadInput.onchange = async () => {
 				const files = [ ...( loadInput.files || [] ) ];
 				loadInput.value = ''; // so picking the same file twice still fires

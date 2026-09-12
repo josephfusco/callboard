@@ -1562,8 +1562,8 @@
 	const canLoopGapless = () =>
 		'AudioContext' in window && document.visibilityState === 'visible';
 	const playhead = () => {
-		if ( ! looper || ! loop ) {
-			return audio.currentTime;
+		if ( ! looper?.src || ! loop ) {
+			return audio.currentTime; // no looper yet, or its audio is still being fetched and decoded
 		}
 		const len = loop.b - loop.a,
 			t =
@@ -1592,11 +1592,15 @@
 				};
 			}
 		} catch {
-			looper = null; // no decode here: the element's own loop stands
+			if ( looper === ticket ) {
+				looper = null; // no decode here: the element's own loop stands
+			}
 			return;
 		}
+		if ( looper !== ticket ) {
+			return; // the loop changed while this one was decoding, and a newer start is on its way
+		}
 		if (
-			looper !== ticket ||
 			! loop ||
 			audio.paused ||
 			! canLoopGapless() ||

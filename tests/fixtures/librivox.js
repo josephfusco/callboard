@@ -28,7 +28,10 @@ const ROOT = path.join( __dirname, 'callboard' );
 const SOURCE = 'https://librivox.org/sonnets-by-william-shakespeare/';
 
 const sh = ( cmd, args ) =>
-	execFileSync( cmd, args, { stdio: [ 'ignore', 'pipe', 'ignore' ], maxBuffer: 1 << 28 } );
+	execFileSync( cmd, args, {
+		stdio: [ 'ignore', 'pipe', 'ignore' ],
+		maxBuffer: 1 << 28,
+	} );
 
 /* Where the reader stops introducing and starts reading: the first real pause after the opening.
    silencedetect reports on stderr at info level, so this reads both streams. */
@@ -42,13 +45,27 @@ function introEnds( file ) {
 		],
 		{ maxBuffer: 1 << 28 }
 	).toString();
-	const ends = [ ...out.matchAll( /silence_end: ([0-9.]+)/g ) ].map( ( m ) => Number( m[ 1 ] ) );
+	const ends = [ ...out.matchAll( /silence_end: ([0-9.]+)/g ) ].map( ( m ) =>
+		Number( m[ 1 ] )
+	);
 	return ends.find( ( t ) => t > 12 && t < 90 ) ?? 25;
 }
 
 /* Same envelope the plugin measures on import, so the waveform is right without a second pass. */
 function levels( file ) {
-	const pcm = sh( 'ffmpeg', [ '-v', 'error', '-i', file, '-ac', '1', '-ar', '1000', '-f', 'u8', '-' ] );
+	const pcm = sh( 'ffmpeg', [
+		'-v',
+		'error',
+		'-i',
+		file,
+		'-ac',
+		'1',
+		'-ar',
+		'1000',
+		'-f',
+		'u8',
+		'-',
+	] );
 	const n = Math.floor( pcm.length / 100 );
 	const v = [];
 	let peak = 1;
@@ -60,14 +77,21 @@ function levels( file ) {
 		v[ k ] = sum / 100;
 		peak = Math.max( peak, v[ k ] );
 	}
-	return v.map( ( x ) => Math.min( 9, Math.round( 9 * Math.sqrt( x / peak ) ) ) ).join( '' );
+	return v
+		.map( ( x ) => Math.min( 9, Math.round( 9 * Math.sqrt( x / peak ) ) ) )
+		.join( '' );
 }
 
 const api = JSON.parse(
-	sh( 'curl', [ '-sL', `https://librivox.org/api/feed/audiobooks/?id=${ BOOK }&format=json&extended=1` ] ).toString()
+	sh( 'curl', [
+		'-sL',
+		`https://librivox.org/api/feed/audiobooks/?id=${ BOOK }&format=json&extended=1`,
+	] ).toString()
 );
 const sections = ( api.books[ 0 ].sections || [] ).slice( 0, WANT );
-console.log( `${ api.books[ 0 ].title }: taking ${ sections.length } sections\n` );
+console.log(
+	`${ api.books[ 0 ].title }: taking ${ sections.length } sections\n`
+);
 
 const tmp = fs.mkdtempSync( path.join( os.tmpdir(), 'callboard-lv-' ) );
 const dir = path.join( ROOT, 'demo-set' );
@@ -83,30 +107,64 @@ const lv = {};
 sections.forEach( ( s, k ) => {
 	const n = String( k + 1 ).padStart( 2, '0' );
 	const src = path.join( tmp, `${ n }.mp3` );
-	sh( 'curl', [ '-sL', `https://archive.org/download/${ ITEM }/sonnets_${ n }_shakespeare_64kb.mp3`, '-o', src ] );
+	sh( 'curl', [
+		'-sL',
+		`https://archive.org/download/${ ITEM }/sonnets_${ n }_shakespeare_64kb.mp3`,
+		'-o',
+		src,
+	] );
 
 	const from = introEnds( src );
 	const id = `son${ n }`;
 	const title = String( s.title ).replace( /-/g, '–' ); // "Sonnets 1-10" reads better with a range dash
 	const file = `${ n } - ${ title } [${ id }].mp3`;
 	const out = path.join( dir, file );
-	const readers = ( s.readers || [] ).map( ( r ) => r.display_name ).filter( Boolean );
+	const readers = ( s.readers || [] )
+		.map( ( r ) => r.display_name )
+		.filter( Boolean );
 
 	sh( 'ffmpeg', [
-		'-v', 'error', '-y',
-		'-ss', String( from ),
-		'-t', String( CLIP ),
-		'-i', src,
-		'-af', `afade=t=in:d=0.4,afade=t=out:st=${ CLIP - 1.2 }:d=1.2,loudnorm=I=-18:TP=-1.5:LRA=11`,
-		'-ac', '1', '-ar', '32000', '-b:a', '64k',
-		'-id3v2_version', '3',
-		'-metadata', `title=${ title }`,
-		'-metadata', `artist=${ readers.join( ', ' ) || 'LibriVox' }`,
-		'-metadata', 'album=Shakespeare’s Sonnets',
+		'-v',
+		'error',
+		'-y',
+		'-ss',
+		String( from ),
+		'-t',
+		String( CLIP ),
+		'-i',
+		src,
+		'-af',
+		`afade=t=in:d=0.4,afade=t=out:st=${
+			CLIP - 1.2
+		}:d=1.2,loudnorm=I=-18:TP=-1.5:LRA=11`,
+		'-ac',
+		'1',
+		'-ar',
+		'32000',
+		'-b:a',
+		'64k',
+		'-id3v2_version',
+		'3',
+		'-metadata',
+		`title=${ title }`,
+		'-metadata',
+		`artist=${ readers.join( ', ' ) || 'LibriVox' }`,
+		'-metadata',
+		'album=Shakespeare’s Sonnets',
 		out,
 	] );
 	const duration = Math.round(
-		parseFloat( sh( 'ffprobe', [ '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', out ] ).toString() )
+		parseFloat(
+			sh( 'ffprobe', [
+				'-v',
+				'error',
+				'-show_entries',
+				'format=duration',
+				'-of',
+				'csv=p=0',
+				out,
+			] ).toString()
+		)
 	);
 	lv[ id ] = levels( out );
 	tracks.push( {
@@ -121,11 +179,19 @@ sections.forEach( ( s, k ) => {
 		uploader: 'LibriVox volunteers',
 		uploader_url: SOURCE,
 	} );
-	console.log( `${ n }  ${ title.padEnd( 16 ) } from ${ String( Math.round( from ) ).padStart( 3 ) }s  ${ duration }s  ${ readers.join( ', ' ) }` );
+	console.log(
+		`${ n }  ${ title.padEnd( 16 ) } from ${ String(
+			Math.round( from )
+		).padStart( 3 ) }s  ${ duration }s  ${ readers.join( ', ' ) }`
+	);
 } );
 
 const write = ( f, d, pretty ) =>
-	fs.writeFileSync( f, ( pretty ? JSON.stringify( d, null, '\t' ) : JSON.stringify( d ) ) + '\n' );
+	fs.writeFileSync(
+		f,
+		( pretty ? JSON.stringify( d, null, '\t' ) : JSON.stringify( d ) ) +
+			'\n'
+	);
 write(
 	path.join( dir, 'manifest.json' ),
 	{
@@ -154,4 +220,6 @@ write( path.join( dir, 'notes.json' ), {
 } );
 write( path.join( dir, 'tempo.json' ), { son03: 96 } );
 fs.rmSync( tmp, { recursive: true, force: true } );
-console.log( `\n${ tracks.length } tracks into ${ path.relative( process.cwd(), dir ) }` );
+console.log(
+	`\n${ tracks.length } tracks into ${ path.relative( process.cwd(), dir ) }`
+);

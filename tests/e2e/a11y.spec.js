@@ -31,7 +31,10 @@ const report = ( results ) =>
 // pass below covers both rather than only ever seeing the compact bar.
 const expandDeck = ( page ) =>
 	page.addInitScript( () =>
-		localStorage.setItem( 'callboard:deck-view', JSON.stringify( 'expanded' ) )
+		localStorage.setItem(
+			'callboard:deck-view',
+			JSON.stringify( 'expanded' )
+		)
 	);
 
 for ( const scheme of [ 'light', 'dark' ] ) {

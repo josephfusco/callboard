@@ -192,6 +192,7 @@ final class Importer {
 			}
 		}
 
+		self::draw_missing_art( $dir, $set->ID );
 		self::import_image( $dir . '/cover.png', $set->ID, 'cover' );
 		self::import_image( $dir . '/share.png', $set->ID, 'share' );
 
@@ -231,6 +232,37 @@ final class Importer {
 		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $file ) );
 		remove_filter( 'intermediate_image_sizes_advanced', $only_ours );
 		return (int) $id;
+	}
+
+	/**
+	 * A folder that is only audio still deserves a cover. Fetcher draws one on the way past; a set
+	 * assembled by dropping files in has never been near it, and would otherwise sit on the home
+	 * screen as a bare letter tile next to sets that have art. Drawn from what actually landed in
+	 * WordPress, so the label counts the tracks that imported rather than the ones the folder held.
+	 *
+	 * @param string $dir Set folder.
+	 * @param int    $set Set post ID.
+	 */
+	private static function draw_missing_art( string $dir, int $set ): void {
+		$cover = $dir . '/cover.png';
+		$share = $dir . '/share.png';
+		if ( ( file_exists( $cover ) && file_exists( $share ) ) || ! is_writable( $dir ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- GD writes the PNG with a path, not through WP_Filesystem, so the question is whether that path is writable.
+			return;
+		}
+		$tracks = array();
+		foreach ( Sets::track_posts( $set ) as $track ) {
+			$tracks[] = array( 'duration' => (float) get_post_meta( $track->ID, '_callboard_duration', true ) );
+		}
+		$manifest = array(
+			'name'   => get_the_title( $set ),
+			'tracks' => $tracks,
+		);
+		if ( ! file_exists( $cover ) ) {
+			Art::cover( $manifest, $cover );
+		}
+		if ( ! file_exists( $share ) ) {
+			Art::share( $manifest, $share );
+		}
 	}
 
 	/**
@@ -329,7 +361,7 @@ final class Importer {
 			}
 			$date  = (string) ( $n['date'] ?? '' );
 			$out[] = array(
-				't'    => max( 0, round( (float) ( $n['t'] ?? 0 ), 1 ) ),
+				't'    => max( 0.0, round( (float) ( $n['t'] ?? 0 ), 1 ) ), // 0.0, not 0: max() hands back the argument it picked, so an int zero here would make a clamped note the one note whose time is not a float.
 				'text' => sanitize_text_field( (string) $n['text'] ),
 				'date' => preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ? $date : current_time( 'Y-m-d' ),
 			);

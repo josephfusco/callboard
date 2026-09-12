@@ -8,7 +8,10 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 // here reach into the wave/times/chips row, which compact hides, so they ask for the expanded view first.
 const expandDeck = ( page ) =>
 	page.addInitScript( () =>
-		localStorage.setItem( 'callboard:deck-view', JSON.stringify( 'expanded' ) )
+		localStorage.setItem(
+			'callboard:deck-view',
+			JSON.stringify( 'expanded' )
+		)
 	);
 
 test.describe( 'Front end', () => {
@@ -26,7 +29,9 @@ test.describe( 'Front end', () => {
 		).toHaveCount( 1 );
 		const card = page.locator( 'a.set', { hasText: 'Shakespeare' } );
 		await expect( card ).toBeVisible();
-		await expect( card.locator( '.set-name' ) ).toHaveText( 'Shakespeare’s Sonnets' );
+		await expect( card.locator( '.set-name' ) ).toHaveText(
+			'Shakespeare’s Sonnets'
+		);
 		await expect( card.locator( '.set-meta' ) ).toContainText(
 			'10 tracks'
 		);
@@ -37,9 +42,7 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#wpadminbar' ) ).toHaveCount( 0 ); // even logged in, no admin bar on the app
 	} );
 
-	test( 'a set scrolls and keeps the deck pinned', async ( {
-		page,
-	} ) => {
+	test( 'a set scrolls and keeps the deck pinned', async ( { page } ) => {
 		await page.goto( '/demo-set/' );
 		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await page.locator( '.track' ).nth( 9 ).click();
@@ -73,17 +76,21 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#load-label' ) ).toBeVisible();
 
 		// One file per matching rule: the track's own name, a car export's leading number, the title.
-		await page.locator( '#load-files' ).setInputFiles( [
-			file( '01 - Sonnets 1–10 [son01].mp3' ),
-			file( '02 Anything At All.mp3' ),
-			file( 'Sonnets 21–30.mp3' ),
-			file( 'nothing-in-this-set.mp3' ),
-		] );
+		await page
+			.locator( '#load-files' )
+			.setInputFiles( [
+				file( '01 - Sonnets 1–10 [son01].mp3' ),
+				file( '02 Anything At All.mp3' ),
+				file( 'Sonnets 21–30.mp3' ),
+				file( 'nothing-in-this-set.mp3' ),
+			] );
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			3,
 			{ timeout: 15000 }
 		);
-		await expect( page.locator( '#toast' ) ).toContainText( /Loaded 3 of 4/ );
+		await expect( page.locator( '#toast' ) ).toContainText(
+			/Loaded 3 of 4/
+		);
 
 		// A copy off a stick is a different size from the server's and must not count as stale.
 		await page.reload();
@@ -214,7 +221,9 @@ test.describe( 'Front end', () => {
 		page,
 	} ) => {
 		await page.goto( '/demo-set/' );
-		await expect( page.locator( 'h1' ) ).toHaveText( 'Shakespeare’s Sonnets' );
+		await expect( page.locator( 'h1' ) ).toHaveText(
+			'Shakespeare’s Sonnets'
+		);
 		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await expect(
 			page.locator( '.track' ).first().locator( '.title' )
@@ -420,52 +429,6 @@ test.describe( 'Front end', () => {
 		);
 	} );
 
-	test( 'the deck sends the playing track itself, named so it can be matched back', async ( {
-		page,
-	} ) => {
-		await page.addInitScript( () => {
-			window.__sharedFiles = [];
-			navigator.canShare = () => true;
-			navigator.share = ( d ) => {
-				window.__sharedFiles.push( {
-					title: d.title,
-					names: ( d.files || [] ).map( ( f ) => f.name ),
-					sizes: ( d.files || [] ).map( ( f ) => f.size ),
-					types: ( d.files || [] ).map( ( f ) => f.type ),
-				} );
-				return Promise.resolve();
-			};
-		} );
-		await expandDeck( page ); // the share-track chip lives on the (now expanded-only) time row
-		await page.goto( '/demo-set/' );
-		await page.locator( '.track[data-i="0"]' ).click();
-		const chip = page.locator( '#share-track' );
-		await expect( chip ).toBeVisible();
-		await chip.click();
-
-		await expect
-			.poll( () => page.evaluate( () => window.__sharedFiles.length ) )
-			.toBe( 1 );
-		const sent = await page.evaluate( () => window.__sharedFiles[ 0 ] );
-		expect( sent.title ).toBe( 'Sonnets 1–10' );
-		// The number and the title are both what the receiving end matches on.
-		expect( sent.names[ 0 ] ).toBe( '01 Sonnets 1–10.mp3' );
-		expect( sent.types[ 0 ] ).toMatch( /^audio\// );
-		expect( sent.sizes[ 0 ] ).toBeGreaterThan( 0 );
-	} );
-
-	test( 'without file sharing the deck does not offer to send a track', async ( {
-		page,
-	} ) => {
-		await page.addInitScript( () => {
-			navigator.canShare = () => false; // shares links, not files
-		} );
-		await expandDeck( page ); // so this stays hidden for lack of file sharing, not because it is compact
-		await page.goto( '/demo-set/' );
-		await page.locator( '.track[data-i="0"]' ).click();
-		await expect( page.locator( '#share-track' ) ).toBeHidden();
-	} );
-
 	test( 'Share hands the set link to the system sheet', async ( {
 		page,
 	} ) => {
@@ -553,7 +516,9 @@ test.describe( 'Front end', () => {
 		] );
 		expect( res.ok() ).toBeTruthy();
 		await expect( page ).toHaveURL( /\/demo-set\/$/ );
-		await expect( page.locator( 'h1' ) ).toHaveText( 'Shakespeare’s Sonnets' );
+		await expect( page.locator( 'h1' ) ).toHaveText(
+			'Shakespeare’s Sonnets'
+		);
 		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await expect( page.locator( '.colophon' ) ).toContainText( 'Audio by' ); // the footer came with it
 	} );
@@ -571,7 +536,9 @@ test.describe( 'Front end', () => {
 			'Sonnets 1–10'
 		);
 		await page.goBack();
-		await expect( page.locator( 'h1' ) ).toHaveText( 'Shakespeare’s Sonnets' );
+		await expect( page.locator( 'h1' ) ).toHaveText(
+			'Shakespeare’s Sonnets'
+		);
 		await expect( page.locator( '#now-title' ) ).toContainText(
 			'Sonnets 1–10'
 		); // no reload

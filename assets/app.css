@@ -30,7 +30,6 @@ button{font:inherit;color:inherit}
 body.has-deck .app{padding-bottom:calc(var(--deck-h) + var(--safe-b) + 40px)}
 
 /* sending the current track: the same chip as the cast one, so the pair reads as one row */
-.share-chip{margin-right:6px}
 /* the gate: the app's own page when the site asks for a sign-in, so nobody lands on wp-login */
 .gate{min-height:100svh;display:flex;flex-direction:column;justify-content:center}
 .gate .label{margin-top:8px}
@@ -100,11 +99,16 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .set{display:grid;grid-template-columns:56px 1fr auto auto;align-items:center;gap:14px;padding:12px 16px;margin:0 -16px;width:calc(100% + 32px);border-radius:10px;transition:background var(--t-fast),transform var(--t-fast);text-decoration:none;min-height:72px}
 .set:active{background:var(--surface-2);transform:scale(.995)}
 .set-mark,.set-art{width:56px;height:56px;border-radius:10px;flex:none}
-.set-mark{background:var(--surface-2);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:600;letter-spacing:-.02em}
+.set-mark{background:var(--surface-2);color:var(--ink-3);display:grid;place-items:center;font-size:1.25rem;font-weight:600;letter-spacing:-.02em;border:1px solid var(--line)} /* the same edge the real covers carry, so a letter reads as a choice */
 .set-art{object-fit:cover;display:block;background:var(--surface-2)}
 .set-text{display:flex;flex-direction:column;gap:3px;min-width:0}
 .set-name{font-size:1.0625rem;font-weight:600;letter-spacing:-.01em}
-.set-meta{color:var(--ink-3);font-size:.8125rem;font-variant-numeric:tabular-nums}
+/* where you left off leads, because it is the only part that is about you; the counts follow and are
+   the half that truncates on a narrow phone. One line either way, so no row changes height. */
+.set-meta{display:flex;align-items:baseline;min-width:0;color:var(--ink-3);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.set-resume{flex:none;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.set-resume:not(:empty)+.set-count::before{content:"·";margin:0 6px}
+.set-count{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .set-go{width:8px;height:8px;margin-right:6px;border-right:1.5px solid var(--line-strong);border-top:1.5px solid var(--line-strong);transform:rotate(45deg);justify-self:end;transition:transform var(--t) var(--ease-spring)}
 .set:active .set-go{transform:rotate(45deg) translate(3px,-3px)}
 
@@ -252,9 +256,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* AirPlay in Safari, Cast in Chrome: an icon chip that only appears while a device is in reach */
 .remote-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .remote-chip svg{width:16px;height:16px;fill:currentColor}
-/* :not([data-state=""]) is the "is active" look; #share-track has no state machine of its own, so it now
-   carries a permanent data-state="" (in deck.php) rather than matching this by omission — it was the only
-   chip that could never clear that attribute, which is why it always read as active before. */
+/* :not([data-state=""]) is the "is active" look, so every chip carries data-state="" in deck.php and
+   clears it into a real value rather than matching this by omission. */
 .remote-chip:not([data-state=""]){color:var(--accent-text);border-color:var(--line-strong);background:linear-gradient(180deg,var(--surface),var(--surface-2));box-shadow:inset 0 1px 0 var(--gloss),0 1px 1px rgba(0,0,0,.08)}
 .remote-chip.is-away{visibility:hidden} /* keeps its slot */
 .remote-chip[data-state="connecting"]{animation:pulse 1s ease-in-out infinite}
@@ -483,8 +486,7 @@ body:not(.has-deck) .a2hs{bottom:calc(var(--safe-b) + 12px)}
 .bell:active{background:var(--surface-2)}
 .bell[data-state="on"]{color:var(--ink)}
 .bell[data-state="on"]::after{content:"";position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)} /* on: the bell carries a dot, the way the phone shows it */
-.set-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.set.is-now .set-name::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:8px;vertical-align:middle} /* the set in the deck */
+body.has-deck .set.is-now .set-name::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:8px;vertical-align:middle} /* the set in the deck — and only while there is a deck to point at, since the idle one can be swiped away */
 body.is-loading{cursor:progress}
 .toast{position:fixed;left:50%;bottom:calc(var(--deck-h) + var(--safe-b) + 12px);transform:translateX(-50%);z-index:19;max-width:min(92vw,480px);margin:0;padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:.875rem;line-height:1.35;text-align:center;text-wrap:pretty;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:opacity var(--t),transform var(--t)}
 @starting-style{.toast{opacity:0;transform:translate(-50%,6px)}}

@@ -36,7 +36,10 @@ const setTime = ( page, t ) =>
 // default, the tap to expand, the swipe to collapse — gets its own describe block below.
 const expandDeck = ( page ) =>
 	page.addInitScript( () =>
-		localStorage.setItem( 'callboard:deck-view', JSON.stringify( 'expanded' ) )
+		localStorage.setItem(
+			'callboard:deck-view',
+			JSON.stringify( 'expanded' )
+		)
 	);
 
 test.describe( 'Controls', () => {
@@ -338,7 +341,9 @@ test.describe( 'Deck view: compact and expanded', () => {
 		await page.locator( '#repeat' ).click();
 		await page.locator( '#repeat' ).click(); // off -> set -> one
 		await page.evaluate( () =>
-			document.getElementById( 'audio' ).dispatchEvent( new Event( 'ended' ) )
+			document
+				.getElementById( 'audio' )
+				.dispatchEvent( new Event( 'ended' ) )
 		);
 		await expect( page.locator( '#now-title' ) ).toContainText(
 			'Sonnets 1–10'
@@ -362,15 +367,15 @@ test.describe( 'Deck view: compact and expanded', () => {
 		await expect( loop ).toHaveAttribute( 'aria-label', /Clear/ );
 	} );
 
-	test( 'the share chip carries its own state rather than always reading active', async ( {
+	test( 'a chip reads active only once it has a state to be active about', async ( {
 		page,
 	} ) => {
 		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
-		// #share-track has no state machine of its own; it must still carry data-state="" so the shared
-		// .remote-chip:not([data-state=""]) "active" look never matches it by default.
-		await expect( page.locator( '#share-track' ) ).toHaveAttribute(
+		// .remote-chip:not([data-state=""]) is the "active" look, so a chip that has not connected to
+		// anything has to carry an empty data-state rather than no attribute at all.
+		await expect( page.locator( '#remote' ) ).toHaveAttribute(
 			'data-state',
 			''
 		);

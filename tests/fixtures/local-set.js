@@ -23,7 +23,17 @@ const sh = ( cmd, args ) =>
 // The plugin measures this on import; matching it here means the waveform is right straight away.
 function levels( file ) {
 	const pcm = sh( 'ffmpeg', [
-		'-v', 'error', '-i', file, '-ac', '1', '-ar', '1000', '-f', 'u8', '-',
+		'-v',
+		'error',
+		'-i',
+		file,
+		'-ac',
+		'1',
+		'-ar',
+		'1000',
+		'-f',
+		'u8',
+		'-',
 	] );
 	const n = Math.floor( pcm.length / 100 );
 	const v = [];
@@ -42,14 +52,24 @@ function levels( file ) {
 }
 const probe = ( file, entry ) =>
 	sh( 'ffprobe', [
-		'-v', 'error', '-show_entries', entry, '-of', 'csv=p=0', file,
-	] ).toString().trim();
+		'-v',
+		'error',
+		'-show_entries',
+		entry,
+		'-of',
+		'csv=p=0',
+		file,
+	] )
+		.toString()
+		.trim();
 
 const args = process.argv.slice( 2 );
 const src = args.find( ( a ) => ! a.startsWith( '--' ) );
 const flag = ( name, fallback ) => {
 	const hit = args.find( ( a ) => a.startsWith( `--${ name }=` ) );
-	return hit ? hit.slice( name.length + 3 ).replace( /^"|"$/g, '' ) : fallback;
+	return hit
+		? hit.slice( name.length + 3 ).replace( /^"|"$/g, '' )
+		: fallback;
 };
 if ( ! src || ! fs.existsSync( src ) ) {
 	console.error(
@@ -58,7 +78,9 @@ if ( ! src || ! fs.existsSync( src ) ) {
 	process.exit( 1 );
 }
 
-const slug = flag( 'slug', 'mine' ).replace( /[^a-z0-9-]/gi, '-' ).toLowerCase();
+const slug = flag( 'slug', 'mine' )
+	.replace( /[^a-z0-9-]/gi, '-' )
+	.toLowerCase();
 const name = flag( 'name', 'On This Machine' );
 const dir = path.join( __dirname, 'callboard', slug );
 fs.mkdirSync( dir, { recursive: true } );
@@ -93,7 +115,9 @@ audio.forEach( ( f, k ) => {
 		id,
 		title,
 		file: f,
-		duration: Math.round( parseFloat( probe( to, 'format=duration' ) ) || 0 ),
+		duration: Math.round(
+			parseFloat( probe( to, 'format=duration' ) ) || 0
+		),
 		url: '',
 		uploader: probe( to, 'format_tags=artist' ) || '',
 		uploader_url: '',
@@ -104,16 +128,28 @@ audio.forEach( ( f, k ) => {
 const write = ( file, data, pretty ) =>
 	fs.writeFileSync(
 		file,
-		( pretty ? JSON.stringify( data, null, '\t' ) : JSON.stringify( data ) ) + '\n'
+		( pretty
+			? JSON.stringify( data, null, '\t' )
+			: JSON.stringify( data ) ) + '\n'
 	);
 write(
 	path.join( dir, 'manifest.json' ),
-	{ name, slug, order: -5, playlist_url: '', curator: '', curator_url: '', tracks },
+	{
+		name,
+		slug,
+		order: -5,
+		playlist_url: '',
+		curator: '',
+		curator_url: '',
+		tracks,
+	},
 	true
 );
 write( path.join( dir, 'levels.json' ), lv );
 
 console.log(
-	`\n${ tracks.length } tracks into ${ path.relative( process.cwd(), dir ) } (gitignored)\n` +
-		'Now: npx wp-env run tests-cli wp callboard import'
+	`\n${ tracks.length } tracks into ${ path.relative(
+		process.cwd(),
+		dir
+	) } (gitignored)\n` + 'Now: npx wp-env run tests-cli wp callboard import'
 );

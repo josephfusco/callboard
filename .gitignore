@@ -11,17 +11,12 @@ plugin-check.json
 .DS_Store
 tests/fixtures/callboard/splash/
 
-# WordPress writes its intermediate sizes next to the fixture covers when the dev sites import them
-tests/fixtures/callboard/*/cover-*.png
-
 # scratch output must never land in the package
 undefined/
 *.png
 !assets/*.png
 !site/*.png
 !tests/fixtures/**/*.png
-tests/fixtures/callboard/*/cover-*.png
-
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
 
@@ -32,3 +27,11 @@ comment.md
 tests/fixtures/callboard/*/
 !tests/fixtures/callboard/demo-set/
 !tests/fixtures/callboard/empty-set/
+
+# Last, so it beats the !tests/fixtures/**/*.png above: WordPress writes its intermediate sizes next
+# to the fixture artwork whenever a dev site imports a set, and those are output, not fixtures.
+tests/fixtures/callboard/*/cover-[0-9]*x[0-9]*.png
+tests/fixtures/callboard/*/share-[0-9]*x[0-9]*.png
+
+# PHPUnit
+.phpunit.result.cache

@@ -196,16 +196,16 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-glow-halo{top:-19px;height:18px;color:var(--accent);background:linear-gradient(180deg,transparent,currentColor);filter:blur(6px);transform:translateZ(0)}
 @media (prefers-reduced-transparency:reduce){.deck-glow-halo{display:none}.deck-glow{box-shadow:none}}
 /* ---- Now Playing. The expanded deck is the full screen, not a taller bar: same element, same
-   controls, only the layout changes, so no state exists in two places and the swipe that closed the
-   tall bar closes this. The wash is one hex value taken from the cover by Art::tint() and cached on
+   controls, only the layout changes, so no state exists in two places. The wash is one hex value taken from the cover by Art::tint() and cached on
    the set, rather than a blurred copy of the artwork — a colour costs no second download, survives
    offline, and composes with the accent instead of fighting it. */
 .deck-down,.deck-top{display:none}
 /* Tidal puts the way into the words at the top right, out of the transport's way. Same here, and it
    only exists when the track actually has words to show. */
 .deck.is-expanded .deck-top{display:flex;justify-content:flex-end;gap:var(--s1);align-items:center;width:100%;max-width:640px;margin-inline:auto;padding:0 max(20px,env(safe-area-inset-left,0px));min-height:34px}
-.sheet-pill{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-2);font:inherit;font-size:.8125rem;padding:5px 14px;border-radius:999px;cursor:pointer;transition:color var(--t),border-color var(--t)}
+.sheet-pill{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-2);font:inherit;font-size:.8125rem;padding:0 14px;min-height:44px;border-radius:999px;display:inline-flex;align-items:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .sheet-pill:hover,.sheet-pill:focus-visible{color:var(--ink);border-color:var(--line-strong)}
+.sheet-pill:active{background:var(--surface-2)}
 .sheet-pill[aria-expanded="true"]{color:var(--accent-text);border-color:var(--line-strong)}
 /* The bar leads with the art too, small. It sits over the row rather than inside it so the expanded
    grid can keep the same element as its centrepiece — one image, two sizes, no second source to
@@ -242,10 +242,9 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck.is-expanded>.deck-down,.deck.is-expanded>.deck-top,.deck.is-expanded>.deck-cover,.deck.is-expanded>.deck-inner,.deck.is-expanded>.seek-wrap,.deck.is-expanded>.deck-from{position:relative;z-index:1}
 .deck-times{padding-top:6px}
 .deck.is-compact .deck-times{display:none}
-.deck.is-expanded .deck-down{display:grid;place-items:center;justify-self:center;appearance:none;border:0;background:transparent;width:72px;height:28px;margin-top:6px;cursor:grab;border-radius:8px}
+.deck.is-expanded .deck-down{display:grid;place-items:center;justify-self:center;appearance:none;border:0;background:transparent;width:72px;height:44px;margin-top:6px;cursor:pointer;border-radius:8px}
 .deck.is-expanded .deck-down i{display:block;width:38px;height:5px;border-radius:999px;background:var(--ink-3);opacity:.5;transition:opacity var(--t),width var(--t) var(--ease)}
 .deck.is-expanded .deck-down:hover i,.deck.is-expanded .deck-down:focus-visible i{opacity:.85}
-.deck.is-expanded .deck-down:active{cursor:grabbing}
 .deck.is-expanded .deck-down:active i{opacity:1;width:44px}
 .deck.is-expanded .deck-cover{position:static;display:grid;place-items:center;width:auto;height:auto;min-height:0;overflow:hidden;padding:var(--s2) max(20px,env(safe-area-inset-left,0px)) var(--s3);pointer-events:auto}
 /* No explicit width or height: the intrinsic square is clamped on both axes, so the art is as large
@@ -386,7 +385,7 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
    quality pill below — goes together, since none of it is nothing without the other. */
 .deck.is-compact .deck-time,.deck.is-compact .deck-meta,.deck.is-compact .seek-wrap{display:none}
 /* AirPlay in Safari, Cast in Chrome: an icon chip that only appears while a device is in reach */
-.remote-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
+.remote-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);width:44px;height:44px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .remote-chip svg{width:16px;height:16px;fill:currentColor}
 /* :not([data-state=""]) is the "is active" look, so every chip carries data-state="" in deck.php and
    clears it into a real value rather than matching this by omission. */
@@ -425,7 +424,7 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
    runs 120px past the bottom of the screen so the browser chrome sits on deck colour, which makes
    its own centre useless. One row height, two offsets derived from it, so they cannot drift. */
 .deck.is-compact .deck-controls{position:absolute;top:calc((var(--bar-row) - 44px) / 2);right:calc(var(--edge-r) + var(--dl-gutter));gap:var(--s2);padding-right:0}
-.deck.is-compact .ctl.skip{width:34px;height:34px}
+.deck.is-compact .ctl.skip{width:44px;height:44px}
 .deck.is-compact #toggle{width:44px;height:44px}
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:26px;height:26px;fill:currentColor}
@@ -485,7 +484,7 @@ body:not(.has-deck) .update{bottom:calc(var(--safe-b) + 12px)}
 .a2hs-x{appearance:none;border:0;background:transparent;width:36px;height:36px;border-radius:50%;font-size:1.25rem;line-height:1;color:var(--ink-3);cursor:pointer;display:grid;place-items:center}
 .a2hs-x:active{background:var(--surface-2)}
 
-@media (max-width:639px){.deck-time{gap:6px}.remote-chip{width:28px}} /* phones: the time row needs the width more than the skip targets do; 44px is still a full tap target */
+@media (max-width:639px){.deck-time{gap:6px}} /* phones: the time row needs the width more than extra spacing around it */
 @media (min-width:640px){
   :root{--deck-h:196px}
   .app{padding-top:48px}

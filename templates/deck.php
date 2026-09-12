@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
 <section class="deck" id="deck" aria-label="<?php esc_attr_e( 'Player', 'callboard' ); ?>" hidden>
 	<i class="deck-glow-halo" id="deck-glow-halo" aria-hidden="true"></i><i class="deck-glow" id="deck-glow" aria-hidden="true"></i><i class="deck-glow-hot" id="deck-glow-hot" aria-hidden="true"></i>
 	<?php /* Now Playing: the expanded deck is a full screen, not a taller bar. Same controls, same element — only the layout changes, so nothing has two copies of its state. */ ?>
-	<?php /* A grabber, not a chevron: the bar says the screen can be pulled down, where an arrow says do something about it. Same target size either way. */ ?>
+	<?php /* Close control for Now Playing. Same element in every layout, so state lives in one place. */ ?>
 	<button type="button" class="deck-down" id="deck-down" aria-label="<?php esc_attr_e( 'Close the player', 'callboard' ); ?>"><i aria-hidden="true"></i></button>
 	<?php /* A generic set cover tells a cast nothing about the sonnet they are on. Where a track carries words — captions, or the director's notes — the words are the useful thing, so the way to them is a control, not a hidden tap on the title. */ ?>
 	<div class="deck-top"><button type="button" class="remote-chip is-away" id="remote" data-state="" aria-label="<?php esc_attr_e( 'Play on another device', 'callboard' ); ?>"><?php echo callboard_icon( 'cast' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button><button type="button" class="sheet-pill" id="sheet-pill" hidden aria-controls="lyrics" aria-expanded="false"></button></div>

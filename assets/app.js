@@ -325,11 +325,21 @@
 		document.body.classList.toggle( 'now-playing', mode === 'expanded' );
 		syncOpenLyricsA11y();
 	}
-	function expandDeck() {
+	let nowPlayingInHistory = false,
+		dismissAfterBack = false;
+	function expandDeck( fromHistory = false ) {
 		if ( deck.classList.contains( 'is-expanded' ) ) {
 			return;
 		}
-		haptic();
+		if ( ! fromHistory ) {
+			haptic();
+		}
+		if ( fromHistory ) {
+			nowPlayingInHistory = true;
+		} else {
+			history.pushState( { callboardNowPlaying: true }, '', location.href );
+			nowPlayingInHistory = true;
+		}
 		setDeckView( 'expanded' );
 		// the wave and the seek knob draw against a box that had zero width while it was display:none
 		requestAnimationFrame( () => {
@@ -337,11 +347,14 @@
 			paint( true );
 		} );
 	}
-	function collapseDeck() {
+	function collapseDeck( fromHistory = false ) {
 		if ( deck.classList.contains( 'is-compact' ) ) {
 			return;
 		}
-		haptic();
+		if ( ! fromHistory && nowPlayingInHistory ) {
+			history.back();
+			return;
+		}
 		setDeckView( 'compact' );
 	}
 	let sheetKind = ''; // set by renderSheet(); declared here so syncOpenLyricsA11y() above can read it early
@@ -978,6 +991,13 @@
 		if ( i < 0 ) {
 			return;
 		}
+		if ( deck.classList.contains( 'is-expanded' ) && nowPlayingInHistory ) {
+			dismissAfterBack = true;
+			history.back();
+			return;
+		}
+		nowPlayingInHistory = false;
+		dismissAfterBack = false;
 		holdStop();
 		remember();
 		audio.pause();
@@ -1077,77 +1097,6 @@
 	};
 	document.addEventListener( 'pointerup', edgeEnd );
 	document.addEventListener( 'pointercancel', edgeEnd );
-	// Swipe down anywhere on the expanded deck (not a control, not the wave/seek) to collapse it back to the
-	// compact bar. Pointer Events, the same one-finger drag-then-decide shape as the A-B loop's two-finger
-	// read on the wave below (see `pointers`/loopHold near canLoopGapless) — a distance threshold on release,
-	// nothing while merely holding.
-	let swipe = null;
-	deck.addEventListener( 'pointerdown', ( e ) => {
-		if ( ! deck.classList.contains( 'is-expanded' ) ) {
-			return;
-		}
-		// The grabber is a handle, so it drags with a mouse as well — a desktop pointer has no swipe
-		// and the bar is drawn as something to pull. Everywhere else on the screen a mouse drag is a
-		// selection, not a dismissal, so only touch starts one there.
-		const onGrabber = !! e.target.closest( '.deck-down' );
-		if (
-			( e.pointerType === 'mouse' && ! onGrabber ) ||
-			( ! onGrabber &&
-				e.target.closest( 'button, input, a, .seek-wrap' ) )
-		) {
-			return;
-		}
-		swipe = { x: e.clientX, y: e.clientY, id: e.pointerId };
-	} );
-	deck.addEventListener( 'pointermove', ( e ) => {
-		if ( ! swipe || e.pointerId !== swipe.id ) {
-			return;
-		}
-		const dy = e.clientY - swipe.y;
-		if ( dy > 0 && Math.abs( e.clientX - swipe.x ) < 40 ) {
-			deck.style.transform = `translateY(${ Math.min( dy, 120 ).toFixed(
-				0
-			) }px)`;
-		}
-	} );
-	const swipeEnd = ( e ) => {
-		if ( ! swipe || e.pointerId !== swipe.id ) {
-			return;
-		}
-		const dy = e.clientY - swipe.y,
-			dx = Math.abs( e.clientX - swipe.x );
-		swipe = null;
-		if ( dy > 70 && dx < 40 ) {
-			if ( reduce() ) {
-				deck.style.transform = '';
-				return collapseDeck();
-			}
-			const slide = deck.animate(
-				[
-					{ transform: deck.style.transform },
-					{ transform: 'translateY(24px)' },
-				],
-				{ duration: 160, easing: 'cubic-bezier(.2,.8,.2,1)' }
-			);
-			slide.onfinish = () => {
-				deck.style.transform = '';
-				collapseDeck();
-			};
-			return;
-		}
-		deck.animate(
-			[ { transform: deck.style.transform }, { transform: 'none' } ],
-			{
-				duration: 200,
-				easing: 'cubic-bezier(.34,1.4,.64,1)',
-			}
-		).onfinish = () => {
-			deck.style.transform = '';
-		};
-	};
-	deck.addEventListener( 'pointerup', swipeEnd );
-	deck.addEventListener( 'pointercancel', swipeEnd );
-
 	function prev() {
 		if ( i < 0 ) {
 			return load( 0 );
@@ -3176,9 +3125,26 @@
 			delete document.documentElement.dataset.nav;
 		}
 	}
-	window.addEventListener( 'popstate', ( e ) =>
-		go( location.href, false, ! e.hasUAVisualTransition )
-	);
+	window.addEventListener( 'popstate', ( e ) => {
+		if (
+			nowPlayingInHistory &&
+			deck.classList.contains( 'is-expanded' ) &&
+			! e.state?.callboardNowPlaying
+		) {
+			nowPlayingInHistory = false;
+			collapseDeck( true );
+			if ( dismissAfterBack ) {
+				dismissAfterBack = false;
+				dismissDeck();
+			}
+			return;
+		}
+		if ( e.state?.callboardNowPlaying && ! deck.hidden && i >= 0 ) {
+			expandDeck( true );
+			return;
+		}
+		go( location.href, false, ! e.hasUAVisualTransition );
+	} );
 	// The first touch on a link starts the fetch; hovering does too. Back to home is prefetched at idle.
 	const prefetchLink = ( e ) => {
 		const a = e.target.closest?.( 'a[href]' );

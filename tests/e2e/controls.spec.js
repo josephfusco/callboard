@@ -33,7 +33,7 @@ const setTime = ( page, t ) =>
 // The deck now opens compact (title, artist, play/pause only) and remembers the last view in localStorage;
 // most of this file predates that and expects the full transport, seek, and waveform on screen the moment
 // a track loads, so it starts every test already expanded. The compact/expanded behaviour itself — the
-// default, the tap to expand, the swipe to collapse — gets its own describe block below.
+// default, the tap to expand, and history close/reopen — gets its own describe block below.
 const expandDeck = ( page ) => page.locator( '#open-lyrics' ).click();
 
 test.describe( 'Controls', () => {
@@ -362,29 +362,17 @@ test.describe( 'Deck view: compact and expanded', () => {
 		);
 	} );
 
-	test( 'swiping down on the expanded deck collapses it back to compact', async ( {
+	test( 'back closes Now Playing and forward reopens it', async ( {
 		page,
 	} ) => {
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
 		await expandDeck( page );
 		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
-		await page.locator( '#deck' ).evaluate( ( deck ) => {
-			const fire = ( type, clientY ) =>
-				deck.dispatchEvent(
-					new PointerEvent( type, {
-						clientX: 60,
-						clientY,
-						pointerId: 7,
-						pointerType: 'touch',
-						bubbles: true,
-					} )
-				);
-			fire( 'pointerdown', 40 );
-			fire( 'pointermove', 140 );
-			fire( 'pointerup', 140 );
-		} );
+		await page.goBack();
 		await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
+		await page.goForward();
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
 	} );
 
 	test( 'repeat cycles off, set, one, and remembers the choice', async ( {

@@ -1,0 +1,75 @@
+name: Public Surface
+
+# A hook, route, constant, or CLI command is a promise: once a site depends on
+# one, renaming it breaks that site. This flags the pull request that adds one.
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+# Disable permissions for all available scopes by default.
+# Any needed permissions should be configured at the job level.
+permissions: {}
+
+jobs:
+  detect:
+    name: Detect new public surfaces
+    # Dependabot's token is read-only, and a dependency bump publishes nothing.
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+      LABEL: Public API
+    steps:
+      - name: Checkout the head of the pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Against the merge base, so a surface someone else merged while this
+      # branch was open is not attributed to it.
+      - name: Compare surfaces
+        id: surfaces
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node .github/scripts/detect-public-surface.js \
+            "$(git merge-base "$BASE_SHA" "$HEAD_SHA")" "$HEAD_SHA"
+
+      # One comment, edited in place on every push, so a branch that adds a hook
+      # and then documents it ends up with an accurate comment.
+      - name: Label and comment
+        env:
+          COUNT: ${{ steps.surfaces.outputs.count }}
+        run: |
+          # MARKER in detect-public-surface.js.
+          ID=$( gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
+            --jq 'map(select(.body | startswith("<!-- callboard:public-surface -->"))) | first | .id // empty' )
+
+          if [ "$COUNT" -eq 0 ]; then
+            # Removing an absent label is a no-op.
+            gh issue edit "$PR" --remove-label "$LABEL"
+            if [ -n "$ID" ]; then
+              gh api --method DELETE "repos/$GH_REPO/issues/comments/$ID" --silent
+            fi
+            exit 0
+          fi
+
+          gh issue edit "$PR" --add-label "$LABEL"
+
+          if [ -n "$ID" ]; then
+            gh api --method PATCH "repos/$GH_REPO/issues/comments/$ID" -F body=@comment.md --silent
+          else
+            gh pr comment "$PR" --body-file comment.md
+          fi

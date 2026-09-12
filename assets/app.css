@@ -42,9 +42,9 @@ body.has-deck .app{padding-bottom:calc(var(--deck-h) + var(--safe-b) + 40px)}
 /* who it is by, where a set gathers different people. Its own cell under the title, so the title
    stays one clean string; rows without an artist collapse the second grid row to nothing. */
 .track .num{grid-area:num}
-.track .title{grid-area:title}
+.track .title{grid-area:title;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .track .len{grid-area:len}
-.track .by{grid-area:by;color:var(--ink-3);font-size:.8125rem;line-height:1.3;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track .by{grid-area:by;min-width:0;color:var(--ink-3);font-size:.8125rem;line-height:1.3;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* what the copy is: 64 kbps off a phone, 270 off a good rip, 16-bit if it is ever lossless.
    Quiet by default — the same chip language as the cast control beside it, not a badge. */
@@ -113,11 +113,11 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
    the list — so the row bleed (.tracks li's negative margin, for the tap target) never meets a hard edge. */
 .tracks{list-style:none;margin:0;padding:0;background-color:var(--bg);background-image:var(--grain);background-size:200px 200px;background-blend-mode:overlay} /* base colour and blend, like body: grain on its own paints a grey wash, not a texture */
 @media (prefers-reduced-transparency:reduce){.tracks{background-image:none}}
-.tracks li{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;margin:0 -16px;padding:0 16px;border-radius:10px;transition:background var(--t-fast)}
+.tracks li{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;margin:0 -16px;padding:0 16px;border-radius:10px;transition:background var(--t-fast)}
 .tracks li::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:1px;background:var(--line)} /* the same width as the rule above the list: the number is content, not chrome, so nothing is inset past it */
 .tracks li:has(.track:active){background:var(--surface-2)}
 .tracks li:last-child::after{display:none}
-.track{appearance:none;width:100%;display:grid;grid-template-columns:34px 1fr auto;grid-template-areas:"num title len" "num by len";align-items:center;gap:0 12px;text-align:left;background:transparent;border:0;padding:15px 0;min-height:56px;cursor:pointer;border-radius:0}
+.track{appearance:none;min-width:0;width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"num title len" "num by len";align-items:center;gap:0 12px;text-align:left;background:transparent;border:0;padding:15px 0;min-height:56px;cursor:pointer;border-radius:0}
 .track .num{color:var(--ink-3);font-size:.875rem;position:relative;height:20px;display:flex;align-items:center}
 .track .eq{display:none;position:absolute;left:1px;top:50%;height:14px;margin-top:-7px;align-items:flex-end;gap:3px}
 .track .eq i{display:block;width:3px;height:14px;border-radius:1.5px;background:var(--accent);transform:scaleY(.35);transform-origin:50% 100%}
@@ -429,7 +429,7 @@ body:not(.has-deck) .a2hs{bottom:calc(var(--safe-b) + 12px)}
 
 /* per-track offline: silent until something happens. A small ring while saving, a small muted mark once saved.
    Idle shows nothing; on pointer devices the control appears on row hover or focus. */
-.dl{appearance:none;border:0;background:transparent;width:32px;height:44px;position:absolute;right:-16px;top:50%;transform:translateY(-50%);display:grid;place-items:center;cursor:pointer;color:var(--ink-3);--p:0;transition:opacity var(--t-fast)} /* in the gutter beside the row, like the eq bars on the left: the durations keep the column's edge */
+.dl{appearance:none;border:0;background:transparent;width:32px;height:44px;display:grid;place-items:center;cursor:pointer;color:var(--ink-3);--p:0;transition:opacity var(--t-fast)} /* in the gutter beside the row, like the eq bars on the left: the durations keep the column's edge */
 .dl svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .dl .dl-track{opacity:.35}
 .dl .dl-ring{stroke-dasharray:56.55;stroke-dashoffset:calc(56.55 * (1 - var(--p)));transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset var(--t) linear;stroke:var(--accent);opacity:0}

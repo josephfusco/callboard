@@ -338,7 +338,7 @@ final class Admin {
 			<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="callboard_import_file">
 				<?php wp_nonce_field( 'callboard_import_file' ); ?>
-				<p><input type="file" name="callboard_file" accept=".callboard,application/zip" required></p>
+				<p><label for="callboard-file"><?php esc_html_e( 'Set file', 'callboard' ); ?></label><br><input type="file" id="callboard-file" name="callboard_file" accept=".callboard,application/zip" required></p>
 				<?php submit_button( __( 'Import the file', 'callboard' ), 'primary', 'submit', false ); ?>
 			</form>
 			<hr>

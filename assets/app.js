@@ -253,6 +253,7 @@
 			b = +e[ Math.min( e.length - 1, k + 1 ) ] / 9;
 		return a + ( b - a ) * ( x - k );
 	};
+	const quality = $( 'quality' );
 	const glowHot = $( 'deck-glow-hot' ),
 		glowHalo = $( 'deck-glow-halo' );
 	// A filament's color follows its heat: near-black red when barely lit, through orange, to a pale yellow-white
@@ -277,6 +278,10 @@
 			.join( ' ' ) })`;
 	};
 	const paintGlow = ( b ) => {
+		// Perceptual, not linear. The curve below was set against audio that sat near full scale
+		// almost constantly; speech spends most of its time around a tenth of that and read as
+		// unlit. A square root lifts the quiet end into view and leaves the top where it was.
+		b = Math.sqrt( b );
 		const c = heatColor( b ); // continuous: no steps in the colour, so nothing to read as a flicker
 		glow.style.color = c;
 		if ( glowHalo ) {
@@ -359,6 +364,7 @@
 		}
 		let bright = 0,
 			ember = 0,
+			ref = 0.5,
 			last = 0;
 		cancelAnimationFrame( coolRaf ); // power is back on
 		const tick = ( now = 0 ) => {
@@ -392,8 +398,18 @@
 				// a filament: it lights in ~90 ms and cools over ~400 ms, so peaks swell and settle rather than
 				// twitch; a second, slower store (~1.4 s) holds the residual heat, so it never goes black
 				// between phrases
-				const target =
+				const raw =
 					levels[ 0 ] * 0.5 + levels[ 1 ] * 0.3 + levels[ 2 ] * 0.2;
+				// What counts as fully lit is whatever this material has actually been reaching.
+				// The reference rises to a peak at once and forgets it over a few seconds, so a
+				// quiet reading and a loud mix each use the whole filament, instead of one pinning
+				// it on and the other never lighting it. Both sources above feed this, so it works
+				// off the live analyser and off the measured envelope alike.
+				ref =
+					raw > ref
+						? raw
+						: ref + ( raw - ref ) * ( 1 - Math.exp( -dt / 6 ) );
+				const target = Math.min( 1, raw / Math.max( 0.12, ref ) );
 				const tau = target > bright ? 0.09 : 0.4;
 				bright += ( target - bright ) * ( 1 - Math.exp( -dt / tau ) );
 				ember += ( bright - ember ) * ( 1 - Math.exp( -dt / 1.4 ) );
@@ -660,6 +676,12 @@
 		nowTitle.classList.remove( 'is-note' );
 		setTitle( t.title );
 		dur.textContent = fmt( t.duration );
+		if ( quality ) {
+			// What this copy actually is. It changes per track once a set is gathered from
+			// different places, or when one track came off a stick and the rest came from here.
+			quality.textContent = t.quality || '';
+			quality.hidden = ! t.quality;
+		}
 		lastSec = -1;
 		setProgress( 0 );
 		clearLoop();
@@ -689,8 +711,10 @@
 		if ( 'mediaSession' in navigator ) {
 			navigator.mediaSession.metadata = new MediaMetadata( {
 				title: t.title,
-				artist: queue.name,
-				album: G.site,
+				// The lock screen wants who made it. A set gathered from one source has no per-track
+				// artist, and there the set's own name is the truthful answer.
+				artist: t.artist || queue.name,
+				album: queue.name,
 				artwork: queue.art || [],
 			} );
 			navigator.mediaSession.setActionHandler( 'previoustrack', prev );
@@ -1516,7 +1540,13 @@
 		} else {
 			delete openLyrics.dataset.sheet;
 		}
-		openLyrics.dataset.line = openLyrics.dataset.sheet || queue?.name || ''; // the line under the title is never blank
+		// The sheet's name if one is open, otherwise who the track is by, otherwise the set's name.
+		// Never blank, so the deck keeps a constant height.
+		openLyrics.dataset.line =
+			openLyrics.dataset.sheet ||
+			queue?.tracks[ i ]?.artist ||
+			queue?.name ||
+			'';
 		openLyrics.setAttribute(
 			'aria-label',
 			sheetKind === 'lyrics'

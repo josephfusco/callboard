@@ -95,7 +95,11 @@ test.describe( 'Admin', () => {
 			.locator( 'a.row-title' )
 			.click();
 		const first = page.locator( '#callboard-tracks li' ).first();
-		await first.locator( 'summary' ).click();
+		// The panel renders open when the track already carries a tempo or a note, so opening it
+		// blindly would close it. Ask before clicking.
+		if ( ! ( await first.locator( 'details' ).evaluate( ( el ) => el.open ) ) ) {
+			await first.locator( 'summary' ).click();
+		}
 		await first.locator( 'input[type=number]' ).fill( '100' );
 		await first.locator( 'textarea' ).fill( '0:03 Softer here' );
 		await page.click( '#publish' );

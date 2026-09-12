@@ -14,7 +14,10 @@ test.describe( 'PWA and previews', () => {
 		expect( manifest.start_url ).toBe( '/' );
 		expect( manifest.icons.length ).toBeGreaterThanOrEqual( 2 );
 		expect( manifest.id ).toBe( '/' );
-		expect( manifest.shortcuts[ 0 ].name ).toBe( 'Shakespeare’s Sonnets' );
+		// Not shortcuts[ 0 ]: a local-only set can sort ahead of the fixtures on this machine.
+		expect(
+			manifest.shortcuts.map( ( s ) => s.name )
+		).toContain( 'Shakespeare’s Sonnets' );
 		expect( manifest.launch_handler.client_mode ).toBe(
 			'navigate-existing'
 		);

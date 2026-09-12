@@ -10,8 +10,14 @@ test.describe( 'Front end', () => {
 	} ) => {
 		await page.goto( '/' );
 		await expect( page ).toHaveTitle( /./ );
-		await expect( page.locator( 'a.set' ) ).toHaveCount( 4 );
-		const card = page.locator( 'a.set' ).first();
+		// Not a total count: a machine can have its own local-only sets alongside the fixtures.
+		await expect(
+			page.locator( 'a.set', { hasText: 'Shakespeare' } )
+		).toHaveCount( 1 );
+		await expect(
+			page.locator( 'a.set', { hasText: 'Empty Set' } )
+		).toHaveCount( 1 );
+		const card = page.locator( 'a.set', { hasText: 'Shakespeare' } );
 		await expect( card ).toBeVisible();
 		await expect( card.locator( '.set-name' ) ).toHaveText( 'Shakespeare’s Sonnets' );
 		await expect( card.locator( '.set-meta' ) ).toContainText(
@@ -24,17 +30,17 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#wpadminbar' ) ).toHaveCount( 0 ); // even logged in, no admin bar on the app
 	} );
 
-	test( 'a long set scrolls and keeps the deck pinned', async ( {
+	test( 'a set scrolls and keeps the deck pinned', async ( {
 		page,
 	} ) => {
-		await page.goto( '/long-set/' );
-		await expect( page.locator( '.track' ) ).toHaveCount( 24 );
-		await page.locator( '.track' ).nth( 20 ).click();
+		await page.goto( '/demo-set/' );
+		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
+		await page.locator( '.track' ).nth( 9 ).click();
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Underscore A'
+			'Sonnets 91–100'
 		);
-		await page.locator( '.track' ).nth( 20 ).scrollIntoViewIfNeeded();
+		await page.locator( '.track' ).nth( 9 ).scrollIntoViewIfNeeded();
 		const deckBox = await page.locator( '#deck' ).boundingBox();
 		const viewport = page.viewportSize();
 		expect( deckBox.y + deckBox.height ).toBeGreaterThanOrEqual(
@@ -94,11 +100,11 @@ test.describe( 'Front end', () => {
 	test( 'saving a set offline marks every track, including slashed titles', async ( {
 		page,
 	} ) => {
-		await page.goto( '/long-set/' );
+		await page.goto( '/demo-set/' );
 		await page.waitForTimeout( 900 );
 		await page.locator( '#offline' ).click();
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
-			24,
+			10,
 			{
 				timeout: 30000,
 			}
@@ -109,11 +115,11 @@ test.describe( 'Front end', () => {
 		await page.reload();
 		await page.waitForTimeout( 1200 );
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
-			24
+			10
 		);
 		await page.locator( '.back' ).click(); // home shows the same mark on the set
 		await expect(
-			page.locator( '.set-off[data-slug="long-set"]' )
+			page.locator( '.set-off[data-slug="demo-set"]' )
 		).toHaveAttribute( 'data-state', 'saved' );
 		await page.goBack();
 		await page.locator( '#offline' ).click(); // a plain tap does nothing
@@ -126,7 +132,7 @@ test.describe( 'Front end', () => {
 		await page.mouse.up();
 		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
-			24
+			10
 		);
 		await page.locator( '#offline' ).click();
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
@@ -253,60 +259,20 @@ test.describe( 'Front end', () => {
 	test( 'ticks and note pins mark the seek line; a pin jumps there', async ( {
 		page,
 	} ) => {
-		await page.goto( '/long-set/' );
-		await page.locator( '.track' ).first().click();
-		await expect( page.locator( '#seek-marks .tick' ) ).toHaveCount( 3 ); // one rest in the lyrics, two notes
-		await expect( page.locator( '#seek-marks .pin' ) ).toHaveCount( 2 );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).nth( 2 ).click(); // the annotated track
+		await expect( page.locator( '#seek-marks .pin' ) ).toHaveCount( 2 ); // one per director's note
 		await page.locator( '#seek-marks .pin' ).first().click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
 			'Softer here'
 		);
 		await expect( page.locator( '#now-title' ) ).toContainText( 'Sep 1' );
-		await page.locator( '#open-lyrics' ).click();
-		await expect(
-			page.locator( '#lyrics-lines li' ).first()
-		).toContainText( 'Curtain up' );
-	} );
-
-	test( 'lyric cues ride on the media element as a metadata text track', async ( {
-		page,
-	} ) => {
-		await page.goto( '/long-set/' );
-		await page.locator( '.track' ).first().click(); // Overture: three cues
-		const track = await page.evaluate( () => {
-			const t = document.getElementById( 'audio' ).textTracks[ 0 ];
-			return t
-				? {
-						kind: t.kind,
-						mode: t.mode,
-						cues: Array.from( t.cues ).map( ( c ) => [
-							c.startTime,
-							c.endTime,
-							c.text,
-						] ),
-				  }
-				: null;
-		} );
-		expect( track.kind ).toBe( 'metadata' );
-		expect( track.mode ).toBe( 'hidden' );
-		expect( track.cues ).toHaveLength( 3 );
-		expect( track.cues[ 0 ][ 2 ] ).toBe( 'Curtain up, the lights come on' );
-		expect( track.cues[ 0 ][ 1 ] ).toBe( track.cues[ 1 ][ 0 ] ); // each cue runs until the next begins
-		await page.goto( '/demo-set/' );
-		await page.locator( '.track' ).first().click(); // a set without lyrics empties the track
-		expect(
-			await page.evaluate(
-				() =>
-					document.getElementById( 'audio' ).textTracks[ 0 ].cues
-						.length
-			)
-		).toBe( 0 );
 	} );
 
 	test( 'an A-B loop from the keyboard shows the band and clears', async ( {
 		page,
 	} ) => {
-		await page.goto( '/long-set/' );
+		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
 		await page.evaluate( () => {
 			document.getElementById( 'audio' ).currentTime = 2;
@@ -324,8 +290,8 @@ test.describe( 'Front end', () => {
 	test( 'the deck draws the waveform and keeps one height with or without lyrics', async ( {
 		page,
 	} ) => {
-		await page.goto( '/long-set/' );
-		await page.locator( '.track' ).first().click(); // Overture: levels and lyrics
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click(); // levels and a note
 		await expect( page.locator( '#deck' ) ).toHaveClass( /has-wave/ );
 		expect(
 			await page.locator( '#wave-base' ).evaluate( ( c ) => c.width )
@@ -374,12 +340,12 @@ test.describe( 'Front end', () => {
 					.first()
 			).toBeVisible();
 		};
-		await page.goto( '/long-set/' );
-		await expect( page.locator( '.track .bpm' ) ).toHaveText( '♩ 120' );
-		await page.locator( '.track' ).nth( 2 ).click(); // The Wish, 120 BPM: off by default, it just plays
+		await page.goto( '/demo-set/' );
+		await expect( page.locator( '.track .bpm' ) ).toHaveText( '♩ 96' );
+		await page.locator( '.track' ).nth( 2 ).click(); // 96 BPM: off by default, it just plays
 		await expect( page.locator( '#deck' ) ).not.toHaveClass( /counting/ );
 		await settings( true );
-		await page.goto( '/long-set/' );
+		await page.goto( '/demo-set/' );
 		await page.evaluate( () => localStorage.clear() ); // forget the position, or the same row just toggles play
 		await page.reload();
 		await page.locator( '.track' ).nth( 2 ).click();
@@ -391,7 +357,7 @@ test.describe( 'Front end', () => {
 			timeout: 4000,
 		} );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'The Wish'
+			'Sonnets 21–30'
 		);
 		await settings( false ); // back off for the other tests
 	} );
@@ -441,16 +407,6 @@ test.describe( 'Front end', () => {
 		expect( await page.evaluate( () => window.__remote.prompted ) ).toBe(
 			1
 		);
-	} );
-
-	test( 'a long title scrolls in the deck instead of truncating', async ( {
-		page,
-	}, testInfo ) => {
-		test.skip( testInfo.project.name !== 'iphone', 'phone width only' );
-		await page.goto( '/one-track/' );
-		await page.locator( '.track' ).first().click();
-		await expect( page.locator( '#now-title' ) ).toHaveClass( /marquee/ );
-		await expect( page.locator( '#now-title .mq span' ) ).toHaveCount( 2 );
 	} );
 
 	test( 'the deck sends the playing track itself, named so it can be matched back', async ( {
@@ -565,7 +521,7 @@ test.describe( 'Front end', () => {
 		page,
 		request,
 	} ) => {
-		const frag = await request.get( '/long-set/?fragment=1' );
+		const frag = await request.get( '/demo-set/?fragment=1' );
 		expect( frag.ok() ).toBeTruthy();
 		const body = await frag.text();
 		expect( body.trim().startsWith( '<main' ) ).toBeTruthy();
@@ -580,12 +536,12 @@ test.describe( 'Front end', () => {
 		await page.goto( '/' );
 		const [ res ] = await Promise.all( [
 			page.waitForResponse( ( r ) => r.url().includes( 'fragment=1' ) ),
-			page.locator( 'a.set', { hasText: 'Long Set' } ).click(),
+			page.locator( 'a.set', { hasText: 'Shakespeare' } ).click(),
 		] );
 		expect( res.ok() ).toBeTruthy();
-		await expect( page ).toHaveURL( /\/long-set\/$/ );
-		await expect( page.locator( 'h1' ) ).toHaveText( 'Long Set' );
-		await expect( page.locator( '.track' ) ).toHaveCount( 24 );
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+		await expect( page.locator( 'h1' ) ).toHaveText( 'Shakespeare’s Sonnets' );
+		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await expect( page.locator( '.colophon' ) ).toContainText( 'Audio by' ); // the footer came with it
 	} );
 

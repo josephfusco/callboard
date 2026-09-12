@@ -135,3 +135,35 @@ function callboard_link( string $text, ?string $url ): string {
 	}
 	return '<a href="' . esc_url( $url ) . '" target="_blank" rel="nofollow noopener noreferrer">' . esc_html( $text ) . '</a>';
 }
+
+/**
+ * What a copy actually is: "16-bit 44.1kHz" for lossless, "270 kbps 48.0kHz" for lossy.
+ *
+ * Bit depth is a property of PCM, so it is only shown where the format has one. Printing "24-bit"
+ * over an mp3 would be flattering and false. This is here because a track can arrive from the
+ * server, off a stick, or out of a car export that was re-encoded on the way, and the difference
+ * is worth being able to see.
+ *
+ * @param array<string, mixed> $meta Attachment metadata.
+ */
+function callboard_quality( array $meta ): string {
+	$rate = (int) ( $meta['sample_rate'] ?? 0 );
+	if ( ! $rate ) {
+		return '';
+	}
+	$khz  = rtrim( rtrim( number_format( $rate / 1000, 1 ), '0' ), '.' ) . 'kHz';
+	$bits = (int) ( $meta['bits_per_sample'] ?? 0 );
+
+	if ( ! empty( $meta['lossless'] ) && $bits ) {
+		/* translators: 1: bit depth, 2: sample rate such as 44.1kHz. */
+		return sprintf( __( '%1$d-bit %2$s', 'callboard' ), $bits, $khz );
+	}
+
+	$kbps = (int) round( ( (float) ( $meta['bitrate'] ?? 0 ) ) / 1000 );
+	if ( ! $kbps ) {
+		return $khz;
+	}
+
+	/* translators: 1: bitrate in kbps, 2: sample rate such as 44.1kHz. */
+	return sprintf( __( '%1$d kbps %2$s', 'callboard' ), $kbps, $khz );
+}

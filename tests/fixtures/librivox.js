@@ -140,5 +140,18 @@ write(
 	true
 );
 write( path.join( dir, 'levels.json' ), lv );
+
+/* Director's notes and a tempo, which are somebody's opinion about a moment and can sit honestly on
+   any recording. No lyrics: a caption claims to be a transcript of what is being said, and these clips
+   start partway into a reading, so any text put here would be a confident lie on screen. */
+// On the third track, not the first: the admin suite edits the first track's tempo and notes, and the
+// front-end suite reads them. Sharing a track made one test overwrite the other's fixture.
+write( path.join( dir, 'notes.json' ), {
+	son03: [
+		{ t: 4, text: 'Softer here', date: '2026-09-01' },
+		{ t: 9, text: 'Lean into the turn', date: '2026-09-04' },
+	],
+} );
+write( path.join( dir, 'tempo.json' ), { son03: 96 } );
 fs.rmSync( tmp, { recursive: true, force: true } );
 console.log( `\n${ tracks.length } tracks into ${ path.relative( process.cwd(), dir ) }` );

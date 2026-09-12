@@ -156,6 +156,7 @@ final class Sets {
 			$notes    = get_post_meta( $track->ID, '_callboard_notes', true );
 			$levels   = (string) get_post_meta( $track->ID, '_callboard_levels', true );
 			$bpm      = (int) get_post_meta( $track->ID, '_callboard_bpm', true );
+			$by       = (string) get_post_meta( $track->ID, '_callboard_uploader', true );
 			$tracks[] = array(
 				'id'       => $track->ID,
 				'index'    => ++$index,
@@ -166,6 +167,8 @@ final class Sets {
 				'levels'   => '' !== $levels ? $levels : null,
 				'bpm'      => $bpm > 0 ? $bpm : null,
 				'notes'    => is_array( $notes ) ? array_values( $notes ) : array(),
+				'artist'   => '' !== $by ? $by : null,
+				'quality'  => callboard_quality( $meta ),
 			);
 			$uploader = get_post_meta( $track->ID, '_callboard_uploader', true );
 			if ( $uploader ) {

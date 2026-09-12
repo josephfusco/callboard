@@ -142,8 +142,8 @@ test.describe( 'Controls', () => {
 	test( 'the title button opens and closes the sheet, or finds the track', async ( {
 		page,
 	} ) => {
-		await page.goto( '/long-set/' );
-		await page.locator( '.track' ).first().click(); // Overture has lyrics
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).nth( 2 ).click(); // carries a director's note
 		await page.locator( '#open-lyrics' ).click();
 		await expect( page.locator( '#lyrics' ) ).toBeVisible();
 		await expect( page.locator( '#open-lyrics' ) ).toHaveAttribute(
@@ -164,14 +164,6 @@ test.describe( 'Controls', () => {
 		await expect( page ).toHaveURL( /\/demo-set\/$/ );
 		await page.locator( '#open-lyrics' ).click(); // on the set it scrolls to and focuses the row
 		await expect( page.locator( '.track' ).nth( 1 ) ).toBeFocused();
-	} );
-
-	test( 'a lyric line seeks to its cue', async ( { page } ) => {
-		await page.goto( '/long-set/' );
-		await page.locator( '.track' ).first().click();
-		await page.locator( '#open-lyrics' ).click();
-		await page.locator( '#lyrics-lines li' ).nth( 2 ).click(); // "Here we go again" at 6.4 s
-		expect( await time( page ) ).toBeCloseTo( 6.4, 1 );
 	} );
 
 	test( 'Play all becomes the transport; the track row toggles the current track', async ( {

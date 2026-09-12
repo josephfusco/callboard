@@ -37,7 +37,7 @@ for ( const scheme of [ 'light', 'dark' ] ) {
 		} );
 
 		test( 'a set, with a track playing', async ( { page } ) => {
-			await page.goto( '/long-set/' );
+			await page.goto( '/demo-set/' );
 			await page.locator( '.track' ).nth( 2 ).click();
 			const results = await audit( page );
 			expect( report( results ) ).toBe( '' );
@@ -63,7 +63,7 @@ test.describe( 'axe, admin', () => {
 } );
 
 test( 'the whole player works from the keyboard', async ( { page } ) => {
-	await page.goto( '/long-set/' );
+	await page.goto( '/demo-set/' );
 	await page.locator( '.skip-link' ).focus();
 	await expect( page.locator( '.skip-link' ) ).toBeFocused();
 	await page.keyboard.press( 'Enter' );
@@ -78,7 +78,7 @@ test( 'the whole player works from the keyboard', async ( { page } ) => {
 	await page.locator( '#next' ).focus();
 	await page.keyboard.press( 'Enter' );
 	await expect( page.locator( '#now-title' ) ).toContainText(
-		'Opening Number'
+		'Sonnets 11–20'
 	);
 	await page.locator( '#seek' ).focus();
 	await page.keyboard.press( 'ArrowRight' );

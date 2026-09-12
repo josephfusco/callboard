@@ -3976,3 +3976,102 @@
 		badge: () => 0,
 	} );
 } )();
+
+// ---- callboard/practice. Anonymous practice counts per track: times opened, loops set and seconds played.
+// The page sends them to the site in batches. Runs only when the "Count practice" setting is on.
+( () => {
+	const cb = window.callboard;
+	if ( ! cb?.isActive( 'callboard/practice' ) || ! navigator.sendBeacon ) {
+		return;
+	}
+	const counts = new Map(); // track id -> { opens, loops, seconds }
+	let playing = null; // { id, since } while a track plays
+	// An open is the first play of a track after it loads. The page can load a track before this runs,
+	// and resuming after a pause is not a new open.
+	let opened = null;
+	const entry = ( id ) => {
+		if ( ! counts.has( id ) ) {
+			counts.set( id, { opens: 0, loops: 0, seconds: 0 } );
+		}
+		return counts.get( id );
+	};
+	// Add the time played so far to the playing track, and keep timing it.
+	const tick = () => {
+		if ( playing ) {
+			const now = performance.now();
+			entry( playing.id ).seconds += ( now - playing.since ) / 1000;
+			playing.since = now;
+		}
+	};
+	const stop = () => {
+		tick();
+		playing = null;
+	};
+	const send = () => {
+		tick();
+		const config = cb.data( 'callboard/practice' );
+		const body = [ ...counts ]
+			.map( ( [ track, c ] ) => ( {
+				track,
+				opens: c.opens,
+				loops: c.loops,
+				seconds: Math.round( c.seconds ),
+			} ) )
+			.filter( ( c ) => c.opens || c.loops || c.seconds );
+		if ( ! body.length || ! config?.url ) {
+			return;
+		}
+		const url = new URL( config.url, window.location.href );
+		if ( config.nonce ) {
+			url.searchParams.set( '_wpnonce', config.nonce ); // sendBeacon cannot set headers
+		}
+		// Sent as text/plain, which a beacon can send without a CORS preflight in every browser.
+		const queued = navigator.sendBeacon(
+			url.href,
+			new Blob( [ JSON.stringify( body ) ], { type: 'text/plain' } )
+		);
+		if ( queued ) {
+			counts.clear();
+		}
+	};
+	/**
+	 * Practice counts, as an extension: listens to player events and sends totals.
+	 */
+	cb.registerExtension( 'callboard/practice', {
+		version: '1.0.0',
+		apiVersion: 1,
+		events: {
+			track() {
+				stop();
+				opened = null;
+			},
+			loop( range ) {
+				const track = cb.state.track;
+				if ( range && track?.id ) {
+					entry( track.id ).loops++;
+				}
+			},
+			play( { track } ) {
+				stop();
+				if ( track?.id ) {
+					if ( opened !== track.id ) {
+						entry( track.id ).opens++;
+						opened = track.id;
+					}
+					playing = { id: track.id, since: performance.now() };
+				}
+			},
+			pause: stop,
+			ended: stop,
+		},
+		setup() {
+			document.addEventListener( 'visibilitychange', () => {
+				if ( document.visibilityState === 'hidden' ) {
+					send();
+				}
+			} );
+			window.addEventListener( 'pagehide', send );
+			setInterval( send, 5 * 60 * 1000 );
+		},
+	} );
+} )();

@@ -138,7 +138,7 @@ A gated request answers 403 with `templates/gate.php` rather than redirecting to
 | `assets/` | `app.js`, `app.css` |
 | `pwa/sw.js` | Service worker source |
 | `tests/e2e/` | Playwright suites |
-| `tests/fixtures/` | Demo sets and `chiptunes.js`, which generates them |
+| `tests/fixtures/` | Demo sets and `rehearsal.js`, which generates them |
 | `blueprint.json` | Playground demo. The Pages workflow publishes it with the plugin zip and demo audio, stamped by commit |
 | `site/` | Landing page (GitHub Pages) |
 | `languages/callboard.pot` | Translation template; `npm run pot` regenerates it |
@@ -268,7 +268,7 @@ Browser and WordPress features considered for this plugin, with a verdict, so no
 
 Playwright tests in `tests/e2e/` run against wp-env, from a pre-commit hook that `npm install` sets up and again in GitHub Actions on every pull request. One test saves a set, takes the browser offline, and opens and plays it. Headless Chromium cannot decode mp3, so player tests assert on state, not audio.
 
-Fixtures are ten public-domain melodies rendered by `tests/fixtures/chiptunes.js` (needs ffmpeg and ffprobe). Covers are drawn by the plugin's `Art` class.
+Fixtures are Act I of a show that does not exist, rendered by `tests/fixtures/rehearsal.js` (needs ffmpeg and ffprobe). Every note is original and the synth is in the file, so the repository owns the audio outright: nothing in it needs a licence, an attribution, or a clearance, which matters because this audio is committed here, served from the Pages site, and loaded into the Playground demo. It is a piano because that is what a rehearsal track is — a guide line over an accompaniment, and a click on the numbers that carry a tempo. Covers are drawn by the plugin's `Art` class.
 
 ## Source and maintainer
 

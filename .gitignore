@@ -24,3 +24,7 @@ tests/fixtures/callboard/*/cover-*.png
 
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
+
+# A set built from your own audio, for local listening only. Never committed.
+tests/fixtures/callboard/mine/
+tests/fixtures/callboard/local-*/

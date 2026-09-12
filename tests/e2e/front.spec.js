@@ -13,7 +13,7 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( 'a.set' ) ).toHaveCount( 4 );
 		const card = page.locator( 'a.set' ).first();
 		await expect( card ).toBeVisible();
-		await expect( card.locator( '.set-name' ) ).toHaveText( 'Demo Set' );
+		await expect( card.locator( '.set-name' ) ).toHaveText( 'Shakespeare’s Sonnets' );
 		await expect( card.locator( '.set-meta' ) ).toContainText(
 			'10 tracks'
 		);
@@ -46,7 +46,7 @@ test.describe( 'Front end', () => {
 		page,
 	} ) => {
 		const audio = fs.readFileSync(
-			'tests/fixtures/callboard/demo-set/01 - Ode to Joy [chip01].mp3'
+			'tests/fixtures/callboard/demo-set/01 - Sonnets 1–10 [son01].mp3'
 		);
 		const file = ( name ) => ( {
 			name,
@@ -61,9 +61,9 @@ test.describe( 'Front end', () => {
 
 		// One file per matching rule: the track's own name, a car export's leading number, the title.
 		await page.locator( '#load-files' ).setInputFiles( [
-			file( '01 - Ode to Joy [chip01].mp3' ),
+			file( '01 - Sonnets 1–10 [son01].mp3' ),
 			file( '02 Anything At All.mp3' ),
-			file( 'Für Elise.mp3' ),
+			file( 'Sonnets 21–30.mp3' ),
 			file( 'nothing-in-this-set.mp3' ),
 		] );
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
@@ -201,13 +201,13 @@ test.describe( 'Front end', () => {
 		page,
 	} ) => {
 		await page.goto( '/demo-set/' );
-		await expect( page.locator( 'h1' ) ).toHaveText( 'Demo Set' );
+		await expect( page.locator( 'h1' ) ).toHaveText( 'Shakespeare’s Sonnets' );
 		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await expect(
 			page.locator( '.track' ).first().locator( '.title' )
-		).toHaveText( 'Ode to Joy' ); // the first of ten public-domain melodies, rendered as chiptunes
+		).toHaveText( 'Sonnets 1–10' ); // the first section of the fixture recording
 		await expect( page.locator( 'footer.colophon' ) ).toContainText(
-			'Audio by Callboard 8-bit'
+			'Audio by LibriVox volunteers'
 		);
 		await expect(
 			page.locator( 'footer.colophon a' ).first()
@@ -221,7 +221,7 @@ test.describe( 'Front end', () => {
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).nth( 1 ).click();
 		const audio = page.locator( '#audio' );
-		await expect( audio ).toHaveAttribute( 'src', /Korobeiniki/ );
+		await expect( audio ).toHaveAttribute( 'src', /son02/ );
 		await expect( page.locator( '.track' ).nth( 1 ) ).toHaveClass(
 			/active/
 		);
@@ -230,7 +230,7 @@ test.describe( 'Front end', () => {
 			'true'
 		);
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Korobeiniki'
+			'Sonnets 11–20'
 		);
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 	} );
@@ -479,9 +479,9 @@ test.describe( 'Front end', () => {
 			.poll( () => page.evaluate( () => window.__sharedFiles.length ) )
 			.toBe( 1 );
 		const sent = await page.evaluate( () => window.__sharedFiles[ 0 ] );
-		expect( sent.title ).toBe( 'Ode to Joy' );
+		expect( sent.title ).toBe( 'Sonnets 1–10' );
 		// The number and the title are both what the receiving end matches on.
-		expect( sent.names[ 0 ] ).toBe( '01 Ode to Joy.mp3' );
+		expect( sent.names[ 0 ] ).toBe( '01 Sonnets 1–10.mp3' );
 		expect( sent.types[ 0 ] ).toMatch( /^audio\// );
 		expect( sent.sizes[ 0 ] ).toBeGreaterThan( 0 );
 	} );
@@ -514,7 +514,7 @@ test.describe( 'Front end', () => {
 		const shared = await page.evaluate( () => window.__shared );
 		expect( shared ).toHaveLength( 1 );
 		expect( shared[ 0 ].url ).toMatch( /\/demo-set\/$/ );
-		expect( shared[ 0 ].title ).toContain( 'Demo Set' );
+		expect( shared[ 0 ].title ).toContain( 'Shakespeare’s Sonnets' );
 		expect( shared[ 0 ].text ).toContain( '10 tracks' );
 	} );
 
@@ -599,12 +599,12 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( 'a.set' ).first() ).toBeVisible();
 		await expect( page.locator( '#deck' ) ).toBeVisible();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Ode to Joy'
+			'Sonnets 1–10'
 		);
 		await page.goBack();
-		await expect( page.locator( 'h1' ) ).toHaveText( 'Demo Set' );
+		await expect( page.locator( 'h1' ) ).toHaveText( 'Shakespeare’s Sonnets' );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Ode to Joy'
+			'Sonnets 1–10'
 		); // no reload
 	} );
 

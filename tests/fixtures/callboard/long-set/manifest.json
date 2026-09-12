@@ -3,8 +3,8 @@
 	"slug": "long-set",
 	"order": 1,
 	"playlist_url": "",
-	"curator": "Public-domain melodies",
-	"curator_url": "https://en.wikipedia.org/wiki/Public_domain_music",
+	"curator": "Original, written for these fixtures",
+	"curator_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
 	"tracks": [
 		{
 			"index": 1,
@@ -12,9 +12,9 @@
 			"title": "1. Overture (Demo OBC)",
 			"file": "01 - Overture [long01].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 2,
@@ -22,9 +22,9 @@
 			"title": "2. Opening Number (Demo OBC)",
 			"file": "02 - Opening Number [long02].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 3,
@@ -32,9 +32,9 @@
 			"title": "3. The Wish (Demo OBC)",
 			"file": "03 - The Wish [long03].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 4,
@@ -42,9 +42,9 @@
 			"title": "4. Village Square (Demo OBC)",
 			"file": "04 - Village Square [long04].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 5,
@@ -52,9 +52,9 @@
 			"title": "5. Something's Coming (Demo OBC)",
 			"file": "05 - Something's Coming [long05].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 6,
@@ -62,9 +62,9 @@
 			"title": "6. Ballad (Demo OBC)",
 			"file": "06 - Ballad [long06].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 7,
@@ -72,9 +72,9 @@
 			"title": "7. Act One Finale (Demo OBC)",
 			"file": "07 - Act One Finale [long07].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 8,
@@ -82,9 +82,9 @@
 			"title": "8. Entr'acte (Demo OBC)",
 			"file": "08 - Entr'acte [long08].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 9,
@@ -92,9 +92,9 @@
 			"title": "9. Reprise (Demo OBC)",
 			"file": "09 - Reprise [long09].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 10,
@@ -102,9 +102,9 @@
 			"title": "10. The Duet (Demo OBC)",
 			"file": "10 - The Duet [long10].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 11,
@@ -112,9 +112,9 @@
 			"title": "11. Chase Scene (Demo OBC)",
 			"file": "11 - Chase Scene [long11].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 12,
@@ -122,9 +122,9 @@
 			"title": "12. Lullaby (Demo OBC)",
 			"file": "12 - Lullaby [long12].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 13,
@@ -132,9 +132,9 @@
 			"title": "13. Comic Number (Demo OBC)",
 			"file": "13 - Comic Number [long13].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 14,
@@ -142,9 +142,9 @@
 			"title": "14. Eleven O'Clock Number (Demo OBC)",
 			"file": "14 - Eleven O'Clock Number [long14].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 15,
@@ -152,9 +152,9 @@
 			"title": "15. Confrontation (Demo OBC)",
 			"file": "15 - Confrontation [long15].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 16,
@@ -162,9 +162,9 @@
 			"title": "16. Transformation (Demo OBC)",
 			"file": "16 - Transformation [long16].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 17,
@@ -172,9 +172,9 @@
 			"title": "17. Finale Ultimo (Demo OBC)",
 			"file": "17 - Finale Ultimo [long17].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 18,
@@ -182,9 +182,9 @@
 			"title": "18. Bows (Demo OBC)",
 			"file": "18 - Bows [long18].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 19,
@@ -192,9 +192,9 @@
 			"title": "19. Exit Music (Demo OBC)",
 			"file": "19 - Exit Music [long19].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 20,
@@ -202,9 +202,9 @@
 			"title": "20. Cut Song ⧸ Bonus (Demo OBC)",
 			"file": "20 - Cut Song ⧸ Bonus [long20].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 21,
@@ -212,9 +212,9 @@
 			"title": "21. Underscore A (Demo OBC)",
 			"file": "21 - Underscore A [long21].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 22,
@@ -222,9 +222,9 @@
 			"title": "22. Underscore B (Demo OBC)",
 			"file": "22 - Underscore B [long22].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 23,
@@ -232,9 +232,9 @@
 			"title": "23. Curtain Call (Demo OBC)",
 			"file": "23 - Curtain Call [long23].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		},
 		{
 			"index": 24,
@@ -242,9 +242,9 @@
 			"title": "24. Playoff (Demo OBC)",
 			"file": "24 - Playoff [long24].mp3",
 			"duration": 20,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		}
 	]
 }

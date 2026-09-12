@@ -3,8 +3,8 @@
 	"slug": "one-track",
 	"order": 0,
 	"playlist_url": "",
-	"curator": "Public-domain melodies",
-	"curator_url": "https://en.wikipedia.org/wiki/Public_domain_music",
+	"curator": "Original, written for these fixtures",
+	"curator_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
 	"tracks": [
 		{
 			"index": 1,
@@ -12,9 +12,9 @@
 			"title": "1. I'm Just Wild About Harry / Look for the Silver Lining (Act One Finale Medley)",
 			"file": "01 - I'm Just Wild About Harry - Look for the Silver Lining [solo01].mp3",
 			"duration": 24,
-			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js",
-			"uploader": "Callboard 8-bit",
-			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/chiptunes.js"
+			"url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js",
+			"uploader": "The Lantern Company",
+			"uploader_url": "https://github.com/josephfusco/callboard/blob/main/tests/fixtures/rehearsal.js"
 		}
 	]
 }

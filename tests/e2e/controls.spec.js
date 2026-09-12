@@ -56,22 +56,22 @@ test.describe( 'Controls', () => {
 		await page.locator( '.track' ).first().click();
 		await page.locator( '#next' ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Korobeiniki'
+			'Sonnets 11–20'
 		);
 		await expect( page.locator( '.track' ).nth( 1 ) ).toHaveClass(
 			/active/
 		);
 		await page.locator( '#prev' ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Ode to Joy'
+			'Sonnets 1–10'
 		);
 		await page.locator( '#prev' ).click(); // from the first track, previous wraps to the last
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Toccata in D minor'
+			'Sonnets 91–100'
 		);
 		await page.locator( '#next' ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Ode to Joy'
+			'Sonnets 1–10'
 		);
 	} );
 
@@ -82,7 +82,7 @@ test.describe( 'Controls', () => {
 		await setTime( page, 5 );
 		await page.locator( '#prev' ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Für Elise'
+			'Sonnets 21–30'
 		); // stayed on the track rather than going back one
 		expect( await time( page ) ).toBeLessThan( 5 );
 	} );
@@ -120,11 +120,11 @@ test.describe( 'Controls', () => {
 		expect( await time( page ) ).toBeCloseTo( 10, 0 );
 		await page.keyboard.press( 'Shift+ArrowRight' );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Korobeiniki'
+			'Sonnets 11–20'
 		);
 		await page.keyboard.press( 'Shift+ArrowLeft' );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Ode to Joy'
+			'Sonnets 1–10'
 		);
 		await setTime( page, 4 );
 		await page.keyboard.press( '[' );
@@ -187,7 +187,7 @@ test.describe( 'Controls', () => {
 		expect( await transport( page ) ).toBe( before + 2 );
 		await page.locator( '.track' ).nth( 4 ).click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'In the Hall of the Mountain King'
+			'Sonnets 41–50'
 		);
 	} );
 
@@ -212,7 +212,7 @@ test.describe( 'Controls', () => {
 		} );
 		expect( pausedByUs ).toBe( 0 );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Korobeiniki'
+			'Sonnets 11–20'
 		);
 	} );
 

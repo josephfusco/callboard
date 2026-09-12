@@ -56,6 +56,21 @@ test.describe( 'Controls', () => {
 		);
 	} );
 
+	// #35: the play key lost its disc and became a bare glyph like the skips beside it.
+	test( 'the play key is a solid disc with the glyph cut out of it', async ( {
+		page,
+	} ) => {
+		await page.locator( '.track' ).first().click();
+		const disc = await page
+			.locator( '#toggle .cap' )
+			.evaluate( ( el ) => getComputedStyle( el ).backgroundColor );
+		const glyph = await page
+			.locator( '#toggle .glyph' )
+			.evaluate( ( el ) => getComputedStyle( el ).fill );
+		expect( disc ).not.toMatch( /rgba\(.*, 0\)$/ ); // painted, not transparent
+		expect( glyph ).not.toBe( disc );
+	} );
+
 	test( 'next and previous move through the set and wrap', async ( {
 		page,
 	} ) => {
@@ -268,6 +283,18 @@ test.describe( 'Controls', () => {
 			return window.__transport - before; // anything here is our own lock handler pausing the new track
 		} );
 		expect( pausedByUs ).toBe( 0 );
+		// #29: the case that actually broke. The new track's request goes in before the old one was ever
+		// released, so it steals from this tab's own earlier request, and that loser must not pause.
+		const pausedBySteal = await page.evaluate( async () => {
+			const a = document.getElementById( 'audio' );
+			const before = window.__transport;
+			a.dispatchEvent( new Event( 'play' ) );
+			a.dispatchEvent( new Event( 'play' ) );
+			await navigator.locks.query(); // lets both requests settle, the stolen one included
+			await new Promise( ( r ) => setTimeout( r ) );
+			return window.__transport - before;
+		} );
+		expect( pausedBySteal ).toBe( 0 );
 		await expect( page.locator( '#now-title' ) ).toContainText(
 			'Sonnets 11–20'
 		);

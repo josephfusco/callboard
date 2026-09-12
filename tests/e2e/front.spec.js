@@ -52,6 +52,40 @@ test.describe( 'Front end', () => {
 		); // pinned to the bottom edge
 	} );
 
+	test( 'back closes Now Playing before leaving the set, and forward reopens it', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
+		await page.goBack();
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
+		await page.goForward();
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
+	} );
+
+	test( 'Now Playing controls keep a 44px minimum touch target', async ( {
+		page,
+	} ) => {
+		const minHit = async ( selector ) => {
+			const box = await page.locator( selector ).boundingBox();
+			expect( box ).not.toBeNull();
+			expect( Math.min( box.width, box.height ) ).toBeGreaterThanOrEqual(
+				44
+			);
+		};
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await minHit( '#prev' );
+		await minHit( '#next' );
+		await minHit( '#toggle' );
+		await expandDeck( page );
+		await minHit( '#deck-down' );
+	} );
+
 	test( 'loading a set from files fills the offline copies without the network', async ( {
 		page,
 	} ) => {

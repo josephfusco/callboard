@@ -205,6 +205,11 @@ test.describe( 'Admin', () => {
 		} );
 		await demo.locator( 'summary' ).click();
 		await demo.locator( 'input[type=checkbox]' ).nth( 2 ).check(); // Sonnets 21–30
+		// Typing a title starts an autosave, and core ignores Publish while one is running: the button
+		// carries .disabled until it lands. On a busy machine the click fell inside that window.
+		await expect( page.locator( '#publish' ) ).not.toHaveClass(
+			/disabled/
+		);
 		await page.click( '#publish' );
 		await page.waitForURL( /post\.php\?post=\d+&action=edit&message=/ );
 		await expect( page.locator( '#callboard-where' ) ).toHaveValue( 'Pit' );
@@ -214,6 +219,12 @@ test.describe( 'Admin', () => {
 		await expect( call ).toBeVisible();
 		await expect( call.locator( '.call-rel' ) ).toContainText( /in|days/ );
 		await expect( call.locator( '.call-where' ) ).toHaveText( 'Pit' );
+		// #51: the board is a list ruled like the others, not a stack of cards.
+		await expect( call ).toHaveCSS(
+			'background-color',
+			'rgba(0, 0, 0, 0)'
+		);
+		await expect( call ).toHaveCSS( 'border-radius', '0px' );
 		await expect( call.locator( '.call-numbers a' ) ).toHaveText(
 			'Sonnets 21–30'
 		);

@@ -4,6 +4,13 @@
 const fs = require( 'node:fs' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
+// The deck opens compact by default (title, artist, play/pause) and remembers the last view; a few tests
+// here reach into the wave/times/chips row, which compact hides, so they ask for the expanded view first.
+const expandDeck = ( page ) =>
+	page.addInitScript( () =>
+		localStorage.setItem( 'callboard:deck-view', JSON.stringify( 'expanded' ) )
+	);
+
 test.describe( 'Front end', () => {
 	test( 'home lists sets with counts and the footer note', async ( {
 		page,
@@ -259,6 +266,7 @@ test.describe( 'Front end', () => {
 	test( 'ticks and note pins mark the seek line; a pin jumps there', async ( {
 		page,
 	} ) => {
+		await expandDeck( page ); // the seek line and its marks are expanded-only now
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).nth( 2 ).click(); // the annotated track
 		await expect( page.locator( '#seek-marks .pin' ) ).toHaveCount( 2 ); // one per director's note
@@ -272,6 +280,7 @@ test.describe( 'Front end', () => {
 	test( 'an A-B loop from the keyboard shows the band and clears', async ( {
 		page,
 	} ) => {
+		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
 		await page.evaluate( () => {
@@ -290,6 +299,7 @@ test.describe( 'Front end', () => {
 	test( 'the deck draws the waveform and keeps one height with or without lyrics', async ( {
 		page,
 	} ) => {
+		await expandDeck( page ); // the wave only draws in the expanded view
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click(); // levels and a note
 		await expect( page.locator( '#deck' ) ).toHaveClass( /has-wave/ );
@@ -389,6 +399,7 @@ test.describe( 'Front end', () => {
 				},
 			} );
 		} );
+		await expandDeck( page ); // the cast chip lives on the (now expanded-only) time row
 		await page.goto( '/demo-set/' );
 		test.skip(
 			! ( await page.evaluate(
@@ -425,6 +436,7 @@ test.describe( 'Front end', () => {
 				return Promise.resolve();
 			};
 		} );
+		await expandDeck( page ); // the share-track chip lives on the (now expanded-only) time row
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track[data-i="0"]' ).click();
 		const chip = page.locator( '#share-track' );
@@ -448,6 +460,7 @@ test.describe( 'Front end', () => {
 		await page.addInitScript( () => {
 			navigator.canShare = () => false; // shares links, not files
 		} );
+		await expandDeck( page ); // so this stays hidden for lack of file sharing, not because it is compact
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track[data-i="0"]' ).click();
 		await expect( page.locator( '#share-track' ) ).toBeHidden();

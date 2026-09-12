@@ -5,6 +5,8 @@
   --ink:#1c1c1c; --ink-2:#55544f; --ink-3:#6f6e69; --accent:#e8541e; --accent-text:#c2401a; --accent-ink:#fff;
   --deck:#f6f5f2; --wave:rgba(0,0,0,.3); --wave-hover:rgba(0,0,0,.52); --deck-shadow:0 -1px 0 var(--line), 0 -12px 32px rgba(0,0,0,.06); --deck-hi:rgba(255,255,255,.72); --gloss:rgba(255,255,255,.85); --play-hi:#565554; --play-rim:rgba(255,255,255,.22); --dish:rgba(0,0,0,.08);
   --ease:cubic-bezier(.2,.8,.2,1); --ease-spring:cubic-bezier(.34,1.4,.64,1); --t-fast:.12s; --t:.2s; --t-slow:.36s; --radius:14px; --safe-b:env(safe-area-inset-bottom,0px); --deck-h:200px; --deck-bg:rgba(246,245,242,.94);
+  /* the deck's whole vertical rhythm — padding, gaps, nothing else — comes from these five; no ad hoc px */
+  --s1:8px; --s2:13px; --s3:21px; --s4:34px; --s5:55px;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#161616; --surface:#1f1f1f; --surface-2:#292929; --line:#2e2e2e; --line-strong:#444;
@@ -48,6 +50,12 @@ body.has-deck .app{padding-bottom:calc(var(--deck-h) + var(--safe-b) + 40px)}
    Quiet by default — the same chip language as the cast control beside it, not a badge. */
 .pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;margin-right:8px;border:1px solid var(--line-strong);border-radius:999px;color:var(--ink-3);font-size:.6875rem;font-variant-numeric:tabular-nums;white-space:nowrap}
 @media (max-width:420px){.pill{display:none}} /* the times matter more than the pedigree on a narrow phone */
+
+/* Where you are, on its own hairline directly under the filament rather than sharing that edge with it.
+   Sharing meant this line painted over the glow, so the wire read as dead up to the playhead and lit
+   after it — the exact opposite of a filament. Compact only: expanded has the whole wave to read. */
+.deck.is-compact::before{content:"";position:absolute;left:0;right:0;top:2px;height:1px;background:var(--line-strong);transform:scaleX(var(--progress,0));transform-origin:0 50%;will-change:transform;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.deck.is-compact::before{will-change:auto}}
 
 /* type */
 .label{margin:0;color:var(--ink-3);font-size:.9375rem}
@@ -100,8 +108,11 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .set-go{width:8px;height:8px;margin-right:6px;border-right:1.5px solid var(--line-strong);border-top:1.5px solid var(--line-strong);transform:rotate(45deg);justify-self:end;transition:transform var(--t) var(--ease-spring)}
 .set:active .set-go{transform:rotate(45deg) translate(3px,-3px)}
 
-/* tracks */
-.tracks{list-style:none;margin:0;padding:0}
+/* tracks: the same feTurbulence the body wears, laid straight over the list so it reads as velvet rather
+   than flat colour. No background-color of its own — the noise composites over whatever is already behind
+   the list — so the row bleed (.tracks li's negative margin, for the tap target) never meets a hard edge. */
+.tracks{list-style:none;margin:0;padding:0;background-color:var(--bg);background-image:var(--grain);background-size:200px 200px;background-blend-mode:overlay} /* base colour and blend, like body: grain on its own paints a grey wash, not a texture */
+@media (prefers-reduced-transparency:reduce){.tracks{background-image:none}}
 .tracks li{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;margin:0 -16px;padding:0 16px;border-radius:10px;transition:background var(--t-fast)}
 .tracks li::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:1px;background:var(--line)} /* the same width as the rule above the list: the number is content, not chrome, so nothing is inset past it */
 .tracks li:has(.track:active){background:var(--surface-2)}
@@ -129,11 +140,16 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .deck,.topbar{background:var(--deck-bg);-webkit-backdrop-filter:saturate(150%) blur(10px);backdrop-filter:saturate(150%) blur(10px);contain:layout paint}
 @supports not (backdrop-filter:blur(1px)){.deck,.topbar{background:var(--deck)}}
 .deck{will-change:transform;position:fixed;left:0;right:0;bottom:-120px;z-index:20;border-top:1px solid var(--line);padding-bottom:calc(var(--safe-b) + 120px);background-image:linear-gradient(180deg,var(--deck-hi),var(--deck-bg) 56px);box-shadow:inset 0 1px 0 var(--gloss)} /* a pane of glass: light catches the top edge, the panel deepens toward the controls */ /* runs past the viewport edge so the browser's bottom bar sits on deck color, not page color */
+/* the column's right/left inset, usable by anything absolutely positioned straight off .deck (full width) rather
+   than nested in .deck-inner: the larger of the safe-area gutter and the gap that centres a 640px column */
+.deck{--edge-r:max(max(20px,env(safe-area-inset-right,0px)),calc((100% - 640px) / 2));--edge-l:max(max(20px,env(safe-area-inset-left,0px)),calc((100% - 640px) / 2))}
 .deck-inner{max-width:640px;margin:0 auto;padding:0 max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px))}
-/* The deck reads top down like a dashboard: the filament, then the display line (what is playing, the time), then the wave, then the transport */
-.deck-display{padding-top:12px;padding-bottom:6px}
-.deck-transport{padding-top:8px;padding-bottom:12px}
-.seek-wrap{position:relative;height:56px;display:flex;align-items:center;--hx:0%} /* the band runs the full width of the deck, flush under the filament: part of the bar, not a panel inside it. Wave or not, one height */
+/* The deck reads top down like a dashboard: the filament (now also the progress line), the display line (what is
+   playing, the time), the wave, then the transport. Compact keeps only the first of those; see .deck.is-compact
+   below, and setDeckView() in app.js for the class that switches between them. */
+.deck-display{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);padding-top:var(--s2);padding-bottom:var(--s2)}
+.deck-transport{padding-top:var(--s1);padding-bottom:var(--s2)}
+.seek-wrap{position:relative;height:var(--s5);display:flex;align-items:center;--hx:0%} /* the band runs the full width of the deck, flush under the filament: part of the bar, not a panel inside it. Wave or not, one height */
 .deck:not(.has-wave) .seek-wrap{max-width:640px;margin:0 auto;padding:0 max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px))} /* no waveform yet: the plain line keeps to the column */
 .seek-wrap input[type=range]{height:100%}
 /* waveform: the track's shape from the levels the import measured (ten a second), two bars per three pixels; the
@@ -164,9 +180,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:transparent;border:0}
 .deck-display .deck-text{touch-action:pan-x}
-/* filament: the deck's top edge is a wire carrying the level. The script sets its color (deep red cold, orange,
-   pale yellow-white at the peaks) and opacity; the halo takes the color from it. It fades toward the posts at
-   either end and blooms into the glass at the edge; nothing spills onto the waveform, which lights itself. */
+/* The filament runs the whole width and always has. It is a wire with current in it: it brightens and settles
+   with the audio, it does not fill up like a gauge. Position is a separate, quieter line underneath, because a
+   glowing thing that also measures something is neither. --progress (0–1, set once per
+   frame by setProgress() in app.js, the same transform-only cadence the seek fill already uses) scales it from
+   the left post; the script's opacity/colour writes still ride on top for the live level within that length. */
 .deck-glow,.deck-glow-hot,.deck-glow-halo{position:absolute;left:0;right:0;top:-1px;opacity:0;will-change:opacity;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
 .deck-glow{height:2px;color:var(--accent);background:currentColor;box-shadow:0 0 6px 1px currentColor} /* the wire is the deck's top edge; a tight bloom */
 .deck-glow-hot{height:2px;background:linear-gradient(90deg,transparent,#ffd2a8 30%,#fff1dc 50%,#ffd2a8 70%,transparent);box-shadow:0 0 10px 2px rgba(255,232,200,.6)} /* the white heart of the coil */
@@ -181,6 +199,16 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* A-B loop: a band on the line, a quiet chip that clears it */
 .loop-band{position:absolute;inset:0;background:var(--ink);opacity:0;transform-origin:0 50%;transform:scaleX(0);transition:opacity var(--t)}
 .loop-band.on{opacity:.4}
+/* the loop chip: same secondary-control size as repeat, quiet until a loop is armed or set */
+.loop-toggle svg{width:22px;height:22px}
+.loop-toggle[data-state="armed"]{color:var(--accent-text);animation:pulse 1s ease-in-out infinite}
+.loop-toggle[data-state="on"]{color:var(--accent-text)}
+/* repeat: off / set / one, cycled by app.js and drawn on one glyph rather than swapped icons — the loop
+   arrows plus a numeral that only shows for "one", so the control never resizes between states */
+.repeat-toggle svg{width:22px;height:22px}
+.repeat-toggle .repeat-one{opacity:0}
+.repeat-toggle[data-mode="set"],.repeat-toggle[data-mode="one"]{color:var(--accent-text)}
+.repeat-toggle[data-mode="one"] .repeat-one{opacity:1}
 .track .bpm{font-size:.8125rem;color:var(--ink-3);margin-right:4px}
 /* notes and the count-in on the title line */
 .deck-title small{font-size:.8125rem;color:var(--ink-3);margin-left:8px}
@@ -190,8 +218,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 @keyframes beat{35%{transform:scale(1.09)}100%{transform:none}}
 .lyrics-lines li time{color:var(--ink-3);font-size:1rem;font-weight:500;margin-right:12px;font-variant-numeric:tabular-nums}
 .lyrics-lines li small{display:block;font-size:.8125rem;font-weight:500;color:var(--ink-3);margin-top:2px}
-.deck-text{padding:0;min-width:0;display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:12px}
-.deck-open{appearance:none;background:transparent;border:0;padding:0;text-align:left;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:3px;cursor:pointer;color:inherit;border-radius:8px}
+.deck-text{padding:0;min-width:0;flex:1;display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:var(--s2)}
+.deck-open{appearance:none;background:transparent;border:0;padding:0;text-align:left;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:var(--s1);cursor:pointer;color:inherit;border-radius:8px}
+/* compact: the open-lyrics button is the whole tap-to-expand bar, so it keeps clear of the play button that
+   floats over it (see .deck.is-compact #toggle below) rather than running text under a control */
+.deck.is-compact .deck-open{padding-right:calc(130px + var(--s2))}
 .deck-open:active .deck-title{opacity:.6}
 .deck-open::after{content:attr(data-line);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* the sheet's name, or the set's: never blank, so the deck's constant height is honest */
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
@@ -215,15 +246,37 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-title.swap{animation:swap var(--t-slow) var(--ease)}
 @keyframes swap{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
 .deck-time{color:var(--ink-3);font-size:.8125rem}
+/* compact: title and play/pause only. Everything else on the display line — times, the cast/share chips, the
+   quality pill below — goes together, since none of it is nothing without the other. */
+.deck.is-compact .deck-time,.deck.is-compact .quality-pill,.deck.is-compact .seek-wrap{display:none}
 /* AirPlay in Safari, Cast in Chrome: an icon chip that only appears while a device is in reach */
 .remote-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .remote-chip svg{width:16px;height:16px;fill:currentColor}
+/* :not([data-state=""]) is the "is active" look; #share-track has no state machine of its own, so it now
+   carries a permanent data-state="" (in deck.php) rather than matching this by omission — it was the only
+   chip that could never clear that attribute, which is why it always read as active before. */
 .remote-chip:not([data-state=""]){color:var(--accent-text);border-color:var(--line-strong);background:linear-gradient(180deg,var(--surface),var(--surface-2));box-shadow:inset 0 1px 0 var(--gloss),0 1px 1px rgba(0,0,0,.08)}
 .remote-chip.is-away{visibility:hidden} /* keeps its slot */
 .remote-chip[data-state="connecting"]{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.4}}
 .remote-chip:active{background:var(--surface-2)}
-.deck-controls{display:flex;align-items:center;justify-content:center;gap:24px;position:relative;z-index:2} /* three equal targets at one spacing: a unit, not three things */
+/* the quality pill: expanded only, aligned to the same column as the title, never the reason the row wraps */
+.quality-pill{flex:none;align-self:flex-start;margin-top:2px;color:var(--ink-3);font-size:.75rem;font-variant-numeric:tabular-nums;white-space:nowrap;padding:2px var(--s1);border:1px solid var(--line);border-radius:999px}
+/* transport: secondary (repeat, the A-B loop affordance) left, primary (previous, play, next) right — both
+   inside the one column, never the viewport (see .deck-inner). Two groups, not five loose controls. */
+.deck-controls{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);position:relative;z-index:2}
+.deck-controls-secondary,.deck-controls-primary{display:flex;align-items:center;gap:var(--s3)}
+.deck-controls-secondary{gap:var(--s2)}
+/* compact: play/pause floats up over the display line (see .deck-open's reserved padding above) — no prev/next,
+   no repeat, no loop; nothing here escapes .deck itself, so top/right below read off .deck's own edges */
+.deck.is-compact .deck-controls-secondary{display:none} /* the loop and repeat can wait; previous and next cannot */
+.deck.is-compact .deck-transport{padding:0}
+/* .deck-controls is itself position:relative (for its own z-index); drop that in compact so #toggle's
+   position:absolute escapes all the way out to .deck and reads off --edge-r, not off a box down in the
+   (now collapsed) transport row */
+.deck.is-compact .deck-controls{position:absolute;top:var(--s1);right:var(--edge-r);gap:var(--s2)}
+.deck.is-compact .ctl.skip{width:34px;height:34px}
+.deck.is-compact #toggle{width:44px;height:44px}
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:26px;height:26px;fill:currentColor}
 .deck-controls .ctl.skip{width:52px;height:52px}

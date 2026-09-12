@@ -30,10 +30,19 @@ const setTime = ( page, t ) =>
 	page.evaluate( ( v ) => {
 		document.getElementById( 'audio' ).currentTime = v;
 	}, t );
+// The deck now opens compact (title, artist, play/pause only) and remembers the last view in localStorage;
+// most of this file predates that and expects the full transport, seek, and waveform on screen the moment
+// a track loads, so it starts every test already expanded. The compact/expanded behaviour itself — the
+// default, the tap to expand, the swipe to collapse — gets its own describe block below.
+const expandDeck = ( page ) =>
+	page.addInitScript( () =>
+		localStorage.setItem( 'callboard:deck-view', JSON.stringify( 'expanded' ) )
+	);
 
 test.describe( 'Controls', () => {
 	test.beforeEach( async ( { page } ) => {
 		await spyTransport( page );
+		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 	} );
 
@@ -222,5 +231,148 @@ test.describe( 'Controls', () => {
 		const other = await context.newPage();
 		await other.goto( '/demo-set/' );
 		await other.close();
+	} );
+} );
+
+test.describe( 'Deck view: compact and expanded', () => {
+	test.beforeEach( async ( { page } ) => {
+		await spyTransport( page );
+		await page.goto( '/demo-set/' ); // no seeded preference: compact is the default
+	} );
+
+	test( 'starts compact: the track, and moving through it', async ( {
+		page,
+	} ) => {
+		await page.locator( '.track' ).first().click();
+		const deck = page.locator( '#deck' );
+		await expect( deck ).toHaveClass( /is-compact/ );
+		await expect( deck ).not.toHaveClass( /is-expanded/ );
+		await expect( page.locator( '#now-title' ) ).toBeVisible();
+		// Skipping between numbers is the job; a bar you have to open first is not compact.
+		await expect( page.locator( '#prev' ) ).toBeVisible();
+		await expect( page.locator( '#toggle' ) ).toBeVisible();
+		await expect( page.locator( '#next' ) ).toBeVisible();
+		// What you set once can wait for the expanded view.
+		await expect( page.locator( '#seek' ) ).toBeHidden();
+		await expect( page.locator( '.deck-time' ) ).toBeHidden();
+		await expect( page.locator( '.deck-controls-secondary' ) ).toBeHidden();
+	} );
+
+	test( 'tapping the compact bar expands it; the play button does not', async ( {
+		page,
+	} ) => {
+		await page.locator( '.track' ).first().click();
+		const before = await transport( page );
+		await page.locator( '#toggle' ).click(); // the play button, not the bar
+		expect( await transport( page ) ).toBe( before + 1 );
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
+		await page.locator( '#open-lyrics' ).click(); // the rest of the bar
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
+		await expect( page.locator( '#next' ) ).toBeVisible();
+		expect(
+			await page.evaluate( () =>
+				JSON.parse( localStorage.getItem( 'callboard:deck-view' ) )
+			)
+		).toBe( 'expanded' );
+	} );
+
+	test( 'swiping down on the expanded deck collapses it back to compact', async ( {
+		page,
+	} ) => {
+		await expandDeck( page );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
+		await page.locator( '#deck' ).evaluate( ( deck ) => {
+			const fire = ( type, clientY ) =>
+				deck.dispatchEvent(
+					new PointerEvent( type, {
+						clientX: 60,
+						clientY,
+						pointerId: 7,
+						pointerType: 'touch',
+						bubbles: true,
+					} )
+				);
+			fire( 'pointerdown', 40 );
+			fire( 'pointermove', 140 );
+			fire( 'pointerup', 140 );
+		} );
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
+	} );
+
+	test( 'repeat cycles off, set, one, and remembers the choice', async ( {
+		page,
+	} ) => {
+		await expandDeck( page );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		const repeat = page.locator( '#repeat' );
+		await expect( repeat ).toHaveAttribute( 'data-mode', 'off' );
+		await expect( repeat ).toHaveAttribute( 'aria-pressed', 'false' );
+		await repeat.click();
+		await expect( repeat ).toHaveAttribute( 'data-mode', 'set' );
+		await expect( repeat ).toHaveAttribute( 'aria-pressed', 'true' );
+		await repeat.click();
+		await expect( repeat ).toHaveAttribute( 'data-mode', 'one' );
+		expect(
+			await page.evaluate( () =>
+				JSON.parse( localStorage.getItem( 'callboard:repeat' ) )
+			)
+		).toBe( 'one' );
+		await page.reload();
+		await expect( page.locator( '#repeat' ) ).toHaveAttribute(
+			'data-mode',
+			'one'
+		);
+		await repeat.click();
+		await expect( repeat ).toHaveAttribute( 'data-mode', 'off' );
+	} );
+
+	test( 'repeat one replays the same track instead of advancing', async ( {
+		page,
+	} ) => {
+		await expandDeck( page );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await page.locator( '#repeat' ).click();
+		await page.locator( '#repeat' ).click(); // off -> set -> one
+		await page.evaluate( () =>
+			document.getElementById( 'audio' ).dispatchEvent( new Event( 'ended' ) )
+		);
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'Sonnets 1–10'
+		);
+	} );
+
+	test( 'the A-B loop chip has an affordance and reads its state', async ( {
+		page,
+	} ) => {
+		await expandDeck( page );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		const loop = page.locator( '#loop' );
+		await expect( loop ).toBeVisible();
+		await expect( loop ).toHaveAttribute( 'data-state', '' );
+		await setTime( page, 4 );
+		await page.keyboard.press( '[' );
+		await setTime( page, 9 );
+		await page.keyboard.press( ']' );
+		await expect( loop ).toHaveAttribute( 'data-state', 'on' );
+		await expect( loop ).toHaveAttribute( 'aria-label', /Clear/ );
+	} );
+
+	test( 'the share chip carries its own state rather than always reading active', async ( {
+		page,
+	} ) => {
+		await expandDeck( page );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		// #share-track has no state machine of its own; it must still carry data-state="" so the shared
+		// .remote-chip:not([data-state=""]) "active" look never matches it by default.
+		await expect( page.locator( '#share-track' ) ).toHaveAttribute(
+			'data-state',
+			''
+		);
 	} );
 } );

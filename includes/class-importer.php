@@ -169,6 +169,12 @@ final class Importer {
 			update_post_meta( $track_id, '_callboard_source_url', esc_url_raw( (string) ( $t['url'] ?? '' ) ) );
 			update_post_meta( $track_id, '_callboard_uploader', sanitize_text_field( (string) ( $t['uploader'] ?? '' ) ) );
 			update_post_meta( $track_id, '_callboard_uploader_url', esc_url_raw( (string) ( $t['uploader_url'] ?? '' ) ) );
+			if ( ! empty( $t['codec'] ) ) {
+				// What Fetcher actually got, and whether it had to re-encode to get it: provenance
+				// for a "this is a re-encode" display later, not a measurement of the file itself.
+				update_post_meta( $track_id, '_callboard_codec', sanitize_text_field( (string) $t['codec'] ) );
+				update_post_meta( $track_id, '_callboard_reencoded', ! empty( $t['reencoded'] ) ? 1 : 0 );
+			}
 			if ( isset( $t['duration'] ) ) {
 				update_post_meta( $track_id, '_callboard_duration', (float) $t['duration'] );
 			}

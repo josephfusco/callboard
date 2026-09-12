@@ -215,8 +215,20 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-cover{position:absolute;left:max(20px,calc((100% - 640px) / 2 + 20px));top:calc((var(--bar-row) - 34px) / 2);width:34px;height:34px;pointer-events:none;z-index:2}
 .deck.is-compact:has(#deck-cover[src]) .deck-open{padding-left:46px}
 .deck-cover:not(:has(img[src])){display:none}
+/* The filament is the app's signature and Now Playing was throwing it away: paint containment clips
+   the halo, and at top:-1px the wire itself sits off the top edge of a full screen. There is no list
+   behind this screen to muddy, so the containment comes off here and the glow is allowed to be the
+   light in the room — a wide, slow bloom down from the top, still driven by the audio, still the
+   same three elements the bar uses. Nothing new to keep in step. */
+.deck.is-expanded{contain:layout style}
+.deck.is-expanded .deck-glow,.deck.is-expanded .deck-glow-hot{top:0}
+/* The bar's halo is driven frame by frame off the audio, which at two pixels reads as a wire with
+   current in it and at two hundred reads as a strobe. Here the room's light is part of the
+   background instead: one static gradient, no blur to recompute, no per-frame write. The wire above
+   still answers the audio, because that is the part that should. */
+.deck.is-expanded .deck-glow-halo{display:none}
 .deck.is-expanded{top:0;bottom:0;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto auto auto auto;padding-bottom:calc(var(--safe-b) + var(--s3));border-top:0;background-image:none;overflow:hidden}
-.deck.is-expanded::before{content:"";position:absolute;inset:0;background:radial-gradient(130% 70% at 50% 0%,color-mix(in srgb,var(--tint,transparent) 20%,transparent),transparent 68%);pointer-events:none;z-index:0}
+.deck.is-expanded::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 13%,transparent),transparent 190px),radial-gradient(130% 70% at 50% 0%,color-mix(in srgb,var(--tint,transparent) 20%,transparent),transparent 68%);pointer-events:none;z-index:0}
 @media (prefers-reduced-transparency:reduce){.deck.is-expanded::before{display:none}}
 /* Named, not `> *`: the three filament elements are position:absolute, and a blanket rule made them
    relative — which turned them into grid items that ate the first three rows, art included. */
@@ -232,7 +244,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* No explicit width or height: the intrinsic square is clamped on both axes, so the art is as large
    as the row allows and never one pixel taller than it. A width alone would push the title under it. */
 .deck-cover img{display:block;width:100%;height:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--surface-2)}
-.deck.is-expanded .deck-cover img{inline-size:auto;block-size:auto;width:auto;height:auto;max-inline-size:min(90vw,min(58vh,460px));max-block-size:100%;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.deck.is-expanded .deck-cover img{inline-size:auto;block-size:auto;width:auto;height:auto;max-inline-size:min(90vw,min(460px,calc(100dvh - 400px)));max-block-size:none;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
 .deck-cover img:not([src]){visibility:hidden}
 /* The display line stops being a row and becomes a title block once there is a screen to fill. Left
    aligned, because a title and an artist are a stack of two facts and centring them makes the eye

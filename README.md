@@ -4,7 +4,7 @@
 
 A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the call. The cast opens it on their phones, taps a number, and the track plays. Works offline, installs from Safari, needs no accounts.
 
-<p><a href="https://josephfus.co/callboard/">Landing page and live demo</a> · <a href="https://playground.wordpress.net/?mode=seamless&blueprint-url=https://josephfus.co/callboard/blueprint.json">Open in WordPress Playground</a> · <a href="https://github.com/promptcorner/callboard/releases/latest">Latest release</a></p>
+<p><a href="https://promptcorner.github.io/callboard/">Landing page and live demo</a> · <a href="https://playground.wordpress.net/?mode=seamless&blueprint-url=https://promptcorner.github.io/callboard/blueprint.json">Open in WordPress Playground</a> · <a href="https://github.com/promptcorner/callboard/releases/latest">Latest release</a></p>
 
 <p><a href="https://github.com/promptcorner/callboard/actions/workflows/ci.yml"><img src="https://github.com/promptcorner/callboard/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="https://github.com/promptcorner/callboard/releases/latest"><img src="https://img.shields.io/github/v/release/promptcorner/callboard?label=release" alt="Latest release"></a> <img src="https://img.shields.io/badge/WordPress-6.5%2B-blue" alt="WordPress 6.5+"> <img src="https://img.shields.io/badge/PHP-8.1%2B-777bb4" alt="PHP 8.1+"> <img src="https://img.shields.io/badge/license-GPL--2.0--or--later-green" alt="GPL-2.0-or-later"></p>
 

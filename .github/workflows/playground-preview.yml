@@ -7,7 +7,14 @@ name: Playground Preview
 
 on:
   pull_request:
-    paths-ignore: [ '**.md', '.github/**', 'tests/**' ]
+    # The preview plays the pull request's own demo set, so a change to it is worth a new preview even
+    # though the rest of tests/ is not. The last pattern that matches a path decides.
+    paths:
+      - '**'
+      - '!**.md'
+      - '!.github/**'
+      - '!tests/**'
+      - 'tests/fixtures/callboard/demo-set/**'
   workflow_dispatch:
 
 concurrency:
@@ -38,6 +45,10 @@ jobs:
           mkdir -p build/callboard
           rsync -a --exclude-from='.distignore' --exclude='build' ./ build/callboard/
           (cd build && zip -qr callboard.zip callboard/)
+          # The demo set travels beside the zip, the same selection the Pages workflow publishes, so the
+          # preview plays this pull request's recordings rather than whatever main last published.
+          mkdir -p build/demo
+          find tests/fixtures/callboard/demo-set -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} build/demo/ \;
       - name: Smoke-test the build
         run: |
           set -euo pipefail
@@ -55,7 +66,9 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-assets
-          path: build/callboard.zip
+          path: |
+            build/callboard.zip
+            build/demo/
           retention-days: 14
           if-no-files-found: error
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

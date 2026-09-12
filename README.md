@@ -74,6 +74,7 @@ Design rules: animate only transform and opacity, never use font weight for stat
 | `_callboard_notes` | Director's notes with a time and date |
 | `_callboard_bpm` | Tempo, for the count-in |
 | `_callboard_video_id`, `_callboard_source_url`, `_callboard_uploader` | Source. The uploader is also sent per track as `artist` — right for one playlist by one uploader, wrong for a set where every track differs |
+| `_callboard_codec`, `_callboard_reencoded` | What a fetch actually got (e.g. `aac`) and whether `ffmpeg` had to re-encode to get it — provenance, not a measurement of the file itself |
 
 `Sets` builds the data the front end renders, cached in a transient for a day and cleared on save.
 
@@ -82,12 +83,12 @@ Design rules: animate only transform and opacity, never use font weight for stat
 <details>
 <summary>Import</summary>
 
-1. **Fetch.** `Fetcher` runs `yt-dlp` and `ffmpeg` on a YouTube URL or playlist and writes `wp-content/uploads/callboard/<slug>/`: the mp3s, a `manifest.json`, and sidecars keyed by video id (`levels.json`, `lyrics.json`, `notes.json`, `tempo.json`). Binary paths are filterable.
+1. **Fetch.** `Fetcher` runs `yt-dlp` (and `ffmpeg` when it needs to) on a YouTube URL, playlist, or search and writes `wp-content/uploads/callboard/<slug>/`: the audio, a `manifest.json`, and sidecars keyed by video id (`levels.json`, `lyrics.json`, `notes.json`, `tempo.json`). It keeps the native m4a/AAC stream YouTube already serves rather than re-encoding it — re-encoding a lossy source is a pure loss, and can even inflate the bitrate while making it sound worse — and only asks `ffmpeg` to convert when a video truly offers no AAC audio, preferring m4a there too and falling back to mp3 only if the ffmpeg build cannot encode AAC at all. A search (yt-dlp's `ytsearch:` syntax) is narrowed to one candidate first: an auto-generated "Topic" upload, then a channel YouTube has verified, skipping obvious live versions, covers and remixes where another copy exists. Binary paths are filterable.
 2. **Import.** `Importer` reads that folder into posts. The folder is only an input; posts are the source of truth. Re-importing refreshes order, credits, and lyrics but keeps titles edited in the admin.
 
-Hosts that cannot run binaries: build the folder on a laptop with the same command, upload it, import. `Requests` is an admin queue of URLs; `wp callboard run` drains it where the tools exist.
+Hosts that cannot run binaries: build the folder on a laptop with the same command, upload it, import. `Requests` is an admin queue of URLs; `wp callboard run` drains it where the tools exist. Because `Requests` only accepts a real YouTube URL, a search query is a WP-CLI-only way in for now.
 
-3. **The file.** `Exporter` writes that same folder as a single `.callboard` file, and reads one back. The manifest carries a `version`; a reader refuses a file newer than it understands. Unzipped it *is* an import folder, so `Importer` reads it without knowing it was ever a file, and somebody with no Callboard still has playable mp3s in the right order with a cover. Entries are extracted by name, never with `extractTo()`, since a set is a flat folder and anything carrying a path separator is not ours to write.
+3. **The file.** `Exporter` writes that same folder as a single `.callboard` file, and reads one back. The manifest carries a `version`; a reader refuses a file newer than it understands. Unzipped it *is* an import folder, so `Importer` reads it without knowing it was ever a file, and somebody with no Callboard still has playable audio in the right order with a cover. Entries are extracted by name, never with `extractTo()`, since a set is a flat folder and anything carrying a path separator is not ours to write.
 
 4. **The stick.** `--format=car` writes a plain folder instead: `01 Title.mp3`, in order, each tagged so it names itself on a dash, with the cover embedded and beside them as `folder.jpg`. `Id3` writes ID3v2.3 by hand — WordPress bundles getID3's reading modules but not its writing ones, and five frames are not worth a dependency. Latin-1 where the text fits it, UTF-16 where it does not, and JPEG artwork because head units read it far more reliably than PNG.
 
@@ -168,7 +169,7 @@ A gated request answers 403 with `templates/gate.php` rather than redirecting to
 
 | Command | Does |
 | --- | --- |
-| `wp callboard fetch <url> --name=<name> [--slug=<slug>]` | Fetch a YouTube video or playlist into a set |
+| `wp callboard fetch <url> --name=<name> [--slug=<slug>]` | Fetch a YouTube video, playlist, or `ytsearch:` query into a set |
 | `wp callboard run [--interval=<seconds>]` | Process the admin's fetch queue |
 | `wp callboard import [--file=<path>]` | Import every folder under `uploads/callboard/`, or one `.callboard` file |
 | `wp callboard export <slug> [--format=<file\|car>] [--out=<path>]` | Write a set out as a `.callboard` file, or as a folder of tagged mp3s for a car |

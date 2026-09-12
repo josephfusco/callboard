@@ -2000,6 +2000,7 @@
 			setTimeout( () => bindOffline( set ), 700 );
 		}
 		bindShare( set );
+		bindShareTrack();
 		paintTip();
 		syncRows();
 		document.dispatchEvent(
@@ -2008,6 +2009,62 @@
 			} )
 		);
 	}
+	// ---- Sending the track itself rather than a link. The sheet here includes AirDrop, which finds
+	// the phone over Bluetooth and moves the bytes over peer-to-peer Wi-Fi with no internet and no
+	// account, and "Save to Files" lands it on a mounted drive.
+	let shareTrackBound = false;
+	// Named `01 Title.mp3`, which is what the other end matches on when it loads the file into a set.
+	async function trackFile( t ) {
+		const cache = await caches.open( CACHE );
+		const res = ( await cache.match( norm( t.url ) ) ) || ( await fetch( t.url ) );
+		const blob = await res.blob();
+		const path = new URL( t.url, location.href ).pathname;
+		const ext = ( /\.[a-z0-9]+$/i.exec( path ) || [ '.mp3' ] )[ 0 ];
+		const name = `${ String( t.index ).padStart( 2, '0' ) } ${ t.title }${ ext }`.replace(
+			/[\\/:*?"<>|]+/g,
+			''
+		);
+		return new File( [ blob ], name, {
+			type: blob.type || 'audio/mpeg',
+		} );
+	}
+	function bindShareTrack() {
+		const btn = $( 'share-track' );
+		if ( shareTrackBound || ! btn || ! ( 'caches' in window ) ) {
+			return;
+		}
+		shareTrackBound = true;
+		try {
+			const probe = new File( [ '' ], 'a.mp3', { type: 'audio/mpeg' } );
+			if ( ! navigator.canShare?.( { files: [ probe ] } ) ) {
+				return; // a browser that shares links but not files
+			}
+		} catch {
+			return;
+		}
+		btn.hidden = false;
+		btn.addEventListener( 'click', async () => {
+			const t = queue?.tracks[ i ];
+			if ( ! t || btn.dataset.busy ) {
+				return;
+			}
+			btn.dataset.busy = '1';
+			haptic();
+			try {
+				await navigator.share( {
+					files: [ await trackFile( t ) ],
+					title: t.title,
+				} );
+			} catch ( err ) {
+				if ( err?.name !== 'AbortError' ) {
+					toast( T.share_failed ); // dismissing the sheet is not a failure
+				}
+			} finally {
+				delete btn.dataset.busy;
+			}
+		} );
+	}
+
 	// ---- Share: the system sheet where there is one (iPhone, Android, Windows), the clipboard elsewhere.
 	// The link alone is enough; the set's share card rides along as its Open Graph image.
 	function bindShare( set ) {

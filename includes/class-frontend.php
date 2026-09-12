@@ -86,6 +86,7 @@ final class Frontend {
 			'no_space'       => __( 'Not enough space, %s free', 'callboard' ),
 			/* translators: %s: track title. */
 			'saving_track'   => __( 'Saving %s, tap to cancel', 'callboard' ),
+			'share_failed'   => __( 'That track could not be sent', 'callboard' ),
 			'notify'         => __( 'Notify me about new sets', 'callboard' ),
 			/* translators: %s: track title. */
 			'left_off'       => __( 'Left off at %s', 'callboard' ),

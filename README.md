@@ -18,7 +18,7 @@ A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the ca
 
 - **Board.** The home page shows the next call: time, place, note, and the numbers being worked. Each number is a tap that starts the track. A call is a post under Sets. Publishing one sends a push notification.
 - **Sets.** A set is a post; its tracks are audio attachments. Fetch a playlist with WP-CLI, or import a folder of audio.
-- **Player.** Previous, play, next. Waveform scrubbing, an A/B loop (two fingers on the wave, or the bracket keys), count-in, lyrics and director's notes in time with the track, AirPlay, lock-screen controls.
+- **Player.** Previous, play, next. Waveform scrubbing, an A/B loop (two fingers on the wave, or the bracket keys), count-in, lyrics and director's notes in time with the track, AirPlay, lock-screen controls, and a chip that hands the track itself to the phone next to you.
 - **Offline.** Save a set once. It plays from the phone with no connection.
 - **Settings.** Site name, accent colour, badge, confetti behind a triple tap on the title. Hooks and template overrides for developers.
 
@@ -182,7 +182,7 @@ Links go to the specifications.
 - [Web Audio](https://www.w3.org/TR/webaudio/) for the level meter, count-in, and sample-accurate loop
 - [Web Locks](https://www.w3.org/TR/web-locks/) so one tab plays at a time, [Screen Wake Lock](https://www.w3.org/TR/screen-wake-lock/) during loops
 - [Storage](https://storage.spec.whatwg.org/) estimate and persist, [Streams](https://streams.spec.whatwg.org/) with `tee()` for save progress, [AbortController](https://dom.spec.whatwg.org/#interface-abortcontroller), [Web Storage](https://html.spec.whatwg.org/multipage/webstorage.html)
-- [Web Share](https://www.w3.org/TR/web-share/) with [Clipboard](https://www.w3.org/TR/clipboard-apis/) fallback, [Vibration](https://www.w3.org/TR/vibration/), [WebKit switch control](https://webkit.org/blog/15054/an-html-switch-control/) for iPhone haptics
+- [Web Share](https://www.w3.org/TR/web-share/) for the set's link with a [Clipboard](https://www.w3.org/TR/clipboard-apis/) fallback, and for the track's own file, which reaches AirDrop and "Save to Files", [Vibration](https://www.w3.org/TR/vibration/), [WebKit switch control](https://webkit.org/blog/15054/an-html-switch-control/) for iPhone haptics
 - [Canvas 2D](https://html.spec.whatwg.org/multipage/canvas.html) for the waveform, [View Transitions](https://www.w3.org/TR/css-view-transitions-1/), [History API](https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-history-interface), [Pointer Events](https://www.w3.org/TR/pointerevents/), [ResizeObserver](https://www.w3.org/TR/resize-observer/), [requestIdleCallback](https://www.w3.org/TR/requestidlecallback/), [online/offline events](https://html.spec.whatwg.org/multipage/system-state.html#navigator.online), [back/forward cache](https://web.dev/articles/bfcache) via `pageshow`
 
 </details>

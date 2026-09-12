@@ -27,6 +27,9 @@ button{font:inherit;color:inherit}
 .app{max-width:640px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) 40px max(20px,env(safe-area-inset-left,0px))} /* landscape iPhone: the column clears the island and the corners */
 body.has-deck .app{padding-bottom:calc(var(--deck-h) + var(--safe-b) + 40px)}
 
+/* sending the current track: the same chip as the cast one, so the pair reads as one row */
+.share-chip{margin-right:6px}
+
 /* type */
 .label{margin:0;color:var(--ink-3);font-size:.9375rem}
 h1{margin:6px 0 0;font-size:2.125rem;line-height:1.1;font-weight:700;letter-spacing:-.02em;text-wrap:balance}

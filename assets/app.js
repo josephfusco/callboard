@@ -173,6 +173,8 @@
 			navigator.vibrate?.( ms );
 		} catch {}
 	};
+	// iOS Safari only applies :active styles when the page has a touch listener.
+	document.addEventListener( 'touchstart', () => {}, { passive: true } );
 	// In-app browsers (Instagram, Facebook, TikTok, Snapchat, Messenger) hide Add to Home Screen; Safari has it.
 	const inApp =
 		/FBAN|FBAV|Instagram|Snapchat|TikTok|musical_ly|Messenger/i.test(
@@ -263,6 +265,8 @@
 	if ( ! audio || ! deck ) {
 		return;
 	}
+	// The lyrics sheet is a <dialog>, so the open attribute is its state.
+	const sheetOpen = () => lyricsSheet.hasAttribute( 'open' );
 
 	// ---- Compact / expanded: two states for the deck itself, remembered like everything else the player
 	// remembers (ls, above). Compact is the default — a 72px bar with just the title and play/pause; expanded
@@ -284,11 +288,11 @@
 		openLyrics.setAttribute( 'aria-controls', 'lyrics' );
 		openLyrics.setAttribute(
 			'aria-expanded',
-			lyricsSheet.hidden ? 'false' : 'true'
+			sheetOpen() ? 'true' : 'false'
 		);
 		openLyrics.setAttribute(
 			'aria-label',
-			! lyricsSheet.hidden
+			sheetOpen()
 				? sheetKind === 'notes'
 					? T.hide_notes
 					: T.hide_lyrics
@@ -311,7 +315,7 @@
 		if ( ! sheetKind ) {
 			return;
 		}
-		const open = ! lyricsSheet.hidden;
+		const open = sheetOpen();
 		pill.textContent = sheetKind === 'notes' ? T.notes : T.lyrics;
 		pill.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
 	}
@@ -325,20 +329,21 @@
 		document.body.classList.toggle( 'now-playing', mode === 'expanded' );
 		syncOpenLyricsA11y();
 	}
-	let nowPlayingInHistory = false,
-		dismissAfterBack = false;
-	function expandDeck( fromHistory = false ) {
+	// Opening Now Playing pushes a history entry at the same URL, so the browser's or system back
+	// (Android back, Safari's edge swipe) closes it. See the popstate handler.
+	const nowPlayingEntry = () => !! history.state?.nowPlaying;
+	function expandDeck( push = true ) {
 		if ( deck.classList.contains( 'is-expanded' ) ) {
 			return;
 		}
-		if ( ! fromHistory ) {
+		if ( push ) {
 			haptic();
-		}
-		if ( fromHistory ) {
-			nowPlayingInHistory = true;
-		} else {
-			history.pushState( { callboardNowPlaying: true }, '', location.href );
-			nowPlayingInHistory = true;
+			if ( ! nowPlayingEntry() ) {
+				history.pushState(
+					{ ...( history.state || {} ), nowPlaying: true },
+					''
+				);
+			}
 		}
 		setDeckView( 'expanded' );
 		// the wave and the seek knob draw against a box that had zero width while it was display:none
@@ -347,17 +352,28 @@
 			paint( true );
 		} );
 	}
-	function collapseDeck( fromHistory = false ) {
+	function collapseDeck() {
 		if ( deck.classList.contains( 'is-compact' ) ) {
-			return;
-		}
-		if ( ! fromHistory && nowPlayingInHistory ) {
-			history.back();
 			return;
 		}
 		setDeckView( 'compact' );
 	}
+	// Close button and Escape: go back through the history entry so it isn't left behind.
+	function closeNowPlaying() {
+		if ( ! deck.classList.contains( 'is-expanded' ) ) {
+			return;
+		}
+		if ( nowPlayingEntry() ) {
+			history.back();
+			return;
+		}
+		collapseDeck();
+	}
 	let sheetKind = ''; // set by renderSheet(); declared here so syncOpenLyricsA11y() above can read it early
+	// After a reload, Now Playing starts closed, so clear the flag on the current entry.
+	if ( nowPlayingEntry() ) {
+		history.replaceState( { ...history.state, nowPlaying: false }, '' );
+	}
 	setDeckView( 'compact' );
 
 	let looper = null, // the gapless loop, when one is running (see the A-B loop section)
@@ -670,8 +686,15 @@
 	};
 	const seekKnob = $( 'seek-knob' );
 	let seekWidth = 0;
+	// Width of the range thumb. The seek input overhangs the line by half a thumb on each side (app.css).
+	const seekThumb = () =>
+		parseFloat( getComputedStyle( seek ).getPropertyValue( '--thumb' ) ) ||
+		0;
 	const measureSeek = () => {
-		seekWidth = seek.clientWidth - ( seekKnob ? seekKnob.offsetWidth : 0 );
+		seekWidth =
+			seek.clientWidth -
+			seekThumb() -
+			( seekKnob ? seekKnob.offsetWidth : 0 );
 	};
 	window.addEventListener( 'resize', measureSeek );
 	// Every frame, transforms only. The range input's value is written by paint() once a second: setting it
@@ -991,13 +1014,6 @@
 		if ( i < 0 ) {
 			return;
 		}
-		if ( deck.classList.contains( 'is-expanded' ) && nowPlayingInHistory ) {
-			dismissAfterBack = true;
-			history.back();
-			return;
-		}
-		nowPlayingInHistory = false;
-		dismissAfterBack = false;
 		holdStop();
 		remember();
 		audio.pause();
@@ -1011,7 +1027,7 @@
 		deck.hidden = true;
 		document.body.classList.remove( 'has-deck' );
 		paintTab();
-		if ( ! lyricsSheet.hidden ) {
+		if ( sheetOpen() ) {
 			hideLyrics();
 		}
 		syncRows();
@@ -1031,13 +1047,18 @@
 		}
 		dismissDeck();
 	} );
-	let edge = null;
+	// Swipe from the left edge to go back. Only in an iOS Home Screen app, which has no back gesture;
+	// `navigator.standalone` is iOS-only. Browsers and Android already have back.
+	let edge = null,
+		quietBack = false; // set when the swipe already animated, so popstate skips the view transition
 	document.addEventListener( 'pointerdown', ( e ) => {
 		if (
-			! standalone ||
+			navigator.standalone !== true ||
 			e.pointerType === 'mouse' ||
 			! view() ||
-			e.clientX > 24
+			e.clientX > 24 ||
+			deck.classList.contains( 'is-expanded' ) ||
+			sheetOpen()
 		) {
 			return;
 		}
@@ -1081,7 +1102,13 @@
 				{ duration: 200, easing: 'cubic-bezier(.2,.8,.2,1)' }
 			).onfinish = () => {
 				main.style.transform = '';
-				go( G.home, true, false ); // the drag was the transition
+				// Go back if the previous entry is ours, otherwise go home.
+				if ( history.state?.fromApp ) {
+					quietBack = true;
+					history.back();
+				} else {
+					go( G.home, true, false ); // the drag was the transition
+				}
 			};
 			return;
 		}
@@ -1097,6 +1124,7 @@
 	};
 	document.addEventListener( 'pointerup', edgeEnd );
 	document.addEventListener( 'pointercancel', edgeEnd );
+
 	function prev() {
 		if ( i < 0 ) {
 			return load( 0 );
@@ -1657,7 +1685,7 @@
 			doAction( 'callboard.loop', null );
 		}
 		looperStop();
-		if ( lyricsSheet.hidden ) {
+		if ( ! sheetOpen() ) {
 			letSleep();
 		}
 		loop = null;
@@ -1710,11 +1738,16 @@
 				clearTimeout( loopHold );
 				loopHold = setTimeout( () => {
 					const rect = seek.getBoundingClientRect(),
+						half = seekThumb() / 2, // measure against the line, not the wider input
 						d = trackDur();
 					const r = ( x ) =>
 						Math.min(
 							1,
-							Math.max( 0, ( x - rect.left ) / rect.width )
+							Math.max(
+								0,
+								( x - rect.left - half ) /
+									( rect.width - half * 2 )
+							)
 						);
 					const xs = [ ...pointers.values() ].map( r );
 					loopGesture = true;
@@ -1807,8 +1840,13 @@
 			setLoop( loop ? loop.a : 0, audio.currentTime );
 		} else if ( e.key === '\\' ) {
 			clearLoop();
-		} else if ( e.key === 'Escape' && ! lyricsSheet.hidden ) {
+		} else if ( e.key === 'Escape' && sheetOpen() ) {
 			hideLyrics();
+		} else if (
+			e.key === 'Escape' &&
+			deck.classList.contains( 'is-expanded' )
+		) {
+			closeNowPlaying(); // Escape closes lyrics, then Now Playing, then a paused player bar
 		} else if ( e.key === 'Escape' && audio.paused && i >= 0 ) {
 			dismissDeck();
 		}
@@ -1922,7 +1960,7 @@
 			el.classList.toggle( 'now', k === n );
 			el.classList.toggle( 'past', k < n );
 		} );
-		if ( n >= 0 && ! lyricsSheet.hidden ) {
+		if ( n >= 0 && sheetOpen() ) {
 			cueEls[ n ].scrollIntoView( {
 				block: 'center',
 				behavior: 'smooth',
@@ -1940,7 +1978,7 @@
 		wake = null;
 	};
 	document.addEventListener( 'visibilitychange', () => {
-		if ( document.visibilityState === 'visible' && ! lyricsSheet.hidden ) {
+		if ( document.visibilityState === 'visible' && sheetOpen() ) {
 			keepAwake();
 		}
 	} );
@@ -1949,7 +1987,13 @@
 		keepAwake();
 		clearTimeout( sheetTimer );
 		lyricsSheet.classList.remove( 'closing' );
-		lyricsSheet.hidden = false;
+		if ( ! sheetOpen() ) {
+			if ( lyricsSheet.show ) {
+				lyricsSheet.show(); // non-modal, so the player controls stay usable
+			} else {
+				lyricsSheet.setAttribute( 'open', '' );
+			}
+		}
 		document.body.classList.add( 'sheet-open' );
 		syncOpenLyricsA11y();
 		if ( cueIdx >= 0 ) {
@@ -1957,18 +2001,23 @@
 		}
 		$( 'close-lyrics' ).focus();
 	}
+	const closeSheet = () => {
+		lyricsSheet.classList.remove( 'closing' );
+		if ( lyricsSheet.close ) {
+			lyricsSheet.close();
+		} else {
+			lyricsSheet.removeAttribute( 'open' );
+		}
+	};
 	function hideLyrics() {
 		letSleep();
 		document.body.classList.remove( 'sheet-open' );
-		if ( reduce() || lyricsSheet.hidden ) {
-			lyricsSheet.hidden = true;
+		if ( reduce() || ! sheetOpen() ) {
+			closeSheet();
 		} else {
 			lyricsSheet.classList.add( 'closing' ); // slides away, then leaves the tree
 			clearTimeout( sheetTimer );
-			sheetTimer = setTimeout( () => {
-				lyricsSheet.hidden = true;
-				lyricsSheet.classList.remove( 'closing' );
-			}, 320 );
+			sheetTimer = setTimeout( closeSheet, 320 );
 		}
 		syncOpenLyricsA11y();
 		openLyrics.focus();
@@ -1982,7 +2031,7 @@
 		}
 		haptic();
 		if ( sheetKind ) {
-			return lyricsSheet.hidden ? showLyrics() : hideLyrics();
+			return sheetOpen() ? hideLyrics() : showLyrics();
 		}
 		if ( ! onQueuePage() ) {
 			return go( `${ G.home }${ queue.slug }/` );
@@ -1997,14 +2046,14 @@
 			return;
 		}
 		haptic();
-		collapseDeck();
-		if ( ! onQueuePage() ) {
-			go( `${ G.home }${ queue.slug }/` );
+		if ( onQueuePage() ) {
+			return closeNowPlaying();
 		}
+		go( `${ G.home }${ queue.slug }/` ); // go() closes Now Playing and replaces its history entry
 	} );
 	$( 'sheet-pill' )?.addEventListener( 'click', () => {
 		haptic();
-		if ( lyricsSheet.hidden ) {
+		if ( ! sheetOpen() ) {
 			showLyrics();
 		} else {
 			hideLyrics();
@@ -2012,7 +2061,7 @@
 	} );
 	$( 'deck-down' )?.addEventListener( 'click', () => {
 		haptic();
-		collapseDeck();
+		closeNowPlaying();
 	} );
 	$( 'close-lyrics' ).addEventListener( 'click', () => {
 		haptic();
@@ -2849,14 +2898,20 @@
 				);
 			};
 		}
-		// Once everything is saved the label is information. Removing is for freeing space, so it takes a
-		// press-and-hold (or Delete on the keyboard) to ask, then a tap to confirm; it forgets after a moment.
-		const arm = async () => {
+		// When the whole set is saved, a tap (or Delete) asks to remove it and a second tap confirms.
+		// data-confirm is "asking" for 350ms, then "1"; taps while asking are ignored so a double tap
+		// can't confirm. The question times out after 4s.
+		const arm = () => {
 			if ( ! offBtn.dataset.some || offBtn.dataset.confirm ) {
 				return;
 			}
-			offBtn.dataset.confirm = '1';
+			offBtn.dataset.confirm = 'asking';
 			offBtn.textContent = T.remove_confirm;
+			setTimeout( () => {
+				if ( offBtn.dataset.confirm === 'asking' ) {
+					offBtn.dataset.confirm = '1';
+				}
+			}, 350 );
 			setTimeout( () => {
 				if ( offBtn.dataset.confirm ) {
 					delete offBtn.dataset.confirm;
@@ -2864,23 +2919,6 @@
 				}
 			}, 4000 );
 		};
-		let hold = 0,
-			held = false; // the release after a hold is not the confirming tap
-		offBtn.onpointerdown = () => {
-			clearTimeout( hold );
-			held = false;
-			if ( offBtn.dataset.some && ! offBtn.dataset.confirm ) {
-				haptic(); // the press that starts the hold; the arm itself runs from a timer
-			}
-			hold = setTimeout( () => {
-				held = true;
-				arm();
-			}, 650 );
-		};
-		offBtn.onpointerup =
-			offBtn.onpointercancel =
-			offBtn.onpointerleave =
-				() => clearTimeout( hold );
 		offBtn.onkeydown = ( e ) => {
 			if ( e.key === 'Delete' || e.key === 'Backspace' ) {
 				e.preventDefault();
@@ -2893,19 +2931,18 @@
 				dlAborts.forEach( ( ctl ) => ctl.abort() );
 				return;
 			}
-			if ( held ) {
-				held = false;
+			haptic(); // the tap itself; the completion below comes long after the gesture
+			if ( offBtn.dataset.confirm === 'asking' ) {
 				return;
 			}
-			haptic(); // the tap itself; the completion below comes long after the gesture
-			const have = await savedSet( tracks );
 			if ( offBtn.dataset.confirm ) {
 				delete offBtn.dataset.confirm;
 				await Promise.all( tracks.map( removeTrack ) );
 				return paintAll();
 			}
+			const have = await savedSet( tracks );
 			if ( have.size === tracks.length ) {
-				return; // a plain tap on "Saved offline" does nothing
+				return arm(); // already saved: ask whether to remove
 			}
 			const todo = tracks.filter( ( t ) => ! have.has( t.url ) );
 			const need = todo.reduce( ( a, t ) => a + ( t.bytes || 0 ), 0 );
@@ -2965,6 +3002,7 @@
 	// renderer, on the server. The service worker keeps fragments for offline; a saved set's is warmed here.
 	// '' = home, 'slug' = a set, null = not ours.
 	const homePath = new URL( G.home ).pathname.replace( /\/$/, '' );
+	let shownPath = location.pathname; // path of the view currently rendered
 	function routeOf( href ) {
 		const u = new URL( href, location.href );
 		if (
@@ -3091,8 +3129,16 @@
 		clearTimeout( slow );
 		document.body.classList.remove( 'is-loading' );
 		if ( push ) {
-			history.pushState( {}, '', url );
+			// fromApp marks entries pushed by this script. Navigating away from Now Playing replaces
+			// its entry, so back returns to the page underneath.
+			if ( nowPlayingEntry() ) {
+				history.replaceState( { fromApp: true }, '', url );
+			} else {
+				history.pushState( { fromApp: true }, '', url );
+			}
+			collapseDeck();
 		}
+		shownPath = new URL( url, location.href ).pathname;
 
 		const apply = () => {
 			const t = document.createElement( 'template' );
@@ -3110,7 +3156,7 @@
 			document.body.classList.toggle( 'view-set', !! slug );
 			document.body.classList.add( 'swapped' );
 			window.scrollTo( 0, 0 );
-			if ( ! lyricsSheet.hidden ) {
+			if ( sheetOpen() ) {
 				hideLyrics();
 			}
 			bindView();
@@ -3126,24 +3172,19 @@
 		}
 	}
 	window.addEventListener( 'popstate', ( e ) => {
-		if (
-			nowPlayingInHistory &&
-			deck.classList.contains( 'is-expanded' ) &&
-			! e.state?.callboardNowPlaying
-		) {
-			nowPlayingInHistory = false;
-			collapseDeck( true );
-			if ( dismissAfterBack ) {
-				dismissAfterBack = false;
-				dismissDeck();
+		const animate = ! e.hasUAVisualTransition && ! quietBack;
+		quietBack = false;
+		// Same path: only Now Playing opens or closes. Different path: navigate.
+		if ( e.state?.nowPlaying && location.pathname === shownPath ) {
+			if ( i >= 0 ) {
+				expandDeck( false );
 			}
 			return;
 		}
-		if ( e.state?.callboardNowPlaying && ! deck.hidden && i >= 0 ) {
-			expandDeck( true );
-			return;
+		collapseDeck();
+		if ( location.pathname !== shownPath ) {
+			go( location.href, false, animate );
 		}
-		go( location.href, false, ! e.hasUAVisualTransition );
 	} );
 	// The first touch on a link starts the fetch; hovering does too. Back to home is prefetched at idle.
 	const prefetchLink = ( e ) => {

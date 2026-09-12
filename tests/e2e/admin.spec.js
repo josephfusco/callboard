@@ -3,11 +3,86 @@
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
+// Some tests change shared data (settings, the demo set's first track, the import queue, the board).
+// Each one registers how to undo its change, and the undo runs in afterEach. Playwright runs afterEach
+// even when a test fails or times out, so a failed test can't leave data behind that breaks later tests.
+let undos = [];
+const undoAfter = ( fn ) => undos.push( fn );
+
+const openDemoSet = async ( admin, page ) => {
+	await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
+	await page
+		.locator( '.wp-list-table tbody tr', {
+			hasText: 'Shakespeare’s Sonnets',
+		} )
+		.first()
+		.locator( 'a.row-title' )
+		.click();
+	return page.locator( '#callboard-tracks li' ).first();
+};
+// The track's details panel starts open when the track already has a tempo or a note, so only click it
+// when it is closed.
+const openTrackDetails = async ( track ) => {
+	if (
+		! ( await track.locator( 'details' ).evaluate( ( el ) => el.open ) )
+	) {
+		await track.locator( 'summary' ).click();
+	}
+};
+const saveSet = async ( page ) => {
+	await page.click( '#publish' );
+	await expect( page.locator( '#message' ) ).toContainText( /updated/i );
+};
+const deleteRows = async ( rows ) => {
+	while ( ( await rows.count() ) > 0 ) {
+		const n = await rows.count();
+		await rows.first().hover();
+		await rows.first().locator( 'a.submitdelete' ).click();
+		await expect( rows ).toHaveCount( n - 1 );
+	}
+};
+const deleteCalls = async ( admin, page, title ) => {
+	await admin.visitAdminPage( 'edit.php', 'post_type=callboard_call' );
+	await deleteRows( page.locator( '#the-list tr', { hasText: title } ) );
+};
+const deleteQueued = async ( admin, page, name ) => {
+	await admin.visitAdminPage(
+		'edit.php',
+		'post_type=callboard_set&page=callboard-import'
+	);
+	await deleteRows(
+		page.locator( 'table.widefat tbody tr', { hasText: name } )
+	);
+};
+
 test.describe( 'Admin', () => {
+	test.afterEach( async ( { page } ) => {
+		// A failed test can leave the editor with unsaved changes. Accept core's "leave this page?" prompt.
+		page.on( 'dialog', ( dialog ) => dialog.accept().catch( () => {} ) );
+		const pending = undos.reverse();
+		undos = [];
+		for ( const undo of pending ) {
+			await undo();
+		}
+	} );
+
 	test( 'settings save and show on the front end', async ( {
 		admin,
 		page,
 	} ) => {
+		undoAfter( async () => {
+			// back to the house colour, so the other tests and the screenshots see it
+			await admin.visitAdminPage(
+				'edit.php',
+				'post_type=callboard_set&page=callboard-settings'
+			);
+			await page.fill( '#callboard-accent', '' );
+			await page.click( '#submit' );
+			await page.goto( '/' );
+			await expect( page.locator( '#callboard-accent' ) ).toHaveCount(
+				0
+			);
+		} );
 		await admin.visitAdminPage(
 			'edit.php',
 			'post_type=callboard_set&page=callboard-settings'
@@ -37,23 +112,18 @@ test.describe( 'Admin', () => {
 					.trim()
 			)
 		).toBe( '#3b82f6' );
-		// back to the house colour, so the other tests and the screenshots see it
-		await admin.visitAdminPage(
-			'edit.php',
-			'post_type=callboard_set&page=callboard-settings'
-		);
-		await page.fill( '#callboard-accent', '' );
-		await page.click( '#submit' );
-		await page.goto( '/' );
-		await expect( page.locator( '#callboard-accent' ) ).toHaveCount( 0 );
 	} );
 
 	test( 'a set has a tracks meta box with reorderable, retitlable rows', async ( {
 		admin,
 		page,
-		requestUtils,
 	} ) => {
-		// Find the demo set's ID through the list table (REST is closed to anonymous but we're logged in here).
+		undoAfter( async () => {
+			const first = await openDemoSet( admin, page );
+			await first.locator( 'input[type=text]' ).fill( 'Sonnets 1–10' );
+			await saveSet( page );
+		} );
+		// Find the demo set through the list table (REST is closed to anonymous but we're logged in here).
 		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
 		const row = page
 			.locator( '.wp-list-table tbody tr', {
@@ -69,47 +139,29 @@ test.describe( 'Admin', () => {
 			.first()
 			.locator( 'input[type=text]' )
 			.fill( 'Renamed Tone' );
-		await page.click( '#publish' );
-		await expect( page.locator( '#message' ) ).toContainText( /updated/i );
+		await saveSet( page );
 		await page.goto( '/demo-set/' );
 		await expect(
 			page.locator( '.track' ).first().locator( '.title' )
 		).toContainText( 'Renamed Tone' );
-		// put it back for the other tests
-		await page.goBack();
-		await page
-			.locator( '#callboard-tracks li' )
-			.first()
-			.locator( 'input[type=text]' )
-			.fill( 'Sonnets 1–10' );
-		await page.click( '#publish' );
-		void requestUtils;
 	} );
 
 	test( 'a track keeps its tempo and dated director notes', async ( {
 		admin,
 		page,
 	} ) => {
-		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
-		await page
-			.locator( '.wp-list-table tbody tr', {
-				hasText: 'Shakespeare’s Sonnets',
-			} )
-			.first()
-			.locator( 'a.row-title' )
-			.click();
-		const first = page.locator( '#callboard-tracks li' ).first();
-		// The panel renders open when the track already carries a tempo or a note, so opening it
-		// blindly would close it. Ask before clicking.
-		if (
-			! ( await first.locator( 'details' ).evaluate( ( el ) => el.open ) )
-		) {
-			await first.locator( 'summary' ).click();
-		}
+		undoAfter( async () => {
+			const first = await openDemoSet( admin, page );
+			await openTrackDetails( first );
+			await first.locator( 'input[type=number]' ).fill( '' );
+			await first.locator( 'textarea' ).fill( '' );
+			await saveSet( page );
+		} );
+		const first = await openDemoSet( admin, page );
+		await openTrackDetails( first );
 		await first.locator( 'input[type=number]' ).fill( '100' );
 		await first.locator( 'textarea' ).fill( '0:03 Softer here' );
-		await page.click( '#publish' );
-		await expect( page.locator( '#message' ) ).toContainText( /updated/i );
+		await saveSet( page );
 		const again = page.locator( '#callboard-tracks li' ).first();
 		await expect( again.locator( 'input[type=number]' ) ).toHaveValue(
 			'100'
@@ -120,23 +172,14 @@ test.describe( 'Admin', () => {
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
 		await expect( page.locator( '#seek-marks .pin' ) ).toHaveCount( 1 );
-		// put it back for the other tests
-		await page.goBack();
-		const back = page.locator( '#callboard-tracks li' ).first();
-		await back.locator( 'input[type=number]' ).fill( '' );
-		await back.locator( 'textarea' ).fill( '' );
-		await page.click( '#publish' );
-		await expect( page.locator( '#message' ) ).toContainText( /updated/i );
 	} );
 
 	test( 'the import page queues a YouTube request', async ( {
 		admin,
 		page,
 	} ) => {
-		await admin.visitAdminPage(
-			'edit.php',
-			'post_type=callboard_set&page=callboard-import'
-		);
+		undoAfter( () => deleteQueued( admin, page, 'Queued Show' ) );
+		await deleteQueued( admin, page, 'Queued Show' ); // left over from a run that was stopped
 		await page.fill(
 			'#callboard-url',
 			'https://www.youtube.com/playlist?list=PLtest'
@@ -183,6 +226,9 @@ test.describe( 'Admin', () => {
 		admin,
 		page,
 	} ) => {
+		// Also deletes a draft left behind if Publish did not go through.
+		undoAfter( () => deleteCalls( admin, page, 'Act II sitzprobe' ) );
+		await deleteCalls( admin, page, 'Act II sitzprobe' ); // left over from a run that was stopped
 		await admin.visitAdminPage(
 			'post-new.php',
 			'post_type=callboard_call'
@@ -205,8 +251,21 @@ test.describe( 'Admin', () => {
 		} );
 		await demo.locator( 'summary' ).click();
 		await demo.locator( 'input[type=checkbox]' ).nth( 2 ).check(); // Sonnets 21–30
+		// When the title field of a new post loses focus, WordPress starts an autosave 200ms later and
+		// ignores clicks on Publish until that save finishes. Wait for "Draft saved" before clicking;
+		// checking that the button is enabled is not enough, because the save may not have started yet (#131).
+		await expect( page.locator( '.autosave-message' ) ).toHaveText(
+			/Draft saved/
+		);
+		await expect( page.locator( '#publish' ) ).not.toHaveClass(
+			/disabled/
+		);
 		await page.click( '#publish' );
-		await page.waitForURL( /post\.php\?post=\d+&action=edit&message=/ );
+		// Wait for the edit screen's HTML, not its load event. The load event also waits for outside
+		// requests such as the admin bar avatar, and a slow one made this test time out.
+		await page.waitForURL( /post\.php\?post=\d+&action=edit&message=/, {
+			waitUntil: 'domcontentloaded',
+		} );
 		await expect( page.locator( '#callboard-where' ) ).toHaveValue( 'Pit' );
 
 		await page.goto( '/' );
@@ -229,19 +288,12 @@ test.describe( 'Admin', () => {
 			'Sonnets 21–30'
 		);
 
-		// leave the board as it was
 		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_call' );
-		const rows = page.locator( '#the-list tr', {
-			hasText: 'Act II sitzprobe',
-		} );
 		await expect(
-			rows.first().locator( '.column-callboard_when' )
+			page
+				.locator( '#the-list tr', { hasText: 'Act II sitzprobe' } )
+				.first()
+				.locator( '.column-callboard_when' )
 		).toContainText( /\(in / );
-		while ( ( await rows.count() ) > 0 ) {
-			const n = await rows.count();
-			await rows.first().hover();
-			await rows.first().locator( 'a.submitdelete' ).click();
-			await expect( rows ).toHaveCount( n - 1 );
-		}
 	} );
 } );

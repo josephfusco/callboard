@@ -87,13 +87,30 @@ test.describe( 'PWA and previews', () => {
 					{ timeout: 15000 }
 				);
 			} );
-		await page.waitForTimeout( 900 ); // the save controls bind shortly after the view does
+		// The save controls bind a beat after the view does and only then read the cache; the button
+		// wears data-some once it has, which is the first moment a tap on it means anything.
+		await expect( page.locator( '#offline[data-some]' ) ).toBeAttached( {
+			timeout: 15000,
+		} );
 		await page.locator( '#offline' ).click();
 		await expect( page.locator( '#offline' ) ).toContainText(
 			/Saved offline/,
 			{ timeout: 30000 }
 		);
-		await page.waitForTimeout( 1500 ); // the set's fragment is warmed into the worker's cache
+		// A saved set warms its own page into the worker's cache, and nothing waits for that write:
+		// the page fires the fetch without awaiting it and the worker stores the answer outside
+		// waitUntil. Wait for the copy to exist, because going dark without it leaves nothing to open.
+		// Polled through evaluate, which awaits: waitForFunction takes the returned promise itself as
+		// truthy and would move on at once.
+		await expect
+			.poll(
+				() =>
+					page.evaluate( async () =>
+						Boolean( await caches.match( '/demo-set/?fragment=1' ) )
+					),
+				{ timeout: 30000 }
+			)
+			.toBe( true );
 
 		await context.setOffline( true );
 		await page.goto( '/' ); // home, from the precached shell
@@ -105,7 +122,14 @@ test.describe( 'PWA and previews', () => {
 		await expect( page ).toHaveURL( /\/demo-set\/$/ );
 		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
 		await page.locator( '.track' ).first().click();
-		await page.waitForTimeout( 2000 );
+		await page.waitForFunction(
+			() => {
+				const a = document.getElementById( 'audio' );
+				return a.error || a.readyState >= 1;
+			},
+			null,
+			{ timeout: 15000 }
+		);
 		const audio = await page.evaluate( () => {
 			const a = document.getElementById( 'audio' );
 			return {
@@ -117,10 +141,23 @@ test.describe( 'PWA and previews', () => {
 		expect( audio.readyState ).toBeGreaterThanOrEqual( 1 ); // metadata arrived from the cache
 		await context.setOffline( false );
 
-		// leave no copies behind: press and hold asks, the next tap removes
+		// Leave no copies behind: press and hold asks, the next tap removes. The view arrived as a
+		// swapped-in fragment, so this button and every row control are new elements waiting to be
+		// bound; a hold on an unbound button asks nothing, and the tap after it reads as a plain tap
+		// on a set that is already saved, which is meant to do nothing at all.
+		await expect( page.locator( '#offline' ) ).toHaveAttribute(
+			'data-some',
+			'1',
+			{ timeout: 15000 }
+		);
 		await page.locator( '#offline' ).hover();
 		await page.mouse.down();
-		await page.waitForTimeout( 900 );
+		// Hold until the button has asked rather than for a moment that is usually long enough.
+		await expect( page.locator( '#offline' ) ).toHaveAttribute(
+			'data-confirm',
+			'1',
+			{ timeout: 15000 }
+		);
 		await page.mouse.up();
 		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
 		await page.locator( '#offline' ).click();

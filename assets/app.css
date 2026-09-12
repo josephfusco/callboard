@@ -212,7 +212,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* Same left edge and same width as the track list's number column, so the bar reads as the row that
    is playing rather than a separate thing parked under it. --edge-l is the column's edge; the extra
    20px is the padding .deck-inner adds inside it, which is where the list's content actually starts. */
-.deck-cover{position:absolute;left:max(20px,calc((100% - 640px) / 2 + 20px));top:20px;width:34px;height:34px;pointer-events:none;z-index:2}
+.deck-cover{position:absolute;left:max(20px,calc((100% - 640px) / 2 + 20px));top:calc((var(--bar-row) - 34px) / 2);width:34px;height:34px;pointer-events:none;z-index:2}
 .deck.is-compact:has(#deck-cover[src]) .deck-open{padding-left:46px}
 .deck-cover:not(:has(img[src])){display:none}
 .deck.is-expanded{top:0;bottom:0;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto auto auto auto;padding-bottom:calc(var(--safe-b) + var(--s3));border-top:0;background-image:none;overflow:hidden}
@@ -369,8 +369,7 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
    column's edge. The bar has no such mark, and without the same inset its last control overshoots
    every duration above it by exactly that width. The tap target below has to clear the controls by
    the same amount, so both read the one value. */
-.deck{--dl-gutter:52px}
-.deck.is-compact .deck-controls{padding-right:var(--dl-gutter)}
+.deck{--dl-gutter:52px;--bar-row:73px} /* the compact row: two 13px paddings around a two-line title block */
 
 /* transport: secondary (repeat, the A-B loop affordance) left, primary (previous, play, next) right — both
    inside the one column, never the viewport (see .deck-inner). Two groups, not five loose controls. */
@@ -384,7 +383,13 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
 /* .deck-controls is itself position:relative (for its own z-index); drop that in compact so #toggle's
    position:absolute escapes all the way out to .deck and reads off --edge-r, not off a box down in the
    (now collapsed) transport row */
-.deck.is-compact .deck-controls{position:absolute;top:var(--s1);right:var(--edge-r);gap:var(--s2)}
+/* Centred on the row rather than pinned to a top offset, which left the transport seven pixels
+   above the art and the title it sits beside. The right inset is the offline column the rows keep,
+   so the last control lands over the last duration. */
+/* Both the art and the transport are centred on the display row, not on the deck: the deck's box
+   runs 120px past the bottom of the screen so the browser chrome sits on deck colour, which makes
+   its own centre useless. One row height, two offsets derived from it, so they cannot drift. */
+.deck.is-compact .deck-controls{position:absolute;top:calc((var(--bar-row) - 44px) / 2);right:calc(var(--edge-r) + var(--dl-gutter));gap:var(--s2);padding-right:0}
 .deck.is-compact .ctl.skip{width:34px;height:34px}
 .deck.is-compact #toggle{width:44px;height:44px}
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}

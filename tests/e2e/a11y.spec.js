@@ -26,6 +26,14 @@ const report = ( results ) =>
 		)
 		.join( '\n' );
 
+// The deck opens compact by default and remembers the last view in localStorage; the repeat control, the
+// A-B loop chip, the quality pill, and the cast/share chips only exist in the expanded view, so the axe
+// pass below covers both rather than only ever seeing the compact bar.
+const expandDeck = ( page ) =>
+	page.addInitScript( () =>
+		localStorage.setItem( 'callboard:deck-view', JSON.stringify( 'expanded' ) )
+	);
+
 for ( const scheme of [ 'light', 'dark' ] ) {
 	test.describe( `axe, ${ scheme }`, () => {
 		test.use( { colorScheme: scheme } );
@@ -36,7 +44,15 @@ for ( const scheme of [ 'light', 'dark' ] ) {
 			expect( report( results ) ).toBe( '' );
 		} );
 
-		test( 'a set, with a track playing', async ( { page } ) => {
+		test( 'a set, with a track playing, compact', async ( { page } ) => {
+			await page.goto( '/demo-set/' );
+			await page.locator( '.track' ).nth( 2 ).click();
+			const results = await audit( page );
+			expect( report( results ) ).toBe( '' );
+		} );
+
+		test( 'a set, with a track playing, expanded', async ( { page } ) => {
+			await expandDeck( page );
 			await page.goto( '/demo-set/' );
 			await page.locator( '.track' ).nth( 2 ).click();
 			const results = await audit( page );
@@ -75,6 +91,10 @@ test( 'the whole player works from the keyboard', async ( { page } ) => {
 		'aria-current',
 		'true'
 	);
+	await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
+	await page.locator( '#open-lyrics' ).focus();
+	await page.keyboard.press( 'Enter' ); // the compact bar's tap-to-expand target, reachable by keyboard too
+	await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
 	await page.locator( '#next' ).focus();
 	await page.keyboard.press( 'Enter' );
 	await expect( page.locator( '#now-title' ) ).toContainText(

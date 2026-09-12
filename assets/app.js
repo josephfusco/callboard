@@ -177,13 +177,80 @@
 		seek = $( 'seek' ),
 		seekFill = $( 'seek-fill' ),
 		cur = $( 'cur' ),
-		dur = $( 'dur' );
+		dur = $( 'dur' ),
+		quality = $( 'quality' );
 	const lyricsSheet = $( 'lyrics' ),
 		lyricsList = $( 'lyrics-lines' ),
 		openLyrics = $( 'open-lyrics' );
 	if ( ! audio || ! deck ) {
 		return;
 	}
+
+	// ---- Compact / expanded: two states for the deck itself, remembered like everything else the player
+	// remembers (ls, above). Compact is the default — a 72px bar with just the title and play/pause; expanded
+	// is close to what the deck has always been. Read before load() below, since the class has to be on the
+	// element before the first track ever shows the deck.
+	const DECK_VIEW_KEY = 'callboard:deck-view';
+	function syncOpenLyricsA11y() {
+		// The title button doubles as the compact bar's tap target; while compact it expands the deck instead
+		// of the lyrics sheet, so its label and aria-controls have to say that rather than whatever the sheet
+		// state would otherwise ask for.
+		if ( deck.classList.contains( 'is-compact' ) ) {
+			openLyrics.setAttribute( 'aria-expanded', 'false' );
+			openLyrics.setAttribute( 'aria-controls', 'deck' );
+			openLyrics.setAttribute( 'aria-label', openLyrics.dataset.labelExpand );
+			return;
+		}
+		openLyrics.setAttribute( 'aria-controls', 'lyrics' );
+		openLyrics.setAttribute(
+			'aria-expanded',
+			lyricsSheet.hidden ? 'false' : 'true'
+		);
+		openLyrics.setAttribute(
+			'aria-label',
+			! lyricsSheet.hidden
+				? sheetKind === 'notes'
+					? T.hide_notes
+					: T.hide_lyrics
+				: sheetKind === 'notes'
+				? T.show_notes
+				: sheetKind === 'lyrics'
+				? T.show_lyrics
+				: T.show_track
+		);
+	}
+	function setDeckView( mode, { persist = true } = {} ) {
+		deck.classList.toggle( 'is-compact', mode !== 'expanded' );
+		deck.classList.toggle( 'is-expanded', mode === 'expanded' );
+		if ( persist ) {
+			ls.set( DECK_VIEW_KEY, mode );
+		}
+		syncOpenLyricsA11y();
+	}
+	function expandDeck() {
+		if ( deck.classList.contains( 'is-expanded' ) ) {
+			return;
+		}
+		haptic();
+		setDeckView( 'expanded' );
+		// the wave and the seek knob draw against a box that had zero width while it was display:none
+		requestAnimationFrame( () => {
+			drawWave();
+			paint( true );
+		} );
+	}
+	function collapseDeck() {
+		if ( deck.classList.contains( 'is-compact' ) ) {
+			return;
+		}
+		haptic();
+		setDeckView( 'compact' );
+	}
+	let sheetKind = ''; // set by renderSheet(); declared here so syncOpenLyricsA11y() above can read it early
+	setDeckView(
+		ls.get( DECK_VIEW_KEY ) === 'expanded' ? 'expanded' : 'compact',
+		{ persist: false }
+	);
 
 	let looper = null, // the gapless loop, when one is running (see the A-B loop section)
 		looperCtx = null,
@@ -253,7 +320,6 @@
 			b = +e[ Math.min( e.length - 1, k + 1 ) ] / 9;
 		return a + ( b - a ) * ( x - k );
 	};
-	const quality = $( 'quality' );
 	const glowHot = $( 'deck-glow-hot' ),
 		glowHalo = $( 'deck-glow-halo' );
 	// A filament's color follows its heat: near-black red when barely lit, through orange, to a pale yellow-white
@@ -494,6 +560,8 @@
 		if ( ! seekWidth ) {
 			measureSeek();
 		}
+		// the filament's lit length is also the compact bar's position line — see .deck-glow* in app.css
+		deck.style.setProperty( '--progress', ratio );
 		seekFill.style.transform = `scaleX(${ ratio })`;
 		if ( waveReveal ) {
 			const off = ( ( 1 - ratio ) * 100 ).toFixed( 3 );
@@ -660,6 +728,29 @@
 			} );
 		} catch {}
 	}
+	// Bytes and duration are on every track already; an average bitrate reads without waiting on the richer
+	// bit-depth/sample-rate metadata WordPress keeps but does not yet send to the front end.
+	function paintQuality( t ) {
+		if ( ! quality ) {
+			return;
+		}
+		// t.quality, once the attachment's own bit depth/sample rate reaches the payload, reads directly; until
+		// then this approximates a bitrate from what every track already carries, so the pill is never empty.
+		if ( t.quality ) {
+			quality.hidden = false;
+			quality.textContent = t.quality;
+			return;
+		}
+		const kbps =
+			t.bytes && t.duration
+				? Math.round( ( t.bytes * 8 ) / t.duration / 1000 )
+				: 0;
+		const ext = ( /\.([a-z0-9]+)(?:\?.*)?$/i.exec( t.url ) || [] )[ 1 ];
+		quality.hidden = ! kbps;
+		quality.textContent = kbps
+			? tpl( quality.dataset.format, ( ext || '' ).toUpperCase(), kbps )
+			: '';
+	}
 	function load( n, { play = true, at = 0 } = {} ) {
 		if ( ! queue?.tracks.length ) {
 			return;
@@ -676,12 +767,7 @@
 		nowTitle.classList.remove( 'is-note' );
 		setTitle( t.title );
 		dur.textContent = fmt( t.duration );
-		if ( quality ) {
-			// What this copy actually is. It changes per track once a set is gathered from
-			// different places, or when one track came off a stick and the rest came from here.
-			quality.textContent = t.quality || '';
-			quality.hidden = ! t.quality;
-		}
+		paintQuality( t );
 		lastSec = -1;
 		setProgress( 0 );
 		clearLoop();
@@ -775,6 +861,20 @@
 		syncRows();
 		paintTip();
 	}
+	// Idle and out of the way: a tap that lands on plain page background (not a control, a link, or a track
+	// row — those already do their own thing) dismisses a paused deck, the same as Escape below.
+	document.addEventListener( 'click', ( e ) => {
+		if (
+			deck.hidden ||
+			! audio.paused ||
+			i < 0 ||
+			deck.contains( e.target ) ||
+			e.target.closest( 'a, button, input, label, .track' )
+		) {
+			return;
+		}
+		dismissDeck();
+	} );
 	let edge = null;
 	document.addEventListener( 'pointerdown', ( e ) => {
 		if (
@@ -841,15 +941,22 @@
 	};
 	document.addEventListener( 'pointerup', edgeEnd );
 	document.addEventListener( 'pointercancel', edgeEnd );
-	const deckRow = deck.querySelector( '.deck-row' );
+	// Swipe down anywhere on the expanded deck (not a control, not the wave/seek) to collapse it back to the
+	// compact bar. Pointer Events, the same one-finger drag-then-decide shape as the A-B loop's two-finger
+	// read on the wave below (see `pointers`/loopHold near canLoopGapless) — a distance threshold on release,
+	// nothing while merely holding.
 	let swipe = null;
-	deckRow?.addEventListener( 'pointerdown', ( e ) => {
-		if ( e.pointerType === 'mouse' || e.target.closest( 'button' ) ) {
+	deck.addEventListener( 'pointerdown', ( e ) => {
+		if (
+			e.pointerType === 'mouse' ||
+			! deck.classList.contains( 'is-expanded' ) ||
+			e.target.closest( 'button, input, a, .seek-wrap' )
+		) {
 			return;
 		}
 		swipe = { x: e.clientX, y: e.clientY, id: e.pointerId };
 	} );
-	deckRow?.addEventListener( 'pointermove', ( e ) => {
+	deck.addEventListener( 'pointermove', ( e ) => {
 		if ( ! swipe || e.pointerId !== swipe.id ) {
 			return;
 		}
@@ -868,17 +975,20 @@
 			dx = Math.abs( e.clientX - swipe.x );
 		swipe = null;
 		if ( dy > 70 && dx < 40 ) {
-			haptic();
+			if ( reduce() ) {
+				deck.style.transform = '';
+				return collapseDeck();
+			}
 			const slide = deck.animate(
 				[
 					{ transform: deck.style.transform },
-					{ transform: 'translateY(100%)' },
+					{ transform: 'translateY(24px)' },
 				],
-				{ duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' }
+				{ duration: 160, easing: 'cubic-bezier(.2,.8,.2,1)' }
 			);
 			slide.onfinish = () => {
 				deck.style.transform = '';
-				dismissDeck();
+				collapseDeck();
 			};
 			return;
 		}
@@ -892,8 +1002,8 @@
 			deck.style.transform = '';
 		};
 	};
-	deckRow?.addEventListener( 'pointerup', swipeEnd );
-	deckRow?.addEventListener( 'pointercancel', swipeEnd );
+	deck.addEventListener( 'pointerup', swipeEnd );
+	deck.addEventListener( 'pointercancel', swipeEnd );
 
 	function prev() {
 		if ( i < 0 ) {
@@ -935,6 +1045,45 @@
 			return load( 0 );
 		}
 		return audio.paused ? audio.play().catch( () => {} ) : audio.pause();
+	} );
+
+	// ---- Repeat: off, the set (wraps and keeps going), or one track. A running order is not a shuffle, so
+	// that is the only other transport mode; the A-B loop beside it is a different feature (a section of one
+	// track), wired further down where the rest of that gesture lives.
+	const REPEAT_KEY = 'callboard:repeat';
+	const repeatBtn = $( 'repeat' );
+	let repeatMode = [ 'off', 'set', 'one' ].includes( ls.get( REPEAT_KEY ) )
+		? ls.get( REPEAT_KEY )
+		: 'off';
+	function paintRepeat() {
+		if ( ! repeatBtn ) {
+			return;
+		}
+		repeatBtn.dataset.mode = repeatMode;
+		repeatBtn.setAttribute(
+			'aria-pressed',
+			repeatMode === 'off' ? 'false' : 'true'
+		);
+		repeatBtn.setAttribute(
+			'aria-label',
+			repeatMode === 'one'
+				? repeatBtn.dataset.labelOne
+				: repeatMode === 'set'
+				? repeatBtn.dataset.labelSet
+				: repeatBtn.dataset.labelOff
+		);
+	}
+	paintRepeat();
+	repeatBtn?.addEventListener( 'click', () => {
+		haptic();
+		repeatMode =
+			repeatMode === 'off'
+				? 'set'
+				: repeatMode === 'set'
+				? 'one'
+				: 'off';
+		ls.set( REPEAT_KEY, repeatMode );
+		paintRepeat();
 	} );
 
 	// ---- Count-in: with a tempo, Play from the top taps four beats first (a soft click, the button breathes)
@@ -1076,7 +1225,15 @@
 	audio.addEventListener( 'canplay', () =>
 		deck.classList.remove( 'buffering' )
 	);
-	audio.addEventListener( 'ended', () => load( i + 1 ) );
+	audio.addEventListener( 'ended', () => {
+		if ( repeatMode === 'one' ) {
+			return load( i, { at: 0 } );
+		}
+		if ( repeatMode === 'off' && i === queue.tracks.length - 1 ) {
+			return; // the set played through; nothing repeats without being asked to
+		}
+		load( i + 1 );
+	} );
 	audio.addEventListener( 'loadedmetadata', () => {
 		if ( isFinite( audio.duration ) ) {
 			dur.textContent = fmt( audio.duration );
@@ -1327,6 +1484,7 @@
 		loopBand.classList.add( 'on' );
 		if ( loopChip ) {
 			loopChip.dataset.state = 'on';
+			loopChip.setAttribute( 'aria-label', loopChip.dataset.labelOn );
 		}
 		requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
 		if ( audio.currentTime < a || audio.currentTime > b ) {
@@ -1352,6 +1510,7 @@
 			loopBand.classList.remove( 'on' );
 			if ( loopChip ) {
 				loopChip.dataset.state = '';
+				loopChip.setAttribute( 'aria-label', loopChip.dataset.labelOff );
 			}
 			requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
 		}
@@ -1366,6 +1525,7 @@
 			loopFrom = audio.currentTime;
 			if ( loopChip ) {
 				loopChip.dataset.state = 'armed';
+				loopChip.setAttribute( 'aria-label', loopChip.dataset.labelArmed );
 			}
 			return;
 		}
@@ -1494,7 +1654,6 @@
 	// ---- Lyrics (only where a set has approved lyrics); otherwise the deck title finds the playing track.
 	// The cues also live on the media element as a metadata text track, so the browser fires cuechange for
 	// them, on time even when the tab is throttled, and a seek lands on the right line without a scan.
-	let sheetKind = '';
 	const lyricTrack =
 		'VTTCue' in window && audio.addTextTrack
 			? audio.addTextTrack( 'metadata', 'Lyrics' )
@@ -1547,14 +1706,7 @@
 			queue?.tracks[ i ]?.artist ||
 			queue?.name ||
 			'';
-		openLyrics.setAttribute(
-			'aria-label',
-			sheetKind === 'lyrics'
-				? T.show_lyrics
-				: sheetKind
-				? T.show_notes
-				: T.show_track
-		);
+		syncOpenLyricsA11y();
 		$( 'sheet-label' ).textContent =
 			sheetKind === 'notes' ? T.notes_sheet : T.lyrics_sheet;
 		const item = ( at, text, detail ) => {
@@ -1635,11 +1787,7 @@
 		lyricsSheet.classList.remove( 'closing' );
 		lyricsSheet.hidden = false;
 		document.body.classList.add( 'sheet-open' );
-		openLyrics.setAttribute( 'aria-expanded', 'true' );
-		openLyrics.setAttribute(
-			'aria-label',
-			sheetKind === 'notes' ? T.hide_notes : T.hide_lyrics
-		);
+		syncOpenLyricsA11y();
 		if ( cueIdx >= 0 ) {
 			cueEls[ cueIdx ].scrollIntoView( { block: 'center' } );
 		}
@@ -1658,16 +1806,15 @@
 				lyricsSheet.classList.remove( 'closing' );
 			}, 320 );
 		}
-		openLyrics.setAttribute( 'aria-expanded', 'false' );
-		openLyrics.setAttribute(
-			'aria-label',
-			sheetKind === 'notes' ? T.show_notes : T.show_lyrics
-		);
+		syncOpenLyricsA11y();
 		openLyrics.focus();
 	}
 	openLyrics.addEventListener( 'click', () => {
 		if ( i < 0 ) {
 			return;
+		}
+		if ( deck.classList.contains( 'is-compact' ) ) {
+			return expandDeck(); // the compact bar's whole job is this tap; the sheet/track logic below is expanded-only
 		}
 		haptic();
 		if ( sheetKind ) {

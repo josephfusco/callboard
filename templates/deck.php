@@ -7,15 +7,26 @@
 
 defined( 'ABSPATH' ) || exit;
 ?>
+<?php
+/*
+ * Two states, remembered in localStorage (see `ls` and `setDeckView()` in app.js): compact (title, artist,
+ * play/pause) and expanded (everything, plus the wave, times, pill, and chips). The JS class lands on #deck
+ * before first paint reads it, so there is no compact->expanded flash on load.
+ */
+?>
 <section class="deck" id="deck" aria-label="<?php esc_attr_e( 'Player', 'callboard' ); ?>" hidden>
 	<i class="deck-glow-halo" id="deck-glow-halo" aria-hidden="true"></i><i class="deck-glow" id="deck-glow" aria-hidden="true"></i><i class="deck-glow-hot" id="deck-glow-hot" aria-hidden="true"></i>
 	<div class="deck-inner deck-display">
 		<div class="deck-text">
-			<button type="button" class="deck-open" id="open-lyrics" aria-expanded="false" aria-controls="lyrics" aria-label="<?php esc_attr_e( 'Show current track', 'callboard' ); ?>">
+			<?php /* Doubles as the compact bar's tap-to-expand target; app.js switches its job (and label) by deck state. */ ?>
+			<button type="button" class="deck-open" id="open-lyrics" aria-expanded="false" aria-controls="lyrics" aria-label="<?php esc_attr_e( 'Show current track', 'callboard' ); ?>" data-label-expand="<?php esc_attr_e( 'Expand player', 'callboard' ); ?>">
 				<span class="deck-title" id="now-title" aria-live="polite"><span class="mq"><span><?php esc_html_e( 'Choose a track', 'callboard' ); ?></span></span></span>
 			</button>
-			<span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><span class="pill" id="quality" hidden></span><button type="button" class="remote-chip share-chip" id="share-track" hidden aria-label="<?php esc_attr_e( 'Send this track to another device', 'callboard' ); ?>"><?php echo callboard_icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button><button type="button" class="remote-chip is-away" id="remote" data-state="" aria-label="<?php esc_attr_e( 'Play on another device', 'callboard' ); ?>"><?php echo callboard_icon( 'cast' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><span id="dur">0:00</span></span>
+			<span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><button type="button" class="remote-chip share-chip" id="share-track" data-state="" hidden aria-label="<?php esc_attr_e( 'Send this track to another device', 'callboard' ); ?>"><?php echo callboard_icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button><button type="button" class="remote-chip is-away" id="remote" data-state="" aria-label="<?php esc_attr_e( 'Play on another device', 'callboard' ); ?>"><?php echo callboard_icon( 'cast' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><span id="dur">0:00</span></span>
 		</div>
+		<?php /* Expanded only: bytes and duration are already on every track, so a bitrate reads without waiting on richer attachment metadata. */ ?>
+		<?php /* translators: %1$s: file format (e.g. MP3), %2$s: bitrate in kbps. */ ?>
+		<span class="quality-pill" id="quality" hidden data-format="<?php echo esc_attr__( '%1$s · %2$s kbps', 'callboard' ); ?>"></span>
 	</div>
 	<div class="seek-wrap">
 		<canvas class="wave wave-base" id="wave-base" aria-hidden="true"></canvas><canvas class="wave wave-hover" id="wave-hover" aria-hidden="true"></canvas><div class="wave-reveal" id="wave-reveal" aria-hidden="true"><canvas class="wave wave-played" id="wave-played"></canvas></div>
@@ -24,9 +35,16 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 	<div class="deck-inner deck-transport">
 		<div class="deck-controls">
-			<button type="button" class="ctl skip" id="prev" aria-label="<?php esc_attr_e( 'Previous', 'callboard' ); ?>"><?php echo callboard_icon( 'prev' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
-			<button type="button" class="ctl play" id="toggle" data-state="play" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><i class="cap" aria-hidden="true"><svg class="pp" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path class="glyph" d="M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z"/><path class="glyph-pause" d="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z"/></svg></i></button>
-			<button type="button" class="ctl skip" id="next" aria-label="<?php esc_attr_e( 'Next', 'callboard' ); ?>"><?php echo callboard_icon( 'next' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
+			<div class="deck-controls-secondary">
+				<?php /* A section of one track (brackets, or two fingers on the wave) — a different feature from repeat, which runs the whole set. */ ?>
+				<button type="button" class="ctl loop-toggle" id="loop" data-state="" aria-label="<?php esc_attr_e( 'Set an A-B loop', 'callboard' ); ?>" data-label-off="<?php esc_attr_e( 'Set an A-B loop', 'callboard' ); ?>" data-label-armed="<?php esc_attr_e( 'Mark the loop’s end', 'callboard' ); ?>" data-label-on="<?php esc_attr_e( 'Clear the A-B loop', 'callboard' ); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3M15 5h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+				<button type="button" class="ctl repeat-toggle" id="repeat" data-mode="off" aria-pressed="false" aria-label="<?php esc_attr_e( 'Repeat off', 'callboard' ); ?>" data-label-off="<?php esc_attr_e( 'Repeat off', 'callboard' ); ?>" data-label-set="<?php esc_attr_e( 'Repeat the set', 'callboard' ); ?>" data-label-one="<?php esc_attr_e( 'Repeat this track', 'callboard' ); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17 2l4 4-4 4M3 12v-2a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 12v2a4 4 0 0 1-4 4H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text class="repeat-one" x="12" y="15.5" font-size="7.5" text-anchor="middle" fill="currentColor" stroke="none">1</text></svg></button>
+			</div>
+			<div class="deck-controls-primary">
+				<button type="button" class="ctl skip" id="prev" aria-label="<?php esc_attr_e( 'Previous', 'callboard' ); ?>"><?php echo callboard_icon( 'prev' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
+				<button type="button" class="ctl play" id="toggle" data-state="play" aria-label="<?php esc_attr_e( 'Play', 'callboard' ); ?>"><i class="cap" aria-hidden="true"><svg class="pp" viewBox="0 0 36 36" aria-hidden="true" focusable="false"><path class="glyph" d="M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z"/><path class="glyph-pause" d="M 11,10 15,10 15,26 11,26 z M 20,10 24,10 24,26 20,26 z"/></svg></i></button>
+				<button type="button" class="ctl skip" id="next" aria-label="<?php esc_attr_e( 'Next', 'callboard' ); ?>"><?php echo callboard_icon( 'next' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
+			</div>
 		</div>
 		<audio id="audio" preload="metadata"></audio>
 	</div>

@@ -130,18 +130,20 @@ test.describe( 'Front end', () => {
 			page.locator( '.set-off[data-slug="demo-set"]' )
 		).toHaveAttribute( 'data-state', 'saved' );
 		await page.goBack();
-		await page.locator( '#offline' ).click(); // a plain tap does nothing
-		await expect( page.locator( '#offline' ) ).toHaveText(
-			'Saved offline'
+		// The set came back as a swapped-in view, so wait for its button to be bound before tapping it.
+		await expect( page.locator( '#offline' ) ).toHaveAttribute(
+			'data-some',
+			'1'
 		);
-		await page.locator( '#offline' ).hover(); // press and hold asks; releasing is not the answer
-		await page.mouse.down();
-		await page.waitForTimeout( 900 );
-		await page.mouse.up();
+		await page.locator( '#offline' ).click(); // a tap on a saved set asks first
 		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			10
 		);
+		await expect( page.locator( '#offline' ) ).toHaveAttribute(
+			'data-confirm',
+			'1'
+		); // ready for the answer
 		await page.locator( '#offline' ).click();
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			0
@@ -561,22 +563,28 @@ test.describe( 'Front end', () => {
 				.locator( '#deck' )
 				.evaluate( ( d ) => d.classList.contains( 'counting' ) )
 		).toBe( false );
-		await settings( true );
-		await page.goto( '/demo-set/' );
-		await page.evaluate( () => localStorage.clear() ); // forget the position, or the same row just toggles play
-		await page.reload();
-		await page.locator( '.track' ).nth( 2 ).click();
-		await expect( page.locator( '#deck' ) ).toHaveClass( /counting/ );
-		await expect( page.locator( '#now-title' ) ).toHaveText(
-			/^1(\s+[2-4])*$/
-		);
-		await expect( page.locator( '#deck' ) ).not.toHaveClass( /counting/, {
-			timeout: 4000,
-		} );
-		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Sonnets 21–30'
-		);
-		await settings( false ); // back off for the other tests
+		try {
+			await settings( true );
+			await page.goto( '/demo-set/' );
+			await page.evaluate( () => localStorage.clear() ); // forget the position, or the same row just toggles play
+			await page.reload();
+			await page.locator( '.track' ).nth( 2 ).click();
+			await expect( page.locator( '#deck' ) ).toHaveClass( /counting/ );
+			await expect( page.locator( '#now-title' ) ).toHaveText(
+				/^1(\s+[2-4])*$/
+			);
+			await expect( page.locator( '#deck' ) ).not.toHaveClass(
+				/counting/,
+				{
+					timeout: 4000,
+				}
+			);
+			await expect( page.locator( '#now-title' ) ).toContainText(
+				'Sonnets 21–30'
+			);
+		} finally {
+			await settings( false ); // back off for the other tests, whether this one passed or not
+		}
 	} );
 
 	test( 'the deck offers AirPlay or Cast only while a device is in reach', async ( {
@@ -931,7 +939,9 @@ test.describe( 'The filament', () => {
 			await page.locator( 'a.back' ).click();
 			await expect( page.locator( 'a.set' ).first() ).toBeVisible();
 			await page.locator( '#open-lyrics' ).click();
-			await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
+			await expect( page.locator( '#deck' ) ).toHaveClass(
+				/is-expanded/
+			);
 			await expectBurning( page );
 			await page.locator( '#deck-down' ).click();
 			await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
@@ -999,7 +1009,9 @@ test.describe( 'The filament', () => {
 			} );
 			await page.goto( '/demo-set/' );
 			await page.locator( '.track' ).first().click();
-			await expect.poll( () => glowOpacity( page ) ).toBeGreaterThan( 0.95 );
+			await expect
+				.poll( () => glowOpacity( page ) )
+				.toBeGreaterThan( 0.95 );
 			// Every frame from the tap until half a second after home has landed.
 			const lowest = await wire( page ).evaluate(
 				( g ) =>
@@ -1008,7 +1020,10 @@ test.describe( 'The filament', () => {
 							landed = 0;
 						const t0 = performance.now();
 						const step = ( now ) => {
-							low = Math.min( low, +getComputedStyle( g ).opacity );
+							low = Math.min(
+								low,
+								+getComputedStyle( g ).opacity
+							);
 							if ( ! landed && ! document.body.dataset.slug ) {
 								landed = now;
 							}
@@ -1028,5 +1043,257 @@ test.describe( 'The filament', () => {
 			await expect( page ).toHaveURL( /\/$/ );
 			expect( lowest ).toBeGreaterThan( 0.9 );
 		} );
+	} );
+} );
+
+// Touch controls and closing Now Playing (#125). In this file so they also run on the iPhone project.
+const isExpanded = ( page ) =>
+	expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
+const isCompact = ( page ) =>
+	expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
+
+// Returns the controls whose touch area is smaller than 44px. Probes 21px out from each control's centre
+// with elementFromPoint, so an invisible ::after touch area counts even when the visible box is smaller.
+// A probe that lands on a neighbouring control whose centre is just as close (two note pins 44px apart)
+// is not a miss.
+const touchAreaUnder44 = ( page, selector ) =>
+	page.evaluate( ( sel ) => {
+		const short = [],
+			all = [ ...document.querySelectorAll( sel ) ];
+		const centre = ( n ) => {
+			const b = n.getBoundingClientRect();
+			return [ b.left + b.width / 2, b.top + b.height / 2 ];
+		};
+		for ( const el of all ) {
+			if (
+				! el.checkVisibility( { visibilityProperty: true } ) ||
+				! el.getClientRects().length
+			) {
+				continue;
+			}
+			el.scrollIntoView( { block: 'center', inline: 'center' } );
+			const r = el.getBoundingClientRect(),
+				x = r.left + r.width / 2,
+				y = r.top + r.height / 2;
+			const misses = [
+				[ -21, 0 ],
+				[ 21, 0 ],
+				[ 0, -21 ],
+				[ 0, 21 ],
+			].filter( ( [ dx, dy ] ) => {
+				const px = x + dx,
+					py = y + dy,
+					hit = document.elementFromPoint( px, py );
+				if ( hit && el.contains( hit ) ) {
+					return false;
+				}
+				const other = hit && all.find( ( o ) => o.contains( hit ) );
+				if ( ! other ) {
+					return true;
+				}
+				// Allow 3px for the later element winning at the midpoint.
+				const [ ox, oy ] = centre( other );
+				return Math.hypot( ox - px, oy - py ) > 24;
+			} );
+			if ( misses.length ) {
+				short.push(
+					`${ el.id || el.className } (${ Math.round(
+						r.width
+					) }x${ Math.round( r.height ) })`
+				);
+			}
+		}
+		return short;
+	}, selector );
+
+test.describe( 'Touch', () => {
+	test( 'browser back closes Now Playing and keeps the set page and scroll position', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).nth( 6 ).scrollIntoViewIfNeeded();
+		await page.locator( '.track' ).nth( 6 ).click();
+		const scrolled = await page.evaluate( () => window.scrollY );
+		expect( scrolled ).toBeGreaterThan( 0 );
+		await expandDeck( page );
+		await isExpanded( page );
+		await page.goBack();
+		await isCompact( page );
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
+		await expect
+			.poll( () => page.evaluate( () => window.scrollY ) )
+			.toBeCloseTo( scrolled, -1 );
+		// Forward opens it again.
+		await page.goForward();
+		await isExpanded( page );
+	} );
+
+	test( 'the close button and Escape close Now Playing without leaving a history entry', async ( {
+		page,
+	} ) => {
+		await page.goto( '/' );
+		await page.locator( 'a.set', { hasText: 'Shakespeare' } ).click();
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+		await page.locator( '.track' ).first().click();
+
+		await expandDeck( page );
+		await isExpanded( page );
+		await page.locator( '#deck-down' ).click();
+		await isCompact( page );
+
+		await expandDeck( page );
+		await isExpanded( page );
+		await page.keyboard.press( 'Escape' );
+		await isCompact( page );
+		await expect( page.locator( '#deck' ) ).toBeVisible(); // Escape closed Now Playing, not the player bar
+
+		// If a history entry was left behind, this back would stay on the set page.
+		await page.goBack();
+		await expect( page ).toHaveURL( /\/$/ );
+		await expect( page.locator( 'a.set' ).first() ).toBeVisible();
+	} );
+
+	test( 'dragging down on Now Playing does not close it', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
+		await isExpanded( page );
+		const followed = await page.locator( '#deck' ).evaluate( ( deck ) => {
+			const cover = deck.querySelector( '.deck-cover' ),
+				r = cover.getBoundingClientRect();
+			const fire = ( type, clientY ) =>
+				cover.dispatchEvent(
+					new PointerEvent( type, {
+						clientX: r.left + r.width / 2,
+						clientY,
+						pointerId: 7,
+						pointerType: 'touch',
+						isPrimary: true,
+						bubbles: true,
+					} )
+				);
+			fire( 'pointerdown', r.top + 10 );
+			fire( 'pointermove', r.top + 150 );
+			const during = deck.style.transform;
+			fire( 'pointerup', r.top + 150 );
+			return during;
+		} );
+		expect( followed ).toBe( '' ); // nothing moved with the drag
+		await isExpanded( page );
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+	} );
+
+	test( 'player and track list controls have touch areas of at least 44px', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).nth( 2 ).click(); // has a note, so a note pin and the lyrics button show
+		expect(
+			await touchAreaUnder44(
+				page,
+				'a.back, .actions button, .track, .dl, #deck button, #deck input'
+			)
+		).toEqual( [] );
+		await expandDeck( page );
+		await isExpanded( page );
+		expect(
+			await touchAreaUnder44(
+				page,
+				'#deck button, #deck input, .seek-marks .pin'
+			)
+		).toEqual( [] );
+	} );
+
+	test( 'tapping the waveform seeks to the tapped position', async ( {
+		page,
+	}, testInfo ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).nth( 1 ).click(); // no lyrics or notes, so no marks to snap to
+		await expandDeck( page );
+		await isExpanded( page );
+		await page.evaluate( () => {
+			const seek = document.getElementById( 'seek' );
+			seek.addEventListener(
+				'input',
+				() => ( window.__seekTo = +seek.value )
+			);
+		} );
+		const wave = await page.locator( '.seek-wrap' ).boundingBox();
+		for ( const at of [ 0.25, 0.75 ] ) {
+			const x = wave.x + wave.width * at,
+				y = wave.y + wave.height / 2;
+			if ( testInfo.project.use.hasTouch ) {
+				await page.touchscreen.tap( x, y );
+			} else {
+				await page.mouse.click( x, y );
+			}
+			// The range is 0 to 1000 across the waveform; allow 5 either way.
+			await expect
+				.poll( () => page.evaluate( () => window.__seekTo ) )
+				.toBeGreaterThanOrEqual( at * 1000 - 5 );
+			expect(
+				await page.evaluate( () => window.__seekTo )
+			).toBeLessThanOrEqual( at * 1000 + 5 );
+		}
+	} );
+
+	test( 'the lyrics sheet is a non-modal dialog', async ( { page } ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).nth( 2 ).click();
+		await expandDeck( page );
+		await page.locator( '#sheet-pill' ).click();
+		await expect( page.locator( '#lyrics' ) ).toBeVisible();
+		expect(
+			await page
+				.locator( '#lyrics' )
+				.evaluate(
+					( el ) =>
+						el instanceof HTMLDialogElement &&
+						el.open &&
+						! el.matches( ':modal' )
+				)
+		).toBe( true );
+		await page.locator( '#next' ).click(); // the player controls still work while it is open
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'Sonnets 31–40'
+		);
+		await page.locator( '#close-lyrics' ).click();
+		await expect( page.locator( '#lyrics' ) ).toBeHidden();
+	} );
+
+	test( 'in an iOS Home Screen app, swiping from the left edge goes back', async ( {
+		page,
+	} ) => {
+		// iOS Home Screen apps have no back gesture, so the app provides one there only.
+		await page.addInitScript( () =>
+			Object.defineProperty( navigator, 'standalone', { value: true } )
+		);
+		await page.goto( '/' );
+		await page.locator( 'a.set', { hasText: 'Shakespeare' } ).click();
+		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
+		await page.evaluate( () => {
+			const fire = ( type, clientX ) =>
+				document.body.dispatchEvent(
+					new PointerEvent( type, {
+						clientX,
+						clientY: 300,
+						pointerId: 9,
+						pointerType: 'touch',
+						isPrimary: true,
+						bubbles: true,
+					} )
+				);
+			fire( 'pointerdown', 8 );
+			fire( 'pointermove', 220 );
+			fire( 'pointerup', 220 );
+		} );
+		await expect( page ).toHaveURL( /\/$/ );
+		await expect( page.locator( 'a.set' ).first() ).toBeVisible();
+		// It went back in history rather than pushing home, so forward returns to the set.
+		await page.goForward();
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
 	} );
 } );

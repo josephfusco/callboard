@@ -16,7 +16,7 @@ use Callboard\Art;
 class Test_Callboard_Art extends WP_UnitTestCase {
 
 	/**
-	 * Where the PNGs go.
+	 * Where the drawn images go.
 	 *
 	 * @var string
 	 */

@@ -29,13 +29,7 @@ const report = ( results ) =>
 // The deck opens compact by default and remembers the last view in localStorage; the repeat control, the
 // A-B loop chip, the quality pill, and the cast/share chips only exist in the expanded view, so the axe
 // pass below covers both rather than only ever seeing the compact bar.
-const expandDeck = ( page ) =>
-	page.addInitScript( () =>
-		localStorage.setItem(
-			'callboard:deck-view',
-			JSON.stringify( 'expanded' )
-		)
-	);
+const expandDeck = ( page ) => page.locator( '#open-lyrics' ).click();
 
 for ( const scheme of [ 'light', 'dark' ] ) {
 	test.describe( `axe, ${ scheme }`, () => {
@@ -55,9 +49,9 @@ for ( const scheme of [ 'light', 'dark' ] ) {
 		} );
 
 		test( 'a set, with a track playing, expanded', async ( { page } ) => {
-			await expandDeck( page );
 			await page.goto( '/demo-set/' );
 			await page.locator( '.track' ).nth( 2 ).click();
+			await expandDeck( page );
 			const results = await audit( page );
 			expect( report( results ) ).toBe( '' );
 		} );

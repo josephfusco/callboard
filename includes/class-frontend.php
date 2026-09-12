@@ -63,7 +63,7 @@ final class Frontend {
 			'saving_set'     => __( 'Saving offline, %1$s of %2$s', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
 			'save_rest'      => __( 'Save the rest, %1$s of %2$s saved', 'callboard' ),
-			'saved_hover'    => __( ' · hold to remove', 'callboard' ),
+			'saved_hover'    => __( 'Hold to remove', 'callboard' ),
 			'saved_hint'     => __( 'Saved offline. Press and hold, or press Delete, to remove the copies.', 'callboard' ),
 			/* translators: 1: tracks saved so far, 2: total tracks. */
 			'saving'         => __( 'Saving %1$s/%2$s · Cancel', 'callboard' ),
@@ -76,6 +76,8 @@ final class Frontend {
 			'hide_notes'     => __( 'Hide director notes', 'callboard' ),
 			/* translators: %d: beats per minute. */
 			'show_lyrics'    => __( 'Show lyrics', 'callboard' ),
+			// The pill's own label: a noun, because the control is the way to a thing, not an instruction.
+			'lyrics'         => __( 'Lyrics', 'callboard' ),
 			'hide_lyrics'    => __( 'Hide lyrics', 'callboard' ),
 			'show_track'     => __( 'Show current track', 'callboard' ),
 			'remote'         => __( 'Play on another device', 'callboard' ),
@@ -98,13 +100,6 @@ final class Frontend {
 			'notify_on'      => __( 'Notifications on', 'callboard' ),
 			'notify_home'    => __( 'Add to Home Screen first, then turn on notifications from there.', 'callboard' ),
 			'notify_denied'  => __( 'Notifications are blocked in your browser settings.', 'callboard' ),
-			// Keyed by the tier callboard_quality_tier() returns, so the script never spells one itself.
-			'tiers'          => array(
-				'max'  => callboard_quality_tier_label( 'max' ),
-				'hifi' => callboard_quality_tier_label( 'hifi' ),
-				'high' => callboard_quality_tier_label( 'high' ),
-				'low'  => callboard_quality_tier_label( 'low' ),
-			),
 		);
 		/**
 		 * Everything the front end knows: site, sets, settings, text. Add a field here and it is on window.CALLBOARD.

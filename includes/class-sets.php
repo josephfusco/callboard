@@ -169,7 +169,6 @@ final class Sets {
 				'notes'    => is_array( $notes ) ? array_values( $notes ) : array(),
 				'artist'   => '' !== $by ? $by : null,
 				'quality'  => callboard_quality( $meta ),
-				'tier'     => callboard_quality_tier( $meta ),
 			);
 			$uploader = get_post_meta( $track->ID, '_callboard_uploader', true );
 			if ( $uploader ) {
@@ -193,7 +192,8 @@ final class Sets {
 			$uploaders = array();
 		}
 
-		$set = array(
+		$thumb = (int) get_post_thumbnail_id( $post->ID );
+		$set   = array(
 			'id'      => $post->ID,
 			'slug'    => $post->post_name,
 			'name'    => $post->post_title,
@@ -201,7 +201,11 @@ final class Sets {
 			'meta'    => callboard_meta( $tracks ),
 			'lyrics'  => $lyrics ? $lyrics : (object) array(),
 			'art'     => self::art( $post->ID ),
-			'cover'   => get_post_thumbnail_id( $post->ID ) ? wp_get_attachment_image_url( get_post_thumbnail_id( $post->ID ), 'callboard-cover-512' ) : null,
+			'cover'   => $thumb ? wp_get_attachment_image_url( $thumb, 'callboard-cover-512' ) : null,
+			// Native responsive images: the sizes WordPress already made for the featured image, so a
+			// full-screen Now Playing on a laptop is not handed the 512 a phone wants.
+			'srcset'  => $thumb ? ( wp_get_attachment_image_srcset( $thumb, 'full' ) ? wp_get_attachment_image_srcset( $thumb, 'full' ) : null ) : null,
+			'tint'    => self::tint( $post->ID ),
 			'share'   => self::share_image( $post->ID ),
 			'credits' => array(
 				'uploaders'    => $uploaders ? $uploaders : (object) array(),
@@ -217,6 +221,30 @@ final class Sets {
 		 * @param WP_Post              $post Set post.
 		 */
 		return apply_filters( 'callboard_set_data', $set, $post );
+	}
+
+	/**
+	 * One colour taken from the set's cover, cached on the set as post meta.
+	 *
+	 * Computed once and stored rather than on every render: GD reading a PNG is not something to do
+	 * inside a page load. The meta is cleared alongside the thumbnail in Importer::import_image(),
+	 * so replacing a cover replaces the colour.
+	 *
+	 * @param int $set_id Set post ID.
+	 */
+	private static function tint( int $set_id ): ?string {
+		$stored = get_post_meta( $set_id, '_callboard_tint', true );
+		if ( is_string( $stored ) && '' !== $stored ) {
+			return 'none' === $stored ? null : $stored;
+		}
+
+		$thumb = (int) get_post_thumbnail_id( $set_id );
+		$file  = $thumb ? get_attached_file( $thumb ) : '';
+		$tint  = $file ? Art::tint( $file ) : null;
+		// 'none' rather than '' so a cover GD cannot read is remembered as answered, not as unasked.
+		update_post_meta( $set_id, '_callboard_tint', $tint ? $tint : 'none' );
+
+		return $tint;
 	}
 
 	/**

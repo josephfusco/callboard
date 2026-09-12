@@ -6,13 +6,7 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
 // The deck opens compact by default (title, artist, play/pause) and remembers the last view; a few tests
 // here reach into the wave/times/chips row, which compact hides, so they ask for the expanded view first.
-const expandDeck = ( page ) =>
-	page.addInitScript( () =>
-		localStorage.setItem(
-			'callboard:deck-view',
-			JSON.stringify( 'expanded' )
-		)
-	);
+const expandDeck = ( page ) => page.locator( '#open-lyrics' ).click();
 
 test.describe( 'Front end', () => {
 	test( 'home lists sets with counts and the footer note', async ( {
@@ -275,9 +269,9 @@ test.describe( 'Front end', () => {
 	test( 'ticks and note pins mark the seek line; a pin jumps there', async ( {
 		page,
 	} ) => {
-		await expandDeck( page ); // the seek line and its marks are expanded-only now
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).nth( 2 ).click(); // the annotated track
+		await expandDeck( page ); // the seek line and its marks are expanded-only now
 		await expect( page.locator( '#seek-marks .pin' ) ).toHaveCount( 2 ); // one per director's note
 		await page.locator( '#seek-marks .pin' ).first().click();
 		await expect( page.locator( '#now-title' ) ).toContainText(
@@ -289,9 +283,9 @@ test.describe( 'Front end', () => {
 	test( 'an A-B loop from the keyboard shows the band and clears', async ( {
 		page,
 	} ) => {
-		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
 		await page.evaluate( () => {
 			document.getElementById( 'audio' ).currentTime = 2;
 		} );
@@ -308,9 +302,9 @@ test.describe( 'Front end', () => {
 	test( 'the deck draws the waveform and keeps one height with or without lyrics', async ( {
 		page,
 	} ) => {
-		await expandDeck( page ); // the wave only draws in the expanded view
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click(); // levels and a note
+		await expandDeck( page ); // the wave only draws in the expanded view
 		await expect( page.locator( '#deck' ) ).toHaveClass( /has-wave/ );
 		expect(
 			await page.locator( '#wave-base' ).evaluate( ( c ) => c.width )
@@ -332,6 +326,7 @@ test.describe( 'Front end', () => {
 		);
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click(); // levels, no lyrics or notes
+		await expandDeck( page ); // compare like with like: Now Playing in both cases
 		const without = ( await page.locator( '#deck' ).boundingBox() ).height;
 		expect( Math.abs( withLyrics - without ) ).toBeLessThan( 1 );
 	} );
@@ -408,7 +403,6 @@ test.describe( 'Front end', () => {
 				},
 			} );
 		} );
-		await expandDeck( page ); // the cast chip lives on the (now expanded-only) time row
 		await page.goto( '/demo-set/' );
 		test.skip(
 			! ( await page.evaluate(
@@ -417,6 +411,7 @@ test.describe( 'Front end', () => {
 			'no Remote Playback API in this browser'
 		);
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page ); // the cast chip lives on the (now expanded-only) time row
 		const chip = page.locator( '#remote' );
 		await expect( chip ).toBeVisible();
 		await expect( chip ).toHaveAttribute(

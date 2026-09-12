@@ -23,6 +23,12 @@
 			} catch {}
 		},
 	};
+	// What is left, not what there is: the track list already states the length, and a player is
+	// asked "how much longer", never "how long was it".
+	const remaining = ( total, at ) =>
+		isFinite( total ) && total > 0
+			? `-${ fmt( Math.max( 0, total - at ) ) }`
+			: '0:00';
 	const retrigger = ( el, cls ) => {
 		el.classList.remove( cls );
 		void el.offsetWidth;
@@ -184,7 +190,6 @@
 		cur = $( 'cur' ),
 		dur = $( 'dur' ),
 		quality = $( 'quality' ),
-		qualityTier = $( 'quality-tier' ),
 		qualityDetail = $( 'quality-detail' );
 	const lyricsSheet = $( 'lyrics' ),
 		lyricsList = $( 'lyrics-lines' ),
@@ -197,7 +202,6 @@
 	// remembers (ls, above). Compact is the default — a 72px bar with just the title and play/pause; expanded
 	// is close to what the deck has always been. Read before load() below, since the class has to be on the
 	// element before the first track ever shows the deck.
-	const DECK_VIEW_KEY = 'callboard:deck-view';
 	function syncOpenLyricsA11y() {
 		// The title button doubles as the compact bar's tap target; while compact it expands the deck instead
 		// of the lyrics sheet, so its label and aria-controls have to say that rather than whatever the sheet
@@ -228,13 +232,31 @@
 				? T.show_lyrics
 				: T.show_track
 		);
+		paintSheetPill();
 	}
-	function setDeckView( mode, { persist = true } = {} ) {
+	// The pill exists only where the track has words. Its label is the sheet's own name so the
+	// control says what it opens rather than "Lyrics" over a page of director's notes.
+	function paintSheetPill() {
+		const pill = $( 'sheet-pill' );
+		if ( ! pill ) {
+			return;
+		}
+		pill.hidden = ! sheetKind;
+		if ( ! sheetKind ) {
+			return;
+		}
+		const open = ! lyricsSheet.hidden;
+		pill.textContent = sheetKind === 'notes' ? T.notes : T.lyrics;
+		pill.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
+	}
+	// Two states and no memory of them. Expanded is Now Playing over the whole screen, and a screen
+	// that opens over the track list because of something you tapped yesterday is a screen you have
+	// to dismiss before you can use the app. Every media player treats Now Playing as somewhere you
+	// go, never somewhere you land.
+	function setDeckView( mode ) {
 		deck.classList.toggle( 'is-compact', mode !== 'expanded' );
 		deck.classList.toggle( 'is-expanded', mode === 'expanded' );
-		if ( persist ) {
-			ls.set( DECK_VIEW_KEY, mode );
-		}
+		document.body.classList.toggle( 'now-playing', mode === 'expanded' );
 		syncOpenLyricsA11y();
 	}
 	function expandDeck() {
@@ -257,12 +279,7 @@
 		setDeckView( 'compact' );
 	}
 	let sheetKind = ''; // set by renderSheet(); declared here so syncOpenLyricsA11y() above can read it early
-	setDeckView(
-		ls.get( DECK_VIEW_KEY ) === 'expanded' ? 'expanded' : 'compact',
-		{
-			persist: false,
-		}
-	);
+	setDeckView( 'compact' );
 
 	let looper = null, // the gapless loop, when one is running (see the A-B loop section)
 		looperCtx = null,
@@ -592,6 +609,20 @@
 		waveHover = $( 'wave-hover' ),
 		wavePlayed = $( 'wave-played' ),
 		waveReveal = $( 'wave-reveal' );
+	// The wave is a bitmap sized to its box, and its box changes width between the bar and the full
+	// screen — and again on rotate, or when a desktop window is dragged. One observer beats trying to
+	// guess the frame on which each of those has settled.
+	let waveBox = 0;
+	if ( window.ResizeObserver && waveBase?.parentElement ) {
+		new ResizeObserver( ( entries ) => {
+			const w = Math.round( entries[ 0 ].contentRect.width );
+			if ( w && w !== waveBox ) {
+				waveBox = w;
+				drawWave();
+				paint( true );
+			}
+		} ).observe( waveBase.parentElement );
+	}
 	function drawWave() {
 		if ( ! waveBase || ! wavePlayed ) {
 			return;
@@ -683,6 +714,7 @@
 		if ( ! seeking ) {
 			seek.value = Math.round( ( d ? now / d : 0 ) * 1000 );
 			cur.textContent = fmt( now );
+			dur.textContent = remaining( d, now );
 			if ( d ) {
 				seek.setAttribute(
 					'aria-valuetext',
@@ -742,12 +774,26 @@
 	}
 	// Bytes and duration are on every track already; an average bitrate reads without waiting on the richer
 	// bit-depth/sample-rate metadata WordPress keeps but does not yet send to the front end.
-	function paintTier( tier ) {
-		if ( ! qualityTier ) {
+	// Now Playing's artwork and wash. Both come off the set, since a set has one cover; a per-track
+	// cover would be a data-model change, not a rendering one.
+	function paintCover() {
+		const img = $( 'deck-cover' );
+		if ( ! img ) {
 			return;
 		}
-		quality.dataset.tier = tier;
-		qualityTier.textContent = tier ? T.tiers?.[ tier ] || '' : '';
+		const src = queue?.cover || '';
+		if ( src && img.getAttribute( 'src' ) !== src ) {
+			img.src = src;
+			if ( queue.srcset ) {
+				img.srcset = queue.srcset;
+			} else {
+				img.removeAttribute( 'srcset' );
+			}
+		} else if ( ! src ) {
+			img.removeAttribute( 'src' );
+			img.removeAttribute( 'srcset' );
+		}
+		deck.style.setProperty( '--tint', queue?.tint || 'transparent' );
 	}
 	function paintQuality( t ) {
 		if ( ! quality ) {
@@ -757,7 +803,6 @@
 		// then this approximates a bitrate from what every track already carries, so the pill is never empty.
 		if ( t.quality ) {
 			quality.hidden = false;
-			paintTier( t.tier || '' );
 			qualityDetail.textContent = t.quality;
 			return;
 		}
@@ -767,9 +812,6 @@
 				: 0;
 		const ext = ( /\.([a-z0-9]+)(?:\?.*)?$/i.exec( t.url ) || [] )[ 1 ];
 		quality.hidden = ! kbps;
-		// A bitrate worked out from bytes over duration is an estimate, so it gets no tier badge:
-		// the badge is a claim about the copy, and this is a guess about the file.
-		paintTier( '' );
 		qualityDetail.textContent = kbps
 			? tpl( quality.dataset.format, ( ext || '' ).toUpperCase(), kbps )
 			: '';
@@ -789,7 +831,7 @@
 		noteShown = null;
 		nowTitle.classList.remove( 'is-note' );
 		setTitle( t.title );
-		dur.textContent = fmt( t.duration );
+		dur.textContent = remaining( t.duration, 0 );
 		paintQuality( t );
 		lastSec = -1;
 		setProgress( 0 );
@@ -819,6 +861,11 @@
 		}
 		// The tab strip is the lock screen for a laptop, so it learns the track at the same moment.
 		paintTab();
+		paintCover();
+		const from = $( 'deck-from-set' );
+		if ( from ) {
+			from.textContent = queue?.name || '';
+		}
 		if ( 'mediaSession' in navigator ) {
 			navigator.mediaSession.metadata = new MediaMetadata( {
 				title: t.title,
@@ -973,10 +1020,17 @@
 	// nothing while merely holding.
 	let swipe = null;
 	deck.addEventListener( 'pointerdown', ( e ) => {
+		if ( ! deck.classList.contains( 'is-expanded' ) ) {
+			return;
+		}
+		// The grabber is a handle, so it drags with a mouse as well — a desktop pointer has no swipe
+		// and the bar is drawn as something to pull. Everywhere else on the screen a mouse drag is a
+		// selection, not a dismissal, so only touch starts one there.
+		const onGrabber = !! e.target.closest( '.deck-down' );
 		if (
-			e.pointerType === 'mouse' ||
-			! deck.classList.contains( 'is-expanded' ) ||
-			e.target.closest( 'button, input, a, .seek-wrap' )
+			( e.pointerType === 'mouse' && ! onGrabber ) ||
+			( ! onGrabber &&
+				e.target.closest( 'button, input, a, .seek-wrap' ) )
 		) {
 			return;
 		}
@@ -1050,12 +1104,10 @@
 
 	$( 'prev' ).addEventListener( 'click', () => {
 		haptic();
-		retrigger( $( 'prev' ), 'kick-l' );
 		prev();
 	} );
 	$( 'next' ).addEventListener( 'click', () => {
 		haptic();
-		retrigger( $( 'next' ), 'kick-r' );
 		load( i < 0 ? 0 : i + 1 );
 	} );
 	toggle.addEventListener( 'click', () => {
@@ -1108,7 +1160,7 @@
 		paintRepeat();
 	} );
 
-	// ---- Count-in: with a tempo, Play from the top taps four beats first (a soft click, the button breathes)
+	// ---- Count-in: with a tempo, Play from the top taps four beats first (a soft click, and the count on the title)
 	let countCancel = null,
 		clickCtx = null;
 	const click = ( first ) => {
@@ -1165,9 +1217,6 @@
 								).join( '   ' )
 							); // the count accumulates: 1, 1 2, 1 2 3, 1 2 3 4
 							click( k === 1 ); // the beat is audible only: a timer is not a gesture, so no haptic can ride on it
-							if ( ! reduce() ) {
-								retrigger( toggle, 'beat' );
-							}
 						},
 						( k - 1 ) * beat
 					)
@@ -1227,7 +1276,6 @@
 		morph( 'pause' );
 		deck.classList.add( 'playing' );
 		syncRows();
-		retrigger( toggle, 'ring' );
 		positionState();
 		paintTab();
 	} );
@@ -1264,7 +1312,7 @@
 	} );
 	audio.addEventListener( 'loadedmetadata', () => {
 		if ( isFinite( audio.duration ) ) {
-			dur.textContent = fmt( audio.duration );
+			dur.textContent = remaining( audio.duration, audio.currentTime );
 		}
 		positionState();
 	} );
@@ -1633,6 +1681,7 @@
 			r = seek.value / 1000;
 		setProgress( r );
 		cur.textContent = fmt( r * d );
+		dur.textContent = remaining( d, r * d );
 		seek.setAttribute(
 			'aria-valuetext',
 			`${ fmt( r * d ) } / ${ fmt( d ) }`
@@ -1733,12 +1782,13 @@
 		} else {
 			delete openLyrics.dataset.sheet;
 		}
-		// The sheet's name if one is open, otherwise who the track is by, otherwise the set's name.
-		// Never blank, so the deck keeps a constant height.
+		// Who the track is by, otherwise the set's name, otherwise the sheet's — never blank, so the
+		// deck keeps a constant height. The sheet's name is the last resort now that Now Playing has
+		// a pill that says it: two controls a thumb apart both reading "Notes" is one too many.
 		openLyrics.dataset.line =
-			openLyrics.dataset.sheet ||
 			queue?.tracks[ i ]?.artist ||
 			queue?.name ||
+			openLyrics.dataset.sheet ||
 			'';
 		syncOpenLyricsA11y();
 		$( 'sheet-label' ).textContent =
@@ -1859,6 +1909,30 @@
 		}
 		rows[ i ]?.scrollIntoView( { block: 'center', behavior: 'smooth' } );
 		rows[ i ]?.focus( { preventScroll: true } );
+	} );
+	// Tidal's "Playing from" is the way back to what you are inside, and with the bar's own tap now
+	// opening Now Playing it is the only way back to the set from anywhere else.
+	$( 'deck-from' )?.addEventListener( 'click', () => {
+		if ( ! queue ) {
+			return;
+		}
+		haptic();
+		collapseDeck();
+		if ( ! onQueuePage() ) {
+			go( `${ G.home }${ queue.slug }/` );
+		}
+	} );
+	$( 'sheet-pill' )?.addEventListener( 'click', () => {
+		haptic();
+		if ( lyricsSheet.hidden ) {
+			showLyrics();
+		} else {
+			hideLyrics();
+		}
+	} );
+	$( 'deck-down' )?.addEventListener( 'click', () => {
+		haptic();
+		collapseDeck();
 	} );
 	$( 'close-lyrics' ).addEventListener( 'click', () => {
 		haptic();
@@ -2620,7 +2694,9 @@
 				'aria-label',
 				have.size === tracks.length && ! busy ? T.saved_hint : ''
 			);
-			offBtn.dataset.hint = have.size ? T.saved_hover : '';
+			// A title, not text in the button: appended inline it grew the button mid-hover and pushed
+			// the row below onto a second line, which is a layout shift caused by looking at something.
+			offBtn.title = have.size ? T.saved_hover : '';
 			if ( ! offBtn.getAttribute( 'aria-label' ) ) {
 				offBtn.removeAttribute( 'aria-label' );
 			}

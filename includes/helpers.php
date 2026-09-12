@@ -137,54 +137,6 @@ function callboard_link( string $text, ?string $url ): string {
 }
 
 /**
- * Which tier a copy belongs to: max, hifi, high, low, or '' when nothing is known.
- *
- * The names are Tidal's, deliberately. A cast member comparing two copies of the same song has
- * almost certainly seen that vocabulary somewhere, and inventing a private one would mean teaching
- * it. The boundaries are Tidal's too: lossless is HiFi, lossless past CD is Max, and lossy splits
- * at the 256 kbps their High tier sits on.
- *
- * The tier is a headline, not a measurement — callboard_quality() below is the measurement, and the
- * two are shown together so the word never has to be taken on trust.
- *
- * @param array<string, mixed> $meta Attachment metadata.
- */
-function callboard_quality_tier( array $meta ): string {
-	$rate = (int) ( $meta['sample_rate'] ?? 0 );
-	if ( ! $rate ) {
-		return '';
-	}
-
-	if ( ! empty( $meta['lossless'] ) ) {
-		$bits = (int) ( $meta['bits_per_sample'] ?? 0 );
-		return $bits >= 24 || $rate > 48000 ? 'max' : 'hifi';
-	}
-
-	$kbps = (int) round( ( (float) ( $meta['bitrate'] ?? 0 ) ) / 1000 );
-	if ( ! $kbps ) {
-		return '';
-	}
-
-	return $kbps >= 256 ? 'high' : 'low';
-}
-
-/**
- * The tier's name, for a badge.
- *
- * @param string $tier One of max, hifi, high, low.
- */
-function callboard_quality_tier_label( string $tier ): string {
-	$names = array(
-		'max'  => _x( 'Max', 'audio quality tier', 'callboard' ),
-		'hifi' => _x( 'HiFi', 'audio quality tier', 'callboard' ),
-		'high' => _x( 'High', 'audio quality tier', 'callboard' ),
-		'low'  => _x( 'Low', 'audio quality tier', 'callboard' ),
-	);
-
-	return $names[ $tier ] ?? '';
-}
-
-/**
  * What a copy actually is: "16-bit 44.1kHz" for lossless, "270 kbps 48.0kHz" for lossy.
  *
  * Bit depth is a property of PCM, so it is only shown where the format has one. Printing "24-bit"

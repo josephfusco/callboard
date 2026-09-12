@@ -246,21 +246,40 @@ final class Importer {
 	private static function draw_missing_art( string $dir, int $set ): void {
 		$cover = $dir . '/cover.png';
 		$share = $dir . '/share.png';
-		if ( ( file_exists( $cover ) && file_exists( $share ) ) || ! is_writable( $dir ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- GD writes the PNG with a path, not through WP_Filesystem, so the question is whether that path is writable.
+		if ( ! is_writable( $dir ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- GD writes the PNG with a path, not through WP_Filesystem, so the question is whether that path is writable.
 			return;
 		}
+
 		$tracks = array();
 		foreach ( Sets::track_posts( $set ) as $track ) {
 			$tracks[] = array( 'duration' => (float) get_post_meta( $track->ID, '_callboard_duration', true ) );
 		}
+		$palette  = (string) get_post_meta( $set, '_callboard_palette', true );
 		$manifest = array(
-			'name'   => get_the_title( $set ),
-			'tracks' => $tracks,
+			'name'    => get_the_title( $set ),
+			'slug'    => get_post_field( 'post_name', $set ),
+			'palette' => $palette,
+			'tracks'  => $tracks,
 		);
-		if ( ! file_exists( $cover ) ) {
-			Art::cover( $manifest, $cover );
+
+		// The artwork carries the set's name and "18 tracks · 1 hr 15 min", so it goes stale the moment
+		// the set gains a track — a cover drawn while a folder was empty says "No audio yet" forever
+		// otherwise. Redrawing on a changed fingerprint fixes that, but only for artwork this code
+		// drew: a cover somebody supplied themselves is theirs, and is never overwritten.
+		$want  = md5( (string) wp_json_encode( array( $manifest['name'], count( $tracks ), (int) array_sum( array_column( $tracks, 'duration' ) ), Settings::get( 'tagline' ), $palette ) ) );
+		$drawn = (string) get_post_meta( $set, '_callboard_art_drawn', true );
+		$ours  = '' !== $drawn;
+
+		$redraw_cover = ! file_exists( $cover ) || ( $ours && $drawn !== $want );
+		$redraw_share = ! file_exists( $share ) || ( $ours && $drawn !== $want );
+		if ( ! $redraw_cover && ! $redraw_share ) {
+			return;
 		}
-		if ( ! file_exists( $share ) ) {
+
+		if ( $redraw_cover && Art::cover( $manifest, $cover ) ) {
+			update_post_meta( $set, '_callboard_art_drawn', $want );
+		}
+		if ( $redraw_share ) {
 			Art::share( $manifest, $share );
 		}
 	}
@@ -290,6 +309,7 @@ final class Importer {
 			update_post_meta( $current, '_callboard_source_mtime', $mtime );
 			if ( 'cover' === $role ) {
 				set_post_thumbnail( $set, $current );
+				delete_post_meta( $set, '_callboard_tint' ); // A new cover is a new colour.
 			}
 			return;
 		}
@@ -304,6 +324,7 @@ final class Importer {
 		update_post_meta( $set, $meta_key, $id );
 		if ( 'cover' === $role ) {
 			set_post_thumbnail( $set, $id );
+			delete_post_meta( $set, '_callboard_tint' );
 		}
 	}
 

@@ -57,4 +57,16 @@
 	<rule ref="WordPress.Security.ValidatedSanitizedInput">
 		<exclude-pattern>/tests/php/*</exclude-pattern>
 	</rule>
+
+	<!--
+		wp-tests-config.php is a WordPress configuration file, not plugin code: every name in it —
+		DB_NAME, ABSPATH, $table_prefix — is one core chose, so the prefix and global-override rules
+		are asking it to be something it cannot be.
+	-->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<exclude-pattern>/tests/php/wp-tests-config.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.GlobalVariablesOverride">
+		<exclude-pattern>/tests/php/wp-tests-config.php</exclude-pattern>
+	</rule>
 </ruleset>

@@ -264,7 +264,13 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 @keyframes pulse{50%{opacity:.4}}
 .remote-chip:active{background:var(--surface-2)}
 /* the quality pill: expanded only, aligned to the same column as the title, never the reason the row wraps */
-.quality-pill{flex:none;align-self:flex-start;margin-top:2px;color:var(--ink-3);font-size:.75rem;font-variant-numeric:tabular-nums;white-space:nowrap;padding:2px var(--s1);border:1px solid var(--line);border-radius:999px}
+.quality-pill{flex:none;align-self:flex-start;margin-top:2px;display:inline-flex;align-items:baseline;gap:6px;color:var(--ink-3);font-size:.75rem;font-variant-numeric:tabular-nums;white-space:nowrap;padding:2px var(--s1);border:1px solid var(--line);border-radius:999px}
+/* the tier is the headline and the numbers are the evidence, so the word is the only part that
+   changes weight. Lossless earns the accent; a stream states itself and stays quiet. */
+.quality-pill .tier{font-weight:600;font-style:normal;letter-spacing:.02em;text-transform:uppercase;font-size:.6875rem}
+.quality-pill .tier:empty{display:none}
+.quality-pill[data-tier="max"],.quality-pill[data-tier="hifi"]{border-color:var(--line-strong)}
+.quality-pill[data-tier="max"] .tier,.quality-pill[data-tier="hifi"] .tier{color:var(--accent-text)}
 /* transport: secondary (repeat, the A-B loop affordance) left, primary (previous, play, next) right — both
    inside the one column, never the viewport (see .deck-inner). Two groups, not five loose controls. */
 .deck-controls{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);position:relative;z-index:2}

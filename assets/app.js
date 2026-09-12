@@ -183,7 +183,9 @@
 		seekFill = $( 'seek-fill' ),
 		cur = $( 'cur' ),
 		dur = $( 'dur' ),
-		quality = $( 'quality' );
+		quality = $( 'quality' ),
+		qualityTier = $( 'quality-tier' ),
+		qualityDetail = $( 'quality-detail' );
 	const lyricsSheet = $( 'lyrics' ),
 		lyricsList = $( 'lyrics-lines' ),
 		openLyrics = $( 'open-lyrics' );
@@ -740,6 +742,13 @@
 	}
 	// Bytes and duration are on every track already; an average bitrate reads without waiting on the richer
 	// bit-depth/sample-rate metadata WordPress keeps but does not yet send to the front end.
+	function paintTier( tier ) {
+		if ( ! qualityTier ) {
+			return;
+		}
+		quality.dataset.tier = tier;
+		qualityTier.textContent = tier ? T.tiers?.[ tier ] || '' : '';
+	}
 	function paintQuality( t ) {
 		if ( ! quality ) {
 			return;
@@ -748,7 +757,8 @@
 		// then this approximates a bitrate from what every track already carries, so the pill is never empty.
 		if ( t.quality ) {
 			quality.hidden = false;
-			quality.textContent = t.quality;
+			paintTier( t.tier || '' );
+			qualityDetail.textContent = t.quality;
 			return;
 		}
 		const kbps =
@@ -757,7 +767,10 @@
 				: 0;
 		const ext = ( /\.([a-z0-9]+)(?:\?.*)?$/i.exec( t.url ) || [] )[ 1 ];
 		quality.hidden = ! kbps;
-		quality.textContent = kbps
+		// A bitrate worked out from bytes over duration is an estimate, so it gets no tier badge:
+		// the badge is a claim about the copy, and this is a guess about the file.
+		paintTier( '' );
+		qualityDetail.textContent = kbps
 			? tpl( quality.dataset.format, ( ext || '' ).toUpperCase(), kbps )
 			: '';
 	}
@@ -2123,8 +2136,9 @@
 		if ( ! t ) {
 			return '';
 		}
-		// The playing glyph, not a pause one: a tab that is merely loaded should read like any other tab.
-		return `${ audio.paused ? '' : '♪ ' }${ t.title } · ${ queue.name }`;
+		// No glyph: every browser already marks an audible tab with a speaker, and a second indicator
+		// beside it would only spend characters the tab strip does not have.
+		return `${ t.title } · ${ queue.name }`;
 	}
 
 	function paintTab() {

@@ -25,6 +25,13 @@ const PHONE = { width: 390, height: 664 };
 		const page = await ctx.newPage();
 		await visit( page );
 		await page.waitForTimeout( 1200 ); // let the entrance animations settle
+		// A title caught mid-marquee reads as a bug in a screenshot. Park it at the start.
+		await page.evaluate( () => {
+			document.querySelectorAll( '.deck-title .mq' ).forEach( ( el ) => {
+				el.style.animation = 'none';
+				el.style.transform = 'none';
+			} );
+		} );
 		await page.screenshot( { path: path.join( OUT, name ) } );
 		await ctx.close();
 		console.log( `${ name }  ${ PHONE.width * 2 }x${ PHONE.height * 2 }  ${ scheme }` );

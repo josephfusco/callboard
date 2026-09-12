@@ -56,7 +56,9 @@ test.describe( 'Admin', () => {
 		// Find the demo set's ID through the list table (REST is closed to anonymous but we're logged in here).
 		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
 		const row = page
-			.locator( '.wp-list-table tbody tr', { hasText: 'Shakespeare’s Sonnets' } )
+			.locator( '.wp-list-table tbody tr', {
+				hasText: 'Shakespeare’s Sonnets',
+			} )
 			.first();
 		await expect( row ).toContainText( 'Shakespeare’s Sonnets' );
 		await expect( row.locator( 'td.tracks' ) ).toHaveText( '10' );
@@ -90,14 +92,18 @@ test.describe( 'Admin', () => {
 	} ) => {
 		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
 		await page
-			.locator( '.wp-list-table tbody tr', { hasText: 'Shakespeare’s Sonnets' } )
+			.locator( '.wp-list-table tbody tr', {
+				hasText: 'Shakespeare’s Sonnets',
+			} )
 			.first()
 			.locator( 'a.row-title' )
 			.click();
 		const first = page.locator( '#callboard-tracks li' ).first();
 		// The panel renders open when the track already carries a tempo or a note, so opening it
 		// blindly would close it. Ask before clicking.
-		if ( ! ( await first.locator( 'details' ).evaluate( ( el ) => el.open ) ) ) {
+		if (
+			! ( await first.locator( 'details' ).evaluate( ( el ) => el.open ) )
+		) {
 			await first.locator( 'summary' ).click();
 		}
 		await first.locator( 'input[type=number]' ).fill( '100' );

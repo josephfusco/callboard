@@ -36,7 +36,10 @@ const setTime = ( page, t ) =>
 // default, the tap to expand, the swipe to collapse — gets its own describe block below.
 const expandDeck = ( page ) =>
 	page.addInitScript( () =>
-		localStorage.setItem( 'callboard:deck-view', JSON.stringify( 'expanded' ) )
+		localStorage.setItem(
+			'callboard:deck-view',
+			JSON.stringify( 'expanded' )
+		)
 	);
 
 test.describe( 'Controls', () => {
@@ -338,7 +341,9 @@ test.describe( 'Deck view: compact and expanded', () => {
 		await page.locator( '#repeat' ).click();
 		await page.locator( '#repeat' ).click(); // off -> set -> one
 		await page.evaluate( () =>
-			document.getElementById( 'audio' ).dispatchEvent( new Event( 'ended' ) )
+			document
+				.getElementById( 'audio' )
+				.dispatchEvent( new Event( 'ended' ) )
 		);
 		await expect( page.locator( '#now-title' ) ).toContainText(
 			'Sonnets 1–10'

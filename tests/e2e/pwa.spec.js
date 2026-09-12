@@ -15,9 +15,9 @@ test.describe( 'PWA and previews', () => {
 		expect( manifest.icons.length ).toBeGreaterThanOrEqual( 2 );
 		expect( manifest.id ).toBe( '/' );
 		// Not shortcuts[ 0 ]: a local-only set can sort ahead of the fixtures on this machine.
-		expect(
-			manifest.shortcuts.map( ( s ) => s.name )
-		).toContain( 'Shakespeare’s Sonnets' );
+		expect( manifest.shortcuts.map( ( s ) => s.name ) ).toContain(
+			'Shakespeare’s Sonnets'
+		);
 		expect( manifest.launch_handler.client_mode ).toBe(
 			'navigate-existing'
 		);
@@ -97,7 +97,9 @@ test.describe( 'PWA and previews', () => {
 
 		await context.setOffline( true );
 		await page.goto( '/' ); // home, from the precached shell
-		const set = page.locator( 'a.set', { hasText: 'Shakespeare’s Sonnets' } );
+		const set = page.locator( 'a.set', {
+			hasText: 'Shakespeare’s Sonnets',
+		} );
 		await expect( set ).toBeVisible();
 		await set.click(); // the set, from its cached fragment
 		await expect( page ).toHaveURL( /\/demo-set\/$/ );

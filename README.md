@@ -146,7 +146,7 @@ A gated request answers 403 with `templates/gate.php` rather than redirecting to
 | `site/` | Landing page (GitHub Pages) |
 | `languages/callboard.pot` | Translation template; `npm run pot` regenerates it |
 | `scripts/sync-versions.sh` | Writes the release version into the plugin files |
-| `scripts/screenshots.js` | Retakes the landing-page screenshots from a running wp-env site, at the exact sizes the page expects |
+| `scripts/screenshots.js` | Retakes the landing page screenshots from a running wp-env site. `node scripts/screenshots.js demo` retakes only the live demo previews |
 | `.github/` | Workflows, Dependabot, PR template, CONTRIBUTING |
 | `AGENTS.md` | Notes for coding agents |
 

@@ -1605,7 +1605,7 @@
 			looperCtx.state !== 'running' // autoplay policy kept the context shut: never mute the element for a silent looper
 		) {
 			if ( looper === ticket ) {
-				looper = null; // a later start owns the looper now: leave its ticket alone
+				looper = null; // still ours to give up; a later start's ticket is not
 			}
 			return;
 		}

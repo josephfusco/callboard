@@ -2,6 +2,8 @@
 # Intentional spellings go here, one per line, as `word = "word"`.
 # HTMLMediaElement fires a `seeked` event; it is not a misspelling of "sought".
 seeked = "seeked"
+# The ID3v2 artist frame is TPE1, and the checker reads the digit separately.
+TPE = "TPE"
 
 [files]
 extend-exclude = [

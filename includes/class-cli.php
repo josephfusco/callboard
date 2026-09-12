@@ -118,13 +118,25 @@ final class Cli {
 	 * <slug>
 	 * : The set's slug.
 	 *
+	 * [--format=<format>]
+	 * : `file` for a .callboard file, or `car` for a plain folder of tagged mp3s to copy
+	 * onto a USB stick. Default: file.
+	 * ---
+	 * default: file
+	 * options:
+	 *   - file
+	 *   - car
+	 * ---
+	 *
 	 * [--out=<path>]
-	 * : Where to write it. Defaults to <slug>.callboard in the working directory.
+	 * : Where to write it. A file path for `file`, a directory to write the set's folder
+	 * inside for `car`. Defaults to the working directory.
 	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp callboard export spring-show
 	 *     wp callboard export spring-show --out=/tmp/spring.callboard
+	 *     wp callboard export spring-show --format=car --out=/Volumes/USB
 	 *
 	 * @param string[]              $args       Positional args.
 	 * @param array<string, string> $assoc_args Named args.
@@ -134,6 +146,15 @@ final class Cli {
 		$set  = $slug ? Sets::post_by_slug( $slug ) : null;
 		if ( ! $set ) {
 			WP_CLI::error( sprintf( 'No set with the slug "%s".', $slug ) );
+		}
+
+		if ( 'car' === ( $assoc_args['format'] ?? 'file' ) ) {
+			$result = Exporter::write_folder( $set, (string) ( $assoc_args['out'] ?? getcwd() ) );
+			if ( is_wp_error( $result ) ) {
+				WP_CLI::error( $result->get_error_message() );
+			}
+			WP_CLI::success( sprintf( '%s: %s', $set->post_title, $result ) );
+			return;
 		}
 
 		$path   = (string) ( $assoc_args['out'] ?? getcwd() . '/' . Exporter::filename( $set ) );

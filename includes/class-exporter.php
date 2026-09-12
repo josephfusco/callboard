@@ -200,6 +200,177 @@ final class Exporter {
 	}
 
 	/**
+	 * Write a set as a plain folder of tagged mp3s, in order, with a cover.
+	 *
+	 * This is the copy that goes on a USB stick. A car stereo has no manifest and no
+	 * sidecars; it sorts by file name and reads ID3, so the numbering carries the order and
+	 * every track names itself and its set on the dash.
+	 *
+	 * @param WP_Post $set  Set post.
+	 * @param string  $into Absolute path to write the set's folder inside.
+	 * @return string|WP_Error Absolute path to the folder written.
+	 */
+	public static function write_folder( WP_Post $set, string $into ) {
+		$tracks = self::manifest( $set )['tracks'];
+		if ( ! $tracks ) {
+			return new WP_Error( 'callboard_empty_set', __( 'That set has no audio to export.', 'callboard' ) );
+		}
+
+		$dir = trailingslashit( $into ) . self::folder_name( $set );
+		if ( file_exists( $dir ) ) {
+			if ( ! is_dir( $dir ) ) {
+				return new WP_Error( 'callboard_mkdir', __( 'Could not create the folder.', 'callboard' ) );
+			}
+			self::rmdir( $dir );
+		}
+		if ( ! wp_mkdir_p( $dir ) ) {
+			return new WP_Error( 'callboard_mkdir', __( 'Could not create the folder.', 'callboard' ) );
+		}
+
+		$cover   = self::jpeg_cover( self::image_path( $set->ID, 'cover' ), $dir );
+		$total   = count( $tracks );
+		$sources = array();
+		foreach ( Sets::track_posts( $set->ID ) as $track ) {
+			$file = get_attached_file( $track->ID );
+			if ( $file && file_exists( $file ) ) {
+				$sources[ basename( $file ) ] = $file;
+			}
+		}
+
+		foreach ( $tracks as $t ) {
+			$source = $sources[ $t['file'] ] ?? null;
+			if ( ! $source ) {
+				continue;
+			}
+			$name = sprintf( '%02d %s.%s', (int) $t['index'], self::plain_name( (string) $t['title'] ), pathinfo( $source, PATHINFO_EXTENSION ) );
+			$dest = $dir . '/' . $name;
+			if ( ! copy( $source, $dest ) ) {
+				continue;
+			}
+			if ( 'mp3' === strtolower( (string) pathinfo( $dest, PATHINFO_EXTENSION ) ) ) {
+				Id3::write(
+					$dest,
+					array(
+						'TIT2' => (string) $t['title'],
+						'TALB' => $set->post_title,
+						'TPE1' => (string) ( $t['uploader'] ? $t['uploader'] : $set->post_title ),
+						'TRCK' => (int) $t['index'] . '/' . $total,
+					),
+					$cover
+				);
+			}
+		}
+
+		return $dir;
+	}
+
+	/**
+	 * The same folder, zipped, because a browser can only be handed one file.
+	 *
+	 * @param WP_Post $set  Set post.
+	 * @param string  $path Absolute destination path for the zip.
+	 * @return string|WP_Error The path written.
+	 */
+	public static function write_car_zip( WP_Post $set, string $path ) {
+		if ( ! self::available() ) {
+			return new WP_Error( 'callboard_no_zip', __( 'This server has no ZipArchive, so sets cannot be exported.', 'callboard' ) );
+		}
+
+		$staging = trailingslashit( get_temp_dir() ) . uniqid( 'callboard-car-', true );
+		$folder  = self::write_folder( $set, $staging );
+		if ( is_wp_error( $folder ) ) {
+			return $folder;
+		}
+
+		$zip = new ZipArchive();
+		if ( true !== $zip->open( $path, ZipArchive::CREATE | ZipArchive::OVERWRITE ) ) {
+			self::rmdir( $staging );
+			return new WP_Error( 'callboard_zip_open', __( 'Could not create the file.', 'callboard' ) );
+		}
+		$base = basename( $folder );
+		foreach ( (array) glob( $folder . '/*' ) as $file ) {
+			if ( is_string( $file ) && is_file( $file ) ) {
+				$zip->addFile( $file, $base . '/' . basename( $file ) );
+			}
+		}
+		$zip->close();
+		self::rmdir( $staging );
+
+		return $path;
+	}
+
+	/**
+	 * The cover as a JPEG beside the audio, named the way head units and desktop players both
+	 * look for it. Embedded artwork is read far more widely as JPEG than as PNG, and the plugin
+	 * draws them, so convert where GD can and fall back to copying where it cannot.
+	 *
+	 * @param string|null $cover Absolute path to the set's cover, or null.
+	 * @param string      $dir   The folder being written.
+	 * @return string|null Path to the image to embed, or null.
+	 */
+	private static function jpeg_cover( ?string $cover, string $dir ): ?string {
+		if ( ! $cover ) {
+			return null;
+		}
+		if ( function_exists( 'imagecreatefrompng' ) && function_exists( 'imagejpeg' ) && 'png' === strtolower( (string) pathinfo( $cover, PATHINFO_EXTENSION ) ) ) {
+			$image = @imagecreatefrompng( $cover ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- a malformed cover is not worth failing the export over.
+			if ( false !== $image ) {
+				$dest = $dir . '/folder.jpg';
+				imagejpeg( $image, $dest, 90 ); // GdImage frees itself; imagedestroy() is deprecated.
+
+				return $dest;
+			}
+		}
+		$dest = $dir . '/folder.' . pathinfo( $cover, PATHINFO_EXTENSION );
+
+		return copy( $cover, $dest ) ? $dest : $cover;
+	}
+
+	/**
+	 * A set's folder name on a stick: the title, with anything a FAT volume dislikes removed.
+	 *
+	 * @param WP_Post $set Set post.
+	 */
+	private static function folder_name( WP_Post $set ): string {
+		$name = self::plain_name( $set->post_title );
+
+		return '' !== $name ? $name : ( $set->post_name ? $set->post_name : 'set' );
+	}
+
+	/**
+	 * A name a FAT volume and a head unit will both accept.
+	 *
+	 * @param string $name Raw name.
+	 */
+	private static function plain_name( string $name ): string {
+		$name = (string) preg_replace( '#[\\/:*?"<>|]+#', '', $name );
+		$name = (string) preg_replace( '/\s+/', ' ', $name );
+
+		return trim( substr( trim( $name ), 0, 60 ) );
+	}
+
+	/**
+	 * Remove a staging directory and everything in it.
+	 *
+	 * @param string $dir Absolute path.
+	 */
+	private static function rmdir( string $dir ): void {
+		foreach ( (array) glob( $dir . '/*' ) as $path ) {
+			if ( ! is_string( $path ) ) {
+				continue;
+			}
+			if ( is_dir( $path ) ) {
+				self::rmdir( $path );
+			} else {
+				wp_delete_file( $path );
+			}
+		}
+		if ( is_dir( $dir ) ) {
+			rmdir( $dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- a temp directory this export made.
+		}
+	}
+
+	/**
 	 * Unpack a .callboard file into an import folder.
 	 *
 	 * @param string $zip_path Absolute path to the uploaded file.
@@ -323,15 +494,19 @@ final class Exporter {
 			wp_die( esc_html__( 'That is not a set.', 'callboard' ) );
 		}
 
-		$path   = trailingslashit( get_temp_dir() ) . uniqid( 'callboard-', true ) . '.' . self::EXT;
-		$result = self::write( $set, $path );
+		$car = isset( $_GET['format'] ) && 'car' === $_GET['format'];
+
+		$path   = trailingslashit( get_temp_dir() ) . uniqid( 'callboard-', true ) . ( $car ? '.zip' : '.' . self::EXT );
+		$result = $car ? self::write_car_zip( $set, $path ) : self::write( $set, $path );
 		if ( is_wp_error( $result ) ) {
 			wp_die( esc_html( $result->get_error_message() ) );
 		}
 
+		$name = $car ? sanitize_file_name( ( $set->post_name ? $set->post_name : 'set' ) . '.zip' ) : self::filename( $set );
+
 		nocache_headers();
-		header( 'Content-Type: ' . self::TYPE );
-		header( 'Content-Disposition: attachment; filename="' . self::filename( $set ) . '"' );
+		header( 'Content-Type: ' . ( $car ? 'application/zip' : self::TYPE ) );
+		header( 'Content-Disposition: attachment; filename="' . $name . '"' );
 		header( 'Content-Length: ' . (string) filesize( $path ) );
 		readfile( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- streaming a temp file to the browser.
 		wp_delete_file( $path );

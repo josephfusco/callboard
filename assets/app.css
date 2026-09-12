@@ -30,7 +30,6 @@ button{font:inherit;color:inherit}
 body.has-deck .app{padding-bottom:calc(var(--deck-h) + var(--safe-b) + 40px)}
 
 /* sending the current track: the same chip as the cast one, so the pair reads as one row */
-.share-chip{margin-right:6px}
 /* the gate: the app's own page when the site asks for a sign-in, so nobody lands on wp-login */
 .gate{min-height:100svh;display:flex;flex-direction:column;justify-content:center}
 .gate .label{margin-top:8px}
@@ -257,9 +256,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* AirPlay in Safari, Cast in Chrome: an icon chip that only appears while a device is in reach */
 .remote-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .remote-chip svg{width:16px;height:16px;fill:currentColor}
-/* :not([data-state=""]) is the "is active" look; #share-track has no state machine of its own, so it now
-   carries a permanent data-state="" (in deck.php) rather than matching this by omission — it was the only
-   chip that could never clear that attribute, which is why it always read as active before. */
+/* :not([data-state=""]) is the "is active" look, so every chip carries data-state="" in deck.php and
+   clears it into a real value rather than matching this by omission. */
 .remote-chip:not([data-state=""]){color:var(--accent-text);border-color:var(--line-strong);background:linear-gradient(180deg,var(--surface),var(--surface-2));box-shadow:inset 0 1px 0 var(--gloss),0 1px 1px rgba(0,0,0,.08)}
 .remote-chip.is-away{visibility:hidden} /* keeps its slot */
 .remote-chip[data-state="connecting"]{animation:pulse 1s ease-in-out infinite}

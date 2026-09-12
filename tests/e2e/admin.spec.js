@@ -276,6 +276,12 @@ test.describe( 'Admin', () => {
 				/in|days/
 			);
 			await expect( call.locator( '.call-where' ) ).toHaveText( 'Pit' );
+			// #51: the board is a list ruled like the others, not a stack of cards.
+			await expect( call ).toHaveCSS(
+				'background-color',
+				'rgba(0, 0, 0, 0)'
+			);
+			await expect( call ).toHaveCSS( 'border-radius', '0px' );
 			await expect( call.locator( '.call-numbers a' ) ).toHaveText(
 				'Sonnets 21–30'
 			);

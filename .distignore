@@ -18,6 +18,7 @@ artifacts
 build
 scripts
 site
+docs
 blueprint.json
 CHANGELOG.md
 README.md

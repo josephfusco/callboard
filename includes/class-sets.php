@@ -62,9 +62,12 @@ final class Sets {
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function all(): array {
-		$cached = get_transient( self::CACHE_KEY );
-		if ( is_array( $cached ) ) {
-			return $cached;
+		// Keyed on the extensions that shape the data as well as the data, so switching one on or off
+		// rebuilds the sets instead of serving what the last configuration made.
+		$fingerprint = Extensions::data_fingerprint();
+		$cached      = get_transient( self::CACHE_KEY );
+		if ( is_array( $cached ) && ( $cached['extensions'] ?? null ) === $fingerprint && is_array( $cached['sets'] ?? null ) ) {
+			return $cached['sets'];
 		}
 		$posts = get_posts(
 			array(
@@ -78,7 +81,14 @@ final class Sets {
 			)
 		);
 		$sets  = array_map( array( self::class, 'build' ), $posts );
-		set_transient( self::CACHE_KEY, $sets, DAY_IN_SECONDS );
+		set_transient(
+			self::CACHE_KEY,
+			array(
+				'extensions' => $fingerprint,
+				'sets'       => $sets,
+			),
+			DAY_IN_SECONDS
+		);
 		return $sets;
 	}
 
@@ -155,7 +165,6 @@ final class Sets {
 			$duration = get_post_meta( $track->ID, '_callboard_duration', true );
 			$notes    = get_post_meta( $track->ID, '_callboard_notes', true );
 			$levels   = (string) get_post_meta( $track->ID, '_callboard_levels', true );
-			$bpm      = (int) get_post_meta( $track->ID, '_callboard_bpm', true );
 			$by       = (string) get_post_meta( $track->ID, '_callboard_uploader', true );
 			$tracks[] = array(
 				'id'       => $track->ID,
@@ -165,10 +174,10 @@ final class Sets {
 				'duration' => '' !== $duration ? (float) $duration : (float) ( $meta['length'] ?? 0 ),
 				'bytes'    => (int) ( $meta['filesize'] ?? filesize( $file ) ),
 				'levels'   => '' !== $levels ? $levels : null,
-				'bpm'      => $bpm > 0 ? $bpm : null,
 				'notes'    => is_array( $notes ) ? array_values( $notes ) : array(),
 				'artist'   => '' !== $by ? $by : null,
-				'quality'  => callboard_quality( $meta ),
+				// Tempo and quality belong to callboard/count-in and callboard/quality now, under `ext`.
+				// Extensions::filter_set_data() still writes `bpm` and `quality` here for API v1.
 			);
 			$uploader = get_post_meta( $track->ID, '_callboard_uploader', true );
 			if ( $uploader ) {

@@ -9,6 +9,7 @@
  */
 
 use Callboard\Importer;
+use Callboard\Sets;
 
 /**
  * @covers \Callboard\Importer
@@ -146,5 +147,32 @@ class Test_Callboard_Importer extends WP_UnitTestCase {
 		);
 
 		$this->assertStringNotContainsString( '<script>', $notes[0]['text'] );
+	}
+
+	/**
+	 * #65. The cover's attachment points at the file in the set folder itself. Replacing that file and
+	 * importing again deleted the old attachment, and deleting an attachment deletes its file, which was
+	 * by then the new cover. The set came back with no artwork at all.
+	 */
+	public function test_importing_a_replaced_cover_keeps_the_new_one(): void {
+		$dir = wp_upload_dir()['basedir'] . '/callboard-reimport-' . wp_generate_password( 8, false );
+		wp_mkdir_p( $dir );
+		file_put_contents( $dir . '/manifest.json', wp_json_encode( array( 'name' => 'Reimported' ) ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		$fixtures = dirname( __DIR__ ) . '/fixtures/callboard';
+		copy( $fixtures . '/demo-set/cover.png', $dir . '/cover.png' );
+
+		Importer::import_folder( $dir );
+		$set = Sets::post_by_slug( sanitize_title( basename( $dir ) ) );
+		$this->assertNotEmpty( get_post_thumbnail_id( $set ), 'The first import attaches the cover.' );
+
+		// A new cover under the same name, a minute newer.
+		copy( $fixtures . '/empty-set/cover.png', $dir . '/cover.png' );
+		touch( $dir . '/cover.png', time() + 60 );
+		clearstatcache();
+		Importer::import_folder( $dir );
+
+		$this->assertFileExists( $dir . '/cover.png', 'Importing again deleted the new cover.' );
+		$this->assertSame( md5_file( $fixtures . '/empty-set/cover.png' ), md5_file( $dir . '/cover.png' ) );
+		$this->assertFileExists( (string) get_attached_file( get_post_thumbnail_id( $set ) ) );
 	}
 }

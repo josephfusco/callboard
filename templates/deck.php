@@ -36,13 +36,15 @@ defined( 'ABSPATH' ) || exit;
 		<span class="seek-line" aria-hidden="true"><i class="seek-fill" id="seek-fill"></i><i class="loop-band" id="loop-band"></i></span><span class="seek-marks" id="seek-marks" aria-hidden="true"></span><i class="seek-knob" id="seek-knob" aria-hidden="true"></i>
 		<input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="<?php esc_attr_e( 'Seek', 'callboard' ); ?>" aria-valuetext="0:00">
 	</div>
-	<div class="deck-inner deck-times"><span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><?php /* translators: %1$s: file format (e.g. MP3), %2$s: bitrate in kbps. */ ?><span class="quality-pill" id="quality" hidden data-format="<?php echo esc_attr__( '%1$s · %2$s kbps', 'callboard' ); ?>"><span id="quality-detail"></span></span><span id="dur">0:00</span></span></div>
+	<div class="deck-inner deck-times"><span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><?php /* Now Playing metadata: filled by extensions through nowPlayingMeta on every track, hidden while empty. */ ?><span class="deck-meta" id="deck-meta" hidden></span><span id="dur">0:00</span></span></div>
 	<div class="deck-inner deck-transport">
 		<div class="deck-controls">
 			<div class="deck-controls-secondary">
 				<?php /* A section of one track (brackets, or two fingers on the wave) — a different feature from repeat, which runs the whole set. */ ?>
 				<button type="button" class="ctl loop-toggle" id="loop" data-state="" aria-label="<?php esc_attr_e( 'Set an A-B loop', 'callboard' ); ?>" data-label-off="<?php esc_attr_e( 'Set an A-B loop', 'callboard' ); ?>" data-label-armed="<?php esc_attr_e( 'Mark the loop’s end', 'callboard' ); ?>" data-label-on="<?php esc_attr_e( 'Clear the A-B loop', 'callboard' ); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3M15 5h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 				<button type="button" class="ctl repeat-toggle" id="repeat" data-mode="off" aria-pressed="false" aria-label="<?php esc_attr_e( 'Repeat off', 'callboard' ); ?>" data-label-off="<?php esc_attr_e( 'Repeat off', 'callboard' ); ?>" data-label-set="<?php esc_attr_e( 'Repeat the set', 'callboard' ); ?>" data-label-one="<?php esc_attr_e( 'Repeat this track', 'callboard' ); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17 2l4 4-4 4M3 12v-2a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 12v2a4 4 0 0 1-4 4H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text class="repeat-one" x="12" y="15.5" font-size="7.5" text-anchor="middle" fill="currentColor" stroke="none">1</text></svg></button>
+				<?php /** Slot transport: extension controls beside loop and repeat. */ ?>
+				<?php callboard_slot( 'transport' ); ?>
 			</div>
 			<div class="deck-controls-primary">
 				<button type="button" class="ctl skip" id="prev" aria-label="<?php esc_attr_e( 'Previous', 'callboard' ); ?>"><?php echo callboard_icon( 'prev' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button>
@@ -72,4 +74,5 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 	<ol class="lyrics-lines" id="lyrics-lines"></ol>
 </section>
-
+<?php /** Slot panels: extension panels, outside #main so they last across views like the deck. */ ?>
+<?php callboard_slot( 'panels' ); ?>

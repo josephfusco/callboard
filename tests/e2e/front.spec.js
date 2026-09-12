@@ -231,6 +231,60 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( 'link[rel=stylesheet]' ) ).toHaveCount( 0 ); // styles are inlined, nothing leaks from the theme
 	} );
 
+	// #106: the save mark sat in the gutter outside the row, and a long title pushed the rest of the row
+	// off the edge of a phone.
+	test( 'a long title stays inside its row, and so do the duration and the save mark', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		const row = page.locator( '.tracks li' ).first();
+		await row
+			.locator( '.title' )
+			.evaluate(
+				( el ) =>
+					( el.textContent =
+						'A number whose title runs on well past the width of any phone held upright' )
+			);
+		const inside = async ( part ) => {
+			const r = await row.boundingBox();
+			const b = await row.locator( part ).boundingBox();
+			return b.x >= r.x - 0.5 && b.x + b.width <= r.x + r.width + 0.5;
+		};
+		await expect.poll( () => inside( '.len' ) ).toBe( true );
+		await expect.poll( () => inside( '.dl' ) ).toBe( true );
+		expect(
+			await page.evaluate(
+				() => document.documentElement.scrollWidth <= window.innerWidth
+			)
+		).toBe( true ); // nothing pushes the page sideways
+	} );
+
+	// #50: on a 375px phone the header wrapped Share onto a line of its own. The size is what gives way.
+	test( 'on a small phone the set header keeps its actions on one line', async ( {
+		page,
+	} ) => {
+		await page.setViewportSize( { width: 375, height: 667 } );
+		await page.goto( '/demo-set/' );
+		await expect( page.locator( '#share' ) ).toBeVisible();
+		await expect
+			.poll( () =>
+				page
+					.locator( '#play-all, #offline, #share' )
+					.evaluateAll(
+						( els ) =>
+							new Set(
+								els.map( ( e ) =>
+									Math.round( e.getBoundingClientRect().top )
+								)
+							).size
+					)
+			)
+			.toBe( 1 );
+		await expect( page.locator( '#offline' ) ).toContainText(
+			'Save offline'
+		);
+	} );
+
 	test( 'tapping a track loads it into the persistent player', async ( {
 		page,
 	} ) => {
@@ -249,6 +303,72 @@ test.describe( 'Front end', () => {
 			'Sonnets 11–20'
 		);
 		await expect( page.locator( '#deck' ) ).toBeVisible();
+	} );
+
+	// 63ea838: the title's width was read from an inline span's scrollWidth, which is always 0, so no title
+	// ever scrolled. Its test went with the long fixture set in #94; this lengthens a real title instead.
+	test( 'a long title scrolls in the deck instead of being cut off', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			let data;
+			Object.defineProperty( window, 'CALLBOARD', {
+				configurable: true,
+				get: () => data,
+				set: ( value ) => {
+					const first = value?.sets?.find(
+						( s ) => s.slug === 'demo-set'
+					)?.tracks?.[ 0 ];
+					if ( first ) {
+						first.title =
+							'Sonnets 1–10, read straight through with every line of every one of them and nothing left out';
+					}
+					data = value;
+				},
+			} );
+		} );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expect( page.locator( '#now-title' ) ).toHaveClass( /marquee/ );
+		await expect( page.locator( '#now-title .mq > span' ) ).toHaveCount(
+			2
+		); // the second copy makes the loop seamless
+	} );
+
+	// #15: play() rejects whenever the browser refuses — a file it cannot decode, a source that is
+	// gone, a gesture it does not count — and every tap left that rejection unhandled on the page.
+	test( 'play controls raise no page errors when the browser refuses to play', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			window.__unhandled = [];
+			window.addEventListener( 'unhandledrejection', ( e ) =>
+				window.__unhandled.push( String( e.reason ) )
+			);
+			window.__refusals = 0;
+			HTMLMediaElement.prototype.play = function refuse() {
+				window.__refusals++;
+				return Promise.reject(
+					new DOMException(
+						'no supported source',
+						'NotSupportedError'
+					)
+				);
+			};
+		} );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expect( page.locator( '.track' ).first() ).toHaveClass(
+			/active/
+		);
+		await page.locator( '#toggle' ).click();
+		await page.locator( '.track' ).first().click(); // the current row plays and pauses it
+		await page.locator( '#play-all' ).click(); // Play all is the transport by now
+		await expect
+			.poll( () => page.evaluate( () => window.__refusals ) )
+			.toBeGreaterThanOrEqual( 4 ); // the load, the play key, the row, and Play all each asked
+		await page.evaluate( () => new Promise( ( r ) => setTimeout( r ) ) ); // rejections report at the end of a task
+		expect( await page.evaluate( () => window.__unhandled ) ).toEqual( [] );
 	} );
 
 	test( "Play all becomes the set's transport once it is playing", async ( {
@@ -331,6 +451,83 @@ test.describe( 'Front end', () => {
 		expect( Math.abs( withLyrics - without ) ).toBeLessThan( 1 );
 	} );
 
+	// #66: each bar used to stand on a line two-thirds down with a faint reflection hanging below it.
+	test( 'the waveform is bars alone, centred on the band', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
+		await expect( page.locator( '#deck' ) ).toHaveClass( /has-wave/ );
+		// Reads the pixels: for every column with paint in it, the gap above the bar and the gap below it
+		// match, to within a device pixel of rounding.
+		const shape = () =>
+			page.locator( '#wave-base' ).evaluate( ( c ) => {
+				const { width: w, height: h } = c;
+				const px = c.getContext( '2d' ).getImageData( 0, 0, w, h ).data;
+				let bars = 0,
+					skew = 0;
+				for ( let x = 0; x < w; x++ ) {
+					let top = -1,
+						bottom = -1;
+					for ( let y = 0; y < h; y++ ) {
+						if ( px[ ( y * w + x ) * 4 + 3 ] ) {
+							top = top < 0 ? y : top;
+							bottom = y;
+						}
+					}
+					if ( top >= 0 ) {
+						bars++;
+						skew = Math.max(
+							skew,
+							Math.abs( top - ( h - 1 - bottom ) )
+						);
+					}
+				}
+				return { bars, skew, dpr: Math.ceil( w / c.clientWidth ) };
+			} );
+		await expect
+			.poll( async () => ( await shape() ).bars )
+			.toBeGreaterThan( 0 );
+		const { skew, dpr } = await shape();
+		expect( skew ).toBeLessThanOrEqual( dpr );
+	} );
+
+	// #112: the wave ran twenty pixels past the times and the transport on both sides, and "kHz" and
+	// "kbps" were shouted in capitals.
+	test( 'Now Playing keeps one column and spells its units as written', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
+		await expect( page.locator( '#deck' ) ).toHaveClass( /has-wave/ );
+		const edges = async ( sel ) => {
+			const b = await page.locator( sel ).boundingBox();
+			return [ b.x, b.x + b.width ];
+		};
+		await expect
+			.poll( async () => {
+				const [ waveLeft, waveRight ] = await edges( '#wave-base' );
+				const [ curLeft ] = await edges( '#cur' );
+				const [ , durRight ] = await edges( '#dur' );
+				const [ ctlLeft, ctlRight ] = await edges( '.deck-controls' );
+				return Math.max(
+					Math.abs( waveLeft - curLeft ),
+					Math.abs( waveRight - durRight ),
+					Math.abs( waveLeft - ctlLeft ),
+					Math.abs( waveRight - ctlRight )
+				);
+			} )
+			.toBeLessThanOrEqual( 1 );
+		// innerText, not textContent: a text-transform shows up in what is drawn, not in the DOM.
+		const quality = page.locator( '.quality-pill' );
+		await expect( quality ).toContainText( /\bkbps\b/, {
+			useInnerText: true,
+		} );
+		await expect( quality ).toContainText( /kHz/, { useInnerText: true } );
+	} );
+
 	test( 'a track with a tempo counts in before it plays, once the setting is on', async ( {
 		page,
 		admin,
@@ -357,7 +554,13 @@ test.describe( 'Front end', () => {
 		await page.goto( '/demo-set/' );
 		await expect( page.locator( '.track .bpm' ) ).toHaveText( '♩ 96' );
 		await page.locator( '.track' ).nth( 2 ).click(); // 96 BPM: off by default, it just plays
-		await expect( page.locator( '#deck' ) ).not.toHaveClass( /counting/ );
+		// Read once, straight after the tap (#29). A count starts inside the click and runs for four beats,
+		// so a retrying not.toHaveClass simply waited it out and passed.
+		expect(
+			await page
+				.locator( '#deck' )
+				.evaluate( ( d ) => d.classList.contains( 'counting' ) )
+		).toBe( false );
 		try {
 			await settings( true );
 			await page.goto( '/demo-set/' );

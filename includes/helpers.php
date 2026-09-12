@@ -167,3 +167,103 @@ function callboard_quality( array $meta ): string {
 	/* translators: 1: bitrate in kbps, 2: sample rate such as 44.1kHz. */
 	return sprintf( __( '%1$d kbps %2$s', 'callboard' ), $kbps, $khz );
 }
+
+/**
+ * Register an extension: a feature that adds itself to Callboard through named contribution points.
+ *
+ * Call it from the `callboard_register_extensions` action. Callboard's own features use this same
+ * function, so anything they do is open to a plugin. The arguments and the contract behind them are
+ * in docs/extending.md.
+ *
+ * @param string               $id   `namespace/name`, lowercase. `callboard/*` is reserved.
+ * @param array<string, mixed> $args Version, api_version, and what the extension contributes.
+ * @return array<string, mixed>|false The registered extension, or false when it was refused.
+ */
+function callboard_register_extension( string $id, array $args = array() ) {
+	return Callboard\Extensions::register( $id, $args );
+}
+
+/**
+ * Unregister an extension, Callboard's own included. Call it on `callboard_register_extensions`
+ * at a priority after 10 to switch a feature off, then register your own id to replace it.
+ *
+ * @param string $id Extension id.
+ * @return array<string, mixed>|false The removed extension, or false when none was registered.
+ */
+function callboard_unregister_extension( string $id ) {
+	return Callboard\Extensions::unregister( $id );
+}
+
+/**
+ * A registered extension, as the registry holds it.
+ *
+ * @param string $id Extension id.
+ * @return array<string, mixed>|null
+ */
+function callboard_get_extension( string $id ): ?array {
+	return Callboard\Extensions::get( $id );
+}
+
+/**
+ * Every registered extension, by id, whether or not it is enabled on this request.
+ *
+ * @return array<string, array<string, mixed>>
+ */
+function callboard_get_extensions(): array {
+	return Callboard\Extensions::all();
+}
+
+/**
+ * Print a contribution slot. Item slots (`track_badges`, `track_meta`) take the track and the set;
+ * `set_header` takes the set; `transport` and `panels` take nothing.
+ *
+ * @param string $slot       Slot name.
+ * @param mixed  ...$context Passed to every contribution.
+ */
+function callboard_slot( string $slot, ...$context ): void {
+	echo callboard_get_slot( $slot, ...$context ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- items are escaped and markup is kses'd in the registry.
+}
+
+/**
+ * A contribution slot's markup, escaped.
+ *
+ * @param string $slot       Slot name.
+ * @param mixed  ...$context Passed to every contribution.
+ */
+function callboard_get_slot( string $slot, ...$context ): string {
+	if ( in_array( $slot, Callboard\Extensions::ITEM_SLOTS, true ) ) {
+		return Callboard\Extensions::render_items( $slot, ...$context );
+	}
+	if ( in_array( $slot, Callboard\Extensions::HTML_SLOTS, true ) ) {
+		return Callboard\Extensions::render_html( $slot, ...$context );
+	}
+	return '';
+}
+
+/**
+ * The markup an HTML slot accepts, in the shape wp_kses() takes.
+ *
+ * @param string $slot `set_header`, `transport` or `panels`.
+ * @return array<string, array<string, mixed>>
+ */
+function callboard_slot_allowed_html( string $slot ): array {
+	return Callboard\Extensions::allowed_html( $slot );
+}
+
+/**
+ * Whether the current REST request may see what the front end shows. Extension routes run this
+ * before their own permission callback, so a gated site's data stays gated.
+ */
+function callboard_rest_can_view(): bool {
+	return Callboard\Gate::allowed();
+}
+
+/**
+ * One of Callboard's settings, with its default when the site never saved one.
+ *
+ * @param string $key Setting key, as on the settings screen: `count_in`, `offline`, `badge`, and so on.
+ * @return mixed Null for a key that does not exist.
+ */
+function callboard_get_setting( string $key ) {
+	return Callboard\Settings::get( $key );
+}

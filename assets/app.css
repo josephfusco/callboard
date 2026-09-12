@@ -72,7 +72,7 @@ body.view-home h1{font-size:1.875rem}
 body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation:none} /* the page transition is the entrance on swaps */
 .tracks li:nth-child(n+2){animation-delay:.04s}.tracks li:nth-child(n+3){animation-delay:.08s}.tracks li:nth-child(n+4){animation-delay:.12s}.tracks li:nth-child(n+5){animation-delay:.16s}.tracks li:nth-child(n+6){animation-delay:.2s}.tracks li:nth-child(n+8){animation-delay:.24s}
 @keyframes arrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.back{display:inline-flex;align-items:center;gap:6px;margin:0 0 14px -4px;padding:6px 10px 6px 4px;border-radius:8px;color:var(--ink-2);font-size:.875rem;font-weight:600;text-decoration:none}
+.back{display:inline-flex;align-items:center;gap:6px;margin:-6px 0 8px -4px;padding:12px 10px 12px 4px;border-radius:8px;color:var(--ink-2);font-size:.875rem;font-weight:600;text-decoration:none}
 .back::before{content:"";width:8px;height:8px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-left:6px}
 .back:active{background:var(--surface-2)}
 .masthead .label{margin-top:8px}
@@ -181,9 +181,12 @@ input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:36px
 input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:transparent}
 input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:transparent}
 input[type=range]{position:relative;z-index:2}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:transparent;border:0;margin-top:-9px}
-
-input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:transparent;border:0}
+/* Invisible 44px thumb. The seek input extends half a thumb past each end of the waveform so a touch
+   seeks to the point under the finger. */
+input[type=range]{--thumb:44px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:var(--thumb);height:var(--thumb);border-radius:50%;background:transparent;border:0;margin-top:calc(2px - var(--thumb) / 2)}
+input[type=range]::-moz-range-thumb{width:var(--thumb);height:var(--thumb);border-radius:50%;background:transparent;border:0}
+.seek-wrap input[type=range]{width:calc(100% + var(--thumb));margin-inline:calc(var(--thumb) / -2);flex:none}
 .deck-display .deck-text{touch-action:pan-x}
 /* The filament runs the whole width and always has. It is a wire with current in it: it brightens and settles
    with the audio, it does not fill up like a gauge. Position is a separate, quieter line underneath, because a
@@ -196,8 +199,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-glow-halo{top:-19px;height:18px;color:var(--accent);background:linear-gradient(180deg,transparent,currentColor);filter:blur(6px);transform:translateZ(0)}
 @media (prefers-reduced-transparency:reduce){.deck-glow-halo{display:none}.deck-glow{box-shadow:none}}
 /* ---- Now Playing. The expanded deck is the full screen, not a taller bar: same element, same
-   controls, only the layout changes, so no state exists in two places and the swipe that closed the
-   tall bar closes this. The wash is one hex value taken from the cover by Art::tint() and cached on
+   controls, only the layout changes, so no state exists in two places. It closes with the close button,
+   Escape, or back. The wash is one hex value taken from the cover by Art::tint() and cached on
    the set, rather than a blurred copy of the artwork — a colour costs no second download, survives
    offline, and composes with the accent instead of fighting it. */
 .deck-down,.deck-top{display:none}
@@ -206,6 +209,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck.is-expanded .deck-top{display:flex;justify-content:flex-end;gap:var(--s1);align-items:center;width:100%;max-width:640px;margin-inline:auto;padding:0 max(20px,env(safe-area-inset-left,0px));min-height:34px}
 .sheet-pill{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-2);font:inherit;font-size:.8125rem;padding:5px 14px;border-radius:999px;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .sheet-pill:hover,.sheet-pill:focus-visible{color:var(--ink);border-color:var(--line-strong)}
+.sheet-pill:active{color:var(--ink);border-color:var(--line-strong);background:var(--surface-2)} /* pressed state for touch */
 .sheet-pill[aria-expanded="true"]{color:var(--accent-text);border-color:var(--line-strong)}
 /* The bar leads with the art too, small. It sits over the row rather than inside it so the expanded
    grid can keep the same element as its centrepiece — one image, two sizes, no second source to
@@ -240,13 +244,19 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* Named, not `> *`: the three filament elements are position:absolute, and a blanket rule made them
    relative — which turned them into grid items that ate the first three rows, art included. */
 .deck.is-expanded>.deck-down,.deck.is-expanded>.deck-top,.deck.is-expanded>.deck-cover,.deck.is-expanded>.deck-inner,.deck.is-expanded>.seek-wrap,.deck.is-expanded>.deck-from{position:relative;z-index:1}
+/* Raise rows with small controls so their 44px touch areas aren't covered by the next row. The top row
+   passes touches through its empty space. */
+.deck.is-expanded>.deck-down,.deck.is-expanded>.deck-top,.deck.is-expanded>.seek-wrap{z-index:2}
+.deck.is-expanded>.deck-top{pointer-events:none}
+.deck.is-expanded>.deck-top>*{pointer-events:auto}
 .deck-times{padding-top:6px}
 .deck.is-compact .deck-times{display:none}
-.deck.is-expanded .deck-down{display:grid;place-items:center;justify-self:center;appearance:none;border:0;background:transparent;width:72px;height:28px;margin-top:6px;cursor:grab;border-radius:8px}
-.deck.is-expanded .deck-down i{display:block;width:38px;height:5px;border-radius:999px;background:var(--ink-3);opacity:.5;transition:opacity var(--t),width var(--t) var(--ease)}
-.deck.is-expanded .deck-down:hover i,.deck.is-expanded .deck-down:focus-visible i{opacity:.85}
-.deck.is-expanded .deck-down:active{cursor:grabbing}
-.deck.is-expanded .deck-down:active i{opacity:1;width:44px}
+/* Close button: 44px, with a negative bottom margin so the row height stays 34px */
+.deck.is-expanded .deck-down{display:grid;place-items:center;justify-self:center;appearance:none;border:0;background:transparent;width:44px;height:44px;margin:0 0 -10px;padding:0;cursor:pointer;border-radius:50%;color:var(--ink-2)}
+.deck.is-expanded .deck-down svg{width:26px;height:26px;transition:transform var(--t-fast) var(--ease)}
+.deck.is-expanded .deck-down:hover,.deck.is-expanded .deck-down:focus-visible{color:var(--ink)}
+.deck.is-expanded .deck-down:active{color:var(--ink);background:var(--surface-2)}
+.deck.is-expanded .deck-down:active svg{transform:translateY(2px)}
 .deck.is-expanded .deck-cover{position:static;display:grid;place-items:center;width:auto;height:auto;min-height:0;overflow:hidden;padding:var(--s2) max(20px,env(safe-area-inset-left,0px)) var(--s3);pointer-events:auto}
 /* No explicit width or height: the intrinsic square is clamped on both axes, so the art is as large
    as the row allows and never one pixel taller than it. A width alone would push the title under it. */
@@ -300,7 +310,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-from button{appearance:none;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:6px}
 .deck-from span{display:block;opacity:.75}
 .deck-from b{font-weight:500;color:var(--ink-2)}
-.deck-from button:hover b,.deck-from button:focus-visible b{color:var(--ink)}
+.deck-from button:hover b,.deck-from button:focus-visible b,.deck-from button:active b{color:var(--ink)}
+.deck-from button:active{opacity:.6}
 .deck-from:not(:has(b:not(:empty))){visibility:hidden}
 /* Landscape, and anything else short and wide: the art moves beside the controls rather than being
    dropped, which is what every player does when the screen turns. The pattern is unchanged — art,
@@ -330,7 +341,7 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
 .seek-marks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
 .seek-marks .tick{position:absolute;top:auto;bottom:3px;width:2px;height:6px;margin-left:-1px;border-radius:1px;background:var(--ink-3);opacity:.85}
 .seek-marks .pin{position:absolute;top:auto;bottom:3px;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--deck);pointer-events:auto;cursor:pointer;transition:transform var(--t) var(--ease-spring)}
-.seek-marks .pin::before{content:"";position:absolute;inset:-12px}
+.seek-marks .pin::before{content:"";position:absolute;inset:-18px}
 .seek-marks .pin:active{transform:scale(1.3)}
 /* A-B loop: a band on the line, a quiet chip that clears it */
 .loop-band{position:absolute;inset:0;background:var(--ink);opacity:0;transform-origin:0 50%;transform:scaleX(0);transition:opacity var(--t)}
@@ -427,6 +438,10 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
 .deck.is-compact .deck-controls{position:absolute;top:calc((var(--bar-row) - 44px) / 2);right:calc(var(--edge-r) + var(--dl-gutter));gap:var(--s2);padding-right:0}
 .deck.is-compact .ctl.skip{width:34px;height:34px}
 .deck.is-compact #toggle{width:44px;height:44px}
+/* Minimum 44px touch area for small controls, using an invisible ::after. :where() keeps specificity at
+   zero so a control's own ::after (including an extension's transport button) wins. */
+:where(.ctl:not(.play),.deck-down,.sheet-pill,.remote-chip,.deck-from button,.dl,.deck-controls-secondary>*){position:relative}
+:where(.ctl:not(.play),.deck-down,.sheet-pill,.remote-chip,.deck-from button,.dl,.deck-controls-secondary>*)::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:26px;height:26px;fill:currentColor}
 .deck-controls .ctl.skip{width:52px;height:52px}
@@ -457,7 +472,8 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
 .ctl.skip:active .skip-tri{transform:scale(.85)}
 
 /* lyrics sheet */
-.lyrics{position:fixed;inset:0 0 calc(var(--deck-h) + var(--safe-b)) 0;z-index:15;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;border-radius:14px 14px 0 0;will-change:transform;transition:transform var(--t-slow) var(--ease)}
+.lyrics:not([open]){display:none}
+.lyrics{position:fixed;inset:0 0 calc(var(--deck-h) + var(--safe-b)) 0;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;border:0;color:inherit;z-index:15;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;border-radius:14px 14px 0 0;will-change:transform;transition:transform var(--t-slow) var(--ease)}
 @starting-style{.lyrics{transform:translateY(100%)}}
 .lyrics.closing{transform:translateY(100%)}
 #main{transition:transform var(--t-slow) var(--ease),opacity var(--t-slow) var(--ease);transform-origin:50% 0}

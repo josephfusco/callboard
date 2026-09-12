@@ -434,6 +434,113 @@ test.describe( 'Deck view: compact and expanded', () => {
 		await expect( loop ).toHaveAttribute( 'aria-label', /Clear/ );
 	} );
 
+	// #165: both ends set before the looper has its buffer. Headless Chromium decodes nothing, so the
+	// context, the buffer and the element's clock are faked; the decode is held open so the second end
+	// lands while the first start is still awaiting it.
+	const fakeLooper = ( page ) =>
+		page.addInitScript( () => {
+			window.__loopStarts = 0;
+			const gate = new Promise( ( resolve ) => {
+				window.__releaseDecode = resolve;
+			} );
+			class FakeContext {
+				constructor() {
+					this.state = 'running';
+					this.destination = {};
+					this.__t0 = performance.now();
+				}
+				get currentTime() {
+					return ( performance.now() - this.__t0 ) / 1000;
+				}
+				resume() {
+					this.state = 'running';
+					return Promise.resolve();
+				}
+				decodeAudioData() {
+					return gate.then( () => ( { duration: 40 } ) );
+				}
+				createBufferSource() {
+					return {
+						connect() {},
+						start() {
+							window.__loopStarts++;
+						},
+						stop() {},
+					};
+				}
+			}
+			window.AudioContext = FakeContext;
+			window.webkitAudioContext = FakeContext;
+			// A playing element, on a clock of its own: nothing here decodes.
+			const proto = HTMLMediaElement.prototype;
+			const now = () => performance.now() / 1000;
+			let playing = false,
+				base = 0,
+				at = now();
+			const read = () => ( playing ? base + now() - at : base );
+			Object.defineProperty( proto, 'paused', {
+				configurable: true,
+				get: () => ! playing,
+			} );
+			Object.defineProperty( proto, 'currentTime', {
+				configurable: true,
+				get: read,
+				set( v ) {
+					base = +v || 0;
+					at = now();
+				},
+			} );
+			proto.play = function play() {
+				if ( ! playing ) {
+					base = read();
+					at = now();
+					playing = true;
+					setTimeout( () =>
+						this.dispatchEvent( new Event( 'play' ) )
+					);
+				}
+				return Promise.resolve();
+			};
+			proto.pause = function pause() {
+				if ( playing ) {
+					base = read();
+					playing = false;
+					setTimeout( () =>
+						this.dispatchEvent( new Event( 'pause' ) )
+					);
+				}
+			};
+		} );
+	const progress = ( page ) =>
+		page.evaluate(
+			() =>
+				+document
+					.getElementById( 'deck' )
+					.style.getPropertyValue( '--progress' )
+		);
+	const muted = ( page ) =>
+		page.evaluate( () => document.getElementById( 'audio' ).muted );
+
+	test( 'both ends set in a hurry still leave one gapless loop running', async ( {
+		page,
+	} ) => {
+		await fakeLooper( page );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await page.locator( 'h1' ).click(); // focus off the controls, for the bracket keys
+		await expandDeck( page );
+		await setTime( page, 4 );
+		await page.keyboard.press( '[' );
+		await setTime( page, 9 );
+		await page.keyboard.press( ']' ); // the first looper is still waiting on its decode
+		await expect( page.locator( '#loop-band' ) ).toHaveClass( /on/ );
+		const before = await progress( page );
+		await expect.poll( () => progress( page ) ).toBeGreaterThan( before ); // the seek line follows the element meanwhile
+		await page.evaluate( () => window.__releaseDecode() );
+		await expect.poll( () => muted( page ) ).toBe( true ); // the looper took the sound
+		expect( await page.evaluate( () => window.__loopStarts ) ).toBe( 1 );
+	} );
+
 	test( 'a chip reads active only once it has a state to be active about', async ( {
 		page,
 	} ) => {

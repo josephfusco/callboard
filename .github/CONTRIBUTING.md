@@ -7,7 +7,7 @@ npm install && composer install
 npm run env:start          # WordPress at http://localhost:8890 (admin / password), fixtures imported
 ```
 
-The plugin renders the whole front end and ships one stylesheet and one script with no build step. Keep it that way: transform and opacity animations only, no font-weight changes for state, native controls first.
+The plugin renders the whole front end and ships one stylesheet and one script with no build step. The only other script on the page is core's `wp-hooks`, which the extension API sits on, plus whatever registered extensions bring. Keep it that way: transform and opacity animations only, no font-weight changes for state, native controls first. A new player feature is built as an extension on the standard in [docs/extending.md](../docs/extending.md) and comes with a contract test.
 
 Fetching from YouTube needs `yt-dlp` (and `ffmpeg` for mp3) wherever WP-CLI runs. `wp callboard doctor` tells you what is available.
 

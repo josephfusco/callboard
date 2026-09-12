@@ -1,0 +1,136 @@
+<?php
+/**
+ * Plugin Name: Callboard example extension (development only)
+ * Description: A third-party extension built on the public API alone, for the contract tests.
+ *
+ * It uses nothing a plugin outside this repository could not: callboard_register_extension() and
+ * friends in PHP, window.callboard in example.js. If a test here needs something that is not public,
+ * the fix is to make it public, not to reach past it.
+ *
+ * Nothing happens without a cookie, so the development site never shows any of it:
+ *
+ *   callboard_example=1                register the example extensions
+ *   callboard_example_replace=1        with them, unregister callboard/quality and register example/quality
+ *   callboard_example_disable=callboard/count-in,callboard/badging   switch those off by id
+ *   callboard_example_count_in=1       the count-in setting, on for this request only
+ *   callboard_example_gate=1           the front-end gate, closed for this request only
+ *
+ * Mapped in by .wp-env.json and kept under tests/, which the plugin zip excludes.
+ *
+ * @package Callboard
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * A cookie the tests set, read as a string.
+ *
+ * @param string $name Cookie name.
+ */
+function callboard_example_cookie( string $name ): string {
+	return isset( $_COOKIE[ $name ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ $name ] ) ) : '';
+}
+
+add_action(
+	'callboard_register_extensions',
+	static function () {
+		if ( '1' !== callboard_example_cookie( 'callboard_example' ) ) {
+			return;
+		}
+		callboard_register_extension(
+			'example/demo',
+			array(
+				'version'     => '1.0.0',
+				'api_version' => 1,
+				'track_data'  => static fn( array $track ) => array( 'seconds' => (int) round( (float) $track['duration'] ) ),
+				'set_data'    => static fn( array $set ) => array( 'tracks' => count( $set['tracks'] ) ),
+				'app_data'    => static fn() => array( 'greeting' => 'hello' ),
+				'slots'       => array(
+					// Ahead of the count-in's ♩ badge, which sits at the default 10.
+					'track_badges' => array(
+						'priority' => 5,
+						'callback' => static fn() => array(
+							array(
+								'text'      => '<b>demo</b>',
+								'label'     => 'Example badge',
+								'tone'      => 'accent',
+								'className' => 'example-badge" onclick="alert(1)',
+							),
+						),
+					),
+					'set_header'   => static fn( array $set ) => '<button type="button" class="btn btn-quiet example-header" data-tracks="' . esc_attr( (string) count( $set['tracks'] ) ) . '" onclick="window.__exampleClicked = true">Demo</button><script>window.__exampleXss = true;</script><style>.track{display:none}</style>',
+					'transport'    => static fn() => '<button type="button" class="ctl example-transport" aria-label="Example control" onmouseover="window.__exampleXss = true">D</button>',
+					'panels'       => static fn() => '<div class="example-panel" data-example="panel" hidden>Example panel</div>',
+				),
+				'rest'        => array(
+					array(
+						'/ping',
+						array(
+							'methods'  => 'GET',
+							'callback' => static fn() => array( 'pong' => true ),
+						),
+					),
+				),
+				'script'      => array(
+					'src'     => content_url( 'mu-plugins/callboard-example/example.js' ),
+					'version' => '1.0.0',
+				),
+			)
+		);
+
+		// After the count-in's ♩ badge.
+		callboard_register_extension(
+			'example/late',
+			array(
+				'version'     => '1.0.0',
+				'api_version' => 1,
+				'priority'    => 20,
+				'slots'       => array(
+					'track_badges' => static fn() => array(
+						array(
+							'text'      => 'late',
+							'className' => 'example-late',
+						),
+					),
+				),
+			)
+		);
+
+		if ( '1' === callboard_example_cookie( 'callboard_example_replace' ) ) {
+			callboard_unregister_extension( 'callboard/quality' );
+			callboard_register_extension(
+				'example/quality',
+				array(
+					'version'     => '1.0.0',
+					'api_version' => 1,
+				)
+			);
+		}
+	},
+	20
+);
+
+add_filter(
+	'callboard_extension_enabled',
+	static function ( bool $enabled, string $id ): bool {
+		$off = array_filter( explode( ',', callboard_example_cookie( 'callboard_example_disable' ) ) );
+		return $enabled && ! in_array( $id, $off, true );
+	},
+	10,
+	2
+);
+
+$callboard_example_count_in = static function ( $settings ) {
+	if ( '1' === callboard_example_cookie( 'callboard_example_count_in' ) ) {
+		$settings             = is_array( $settings ) ? $settings : array();
+		$settings['count_in'] = true;
+	}
+	return $settings;
+};
+add_filter( 'option_callboard_settings', $callboard_example_count_in );
+add_filter( 'default_option_callboard_settings', $callboard_example_count_in );
+
+add_filter(
+	'callboard_can_view',
+	static fn( $allowed ) => '1' === callboard_example_cookie( 'callboard_example_gate' ) ? false : $allowed
+);

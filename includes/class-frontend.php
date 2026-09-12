@@ -39,7 +39,11 @@ final class Frontend {
 		if ( ! Gate::allowed() ) {
 			return; // The gate needs no player, and app data is every set and every track URL.
 		}
-		wp_enqueue_script( 'callboard', callboard_asset( 'assets/app.js' ), array(), null, array( 'strategy' => 'defer' ) ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		// Core's hooks script is the lower layer of the extension API: window.callboard's events and
+		// filters are wp.hooks actions and filters. It ships with WordPress, so there is still no build.
+		wp_script_add_data( 'wp-hooks', 'strategy', 'defer' );
+		wp_enqueue_script( 'callboard', callboard_asset( 'assets/app.js' ), array( 'wp-hooks' ), null, array( 'strategy' => 'defer' ) ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		Extensions::enqueue();
 		$data             = Sets::app_data( Router::view() );
 		$data['settings'] = Settings::for_client();
 		$data['icon']     = callboard_asset( 'assets/icon-512.png' );
@@ -110,14 +114,22 @@ final class Frontend {
 	}
 
 	/**
-	 * Drop any style or script the active theme or other plugins added.
+	 * Drop any style or script the active theme or other plugins added. What stays is Callboard's own
+	 * script, core's hooks underneath it, and the assets of registered extensions: a plugin that
+	 * wants to be on the page registers as an extension rather than enqueuing around the app.
 	 */
 	public static function dequeue_everything_else(): void {
+		$handles = Gate::allowed() ? Extensions::handles() : array(
+			'scripts' => array(),
+			'styles'  => array(),
+		);
 		foreach ( wp_styles()->queue as $handle ) {
-			wp_dequeue_style( $handle );
+			if ( ! in_array( $handle, $handles['styles'], true ) ) {
+				wp_dequeue_style( $handle );
+			}
 		}
 		foreach ( wp_scripts()->queue as $handle ) {
-			if ( 'callboard' !== $handle ) {
+			if ( ! in_array( $handle, array_merge( array( 'callboard', 'wp-hooks' ), $handles['scripts'] ), true ) ) {
 				wp_dequeue_script( $handle );
 			}
 		}

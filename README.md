@@ -45,7 +45,7 @@ A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the ca
 <details>
 <summary>Rendering and navigation</summary>
 
-`Router` handles two routes: the home page and `/<set-slug>/`. Unknown paths show the home page with a note. `Frontend` renders from `templates/` on `template_redirect` and loads only the plugin's stylesheet and script. The theme is not used.
+`Router` handles two routes: the home page and `/<set-slug>/`. Unknown paths show the home page with a note. `Frontend` renders from `templates/` on `template_redirect` and loads only the plugin's stylesheet and script, core's `wp-hooks` underneath it, and the assets of registered extensions. The theme is not used.
 
 Navigation is client-side. The script fetches the target URL with `?fragment=1`, which returns the view without the page shell, and swaps it into `<main>` inside a view transition. PHP is the only renderer. Fetching starts on the first touch of a link. The home fragment is prefetched when idle.
 
@@ -154,19 +154,51 @@ A gated request answers 403 with `templates/gate.php` rather than redirecting to
 
 ## Developer API
 
-| Hook | Kind | What it does |
+Features are extensions: an id, a version, and named contribution points shared between PHP and the page. Callboard's own count-in, quality readout and Home Screen badge are built that way, so a plugin can switch one off, replace it, or add its own beside them. [Extending Callboard](docs/extending.md) is the contract: the points, the lifecycle, events, state and commands, escaping, and what version 1 promises.
+
+<details>
+<summary>PHP</summary>
+
+| Function or hook | Kind | What it does |
 | --- | --- | --- |
+| `callboard_register_extension( $id, $args )` | function | Register an extension on `callboard_register_extensions`. `callboard/*` is reserved |
+| `callboard_unregister_extension( $id )` | function | Remove one, Callboard's own included |
+| `callboard_get_extension( $id )`, `callboard_get_extensions()` | functions | Read the registry |
+| `callboard_slot( $slot, ...$context )`, `callboard_get_slot()` | functions | Print or return a slot, for a replacement template |
+| `callboard_rest_can_view()` | function | Whether this REST request may see what the front end shows |
+| `callboard_get_setting( $key )` | function | One of Callboard's settings |
+| `CALLBOARD_API_VERSION` | constant | The extension contract's version: 1 |
+| `callboard_register_extensions` | action | Register, unregister or replace extensions here |
+| `callboard_extension_enabled` | filter | Whether an extension runs on this request |
+| `callboard_slot_allowed_html` | filter | The markup an HTML slot accepts |
 | `callboard_can_view` | filter | Whether this visitor may see the front end. Return `null` for the default, `true` or `false` to decide |
 | `callboard_head` | action | Output in the `<head>` of every front-end page |
 | `callboard_template_path` | filter | Replace any template with your own file |
-| `callboard_app_data` | filter | Data the script receives on load |
-| `callboard_set_data` | filter | One set's data |
+| `callboard_app_data` | filter | Data the script receives on load. Extension `app_data` runs inside it at priority 5 |
+| `callboard_set_data` | filter | One set's data. Extension `track_data` and `set_data` run inside it at priority 5 |
 | `callboard_board` | filter | The calls shown on the board |
 | `callboard_push_message` | filter | Title, body, and URL of a notification. Return an empty array to cancel |
 | `callboard_call_published` | action | A call was published |
 | `callboard_imported` | action | A set folder was imported |
 | `callboard_import_page` | action | Add your own controls to the bottom of the admin import screen |
 | `callboard_import_dir`, `callboard_ytdlp_path`, `callboard_ffmpeg_path`, `callboard_max_subscribers` | filters | Import folder, tool paths, subscriber limit |
+
+</details>
+
+<details>
+<summary>JavaScript</summary>
+
+| Name | Kind | What it does |
+| --- | --- | --- |
+| `callboard.registerExtension( id, args )` | function | Register the page half of an extension PHP registered |
+| `callboard.unregisterExtension( id )` | function | Remove its client contributions |
+| `callboard.state` | object | The view, the set and track in the deck, position, duration, paused, loop, online |
+| `callboard.commands` | object | `play`, `pause`, `seek`, `next`, `prev`, `goTo`, `display` |
+| `callboard.data( id )`, `callboard.run( command )`, `callboard.emit( event )`, `callboard.invalidate( point )` | functions | App data, extension commands and events, re-rendering |
+| `callboard.ready`, `.view`, `.viewTeardown`, `.track`, `.play`, `.pause`, `.ended`, `.seek`, `.loop`, `.save`, `.unsave`, `.online`, `.offline` | `wp.hooks` actions | Also fired as `callboard:<event>` on `document`, which is how `callboard:track` and `callboard:view` have always arrived |
+| `callboard.slot.trackBadges`, `.slot.trackMeta`, `.slot.nowPlayingMeta`, `callboard.badge`, `callboard.beforePlay` | `wp.hooks` filters | The contribution points underneath the registry |
+
+</details>
 
 ## WP-CLI
 

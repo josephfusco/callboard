@@ -169,9 +169,13 @@ self.addEventListener( 'fetch', ( e ) => {
 		}
 		return e.respondWith( page( req, e, fragment ) );
 	}
+	// The shell list reaches beyond the plugin folder: core's hooks script and extension assets live
+	// wherever WordPress or their own plugin put them, and an installed app has to open without them
+	// fetching.
 	if (
 		url.pathname.startsWith( PLUGIN ) ||
-		url.pathname === '/manifest.json'
+		url.pathname === '/manifest.json' ||
+		ASSETS.includes( url.pathname + url.search )
 	) {
 		return e.respondWith( staleWhileRevalidate( req ) );
 	}

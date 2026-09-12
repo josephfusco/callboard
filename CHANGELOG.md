@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.2.0](https://github.com/promptcorner/callboard/compare/v2.1.0...v2.2.0) (2026-09-12)
+
+
+### Features
+
+* declare the data model with register_post_meta ([#115](https://github.com/promptcorner/callboard/issues/115)) ([9fd95b6](https://github.com/promptcorner/callboard/commit/9fd95b66d0a1f680ab4ad93d57a6448331d2de8a))
+* give the deck one system, and a size it earns ([#105](https://github.com/promptcorner/callboard/issues/105)) ([cac06fc](https://github.com/promptcorner/callboard/commit/cac06fc36eadd0acfd437523b987ca0fd85ffc93))
+* Now Playing is a screen, not a taller bar ([#110](https://github.com/promptcorner/callboard/issues/110)) ([8df5a93](https://github.com/promptcorner/callboard/commit/8df5a93e3c907bc8e980e76ae3fcbc3ad0f3820b))
+* PHP unit tests, one Share, and a cover for every set ([#107](https://github.com/promptcorner/callboard/issues/107)) ([baa3df9](https://github.com/promptcorner/callboard/commit/baa3df9f34ea9677472ac9edb68ebe65289f0cd2))
+* quality tiers, and a manifest that keeps up with the sets ([#109](https://github.com/promptcorner/callboard/issues/109)) ([6b92f0f](https://github.com/promptcorner/callboard/commit/6b92f0f545a4c20ca0b63116735d47d11942564f))
+* real recordings, per-track artist and quality, and a filament that ranges itself ([#94](https://github.com/promptcorner/callboard/issues/94)) ([ad75627](https://github.com/promptcorner/callboard/commit/ad75627a3a75cf395b7397163bcedeff92863538))
+* the tab carries the track, and durable storage that actually asks ([#108](https://github.com/promptcorner/callboard/issues/108)) ([bb11417](https://github.com/promptcorner/callboard/commit/bb114176ec9e86131a3a840571d2dcdbd9b36fce))
+
+
+### Bug Fixes
+
+* a push endpoint must be somewhere the internet can reach ([#117](https://github.com/promptcorner/callboard/issues/117)) ([2324af7](https://github.com/promptcorner/callboard/commit/2324af79709fa53edc317b34dfae0dc16d83b38e))
+* fetch the truest copy available, and stop inflating it ([#104](https://github.com/promptcorner/callboard/issues/104)) ([cfb6b82](https://github.com/promptcorner/callboard/commit/cfb6b82aba8d7e70590fb9aeae3f932b376257c5))
+* fit a long set name inside its cover ([#93](https://github.com/promptcorner/callboard/issues/93)) ([c28ea57](https://github.com/promptcorner/callboard/commit/c28ea57c188c2d59e025064c4247fb2c831e8485))
+* keep the offline badge inside the row ([#106](https://github.com/promptcorner/callboard/issues/106)) ([d2d8ffe](https://github.com/promptcorner/callboard/commit/d2d8ffe9c63b0fbfb2df4e30618956e156529f14))
+* one column in Now Playing, and unit symbols that keep their casing ([#112](https://github.com/promptcorner/callboard/issues/112)) ([8380fbb](https://github.com/promptcorner/callboard/commit/8380fbb4cdffa8162d290fcb04319917c430232b))
+
+
+### Dependencies
+
+* **deps-dev:** bump globals from 16.5.0 to 17.12.0 ([#102](https://github.com/promptcorner/callboard/issues/102)) ([64d28a6](https://github.com/promptcorner/callboard/commit/64d28a68163261de7c2048c0db1f7ead3c5cb277))
+* **deps:** bump crate-ci/typos from 1.50.0 to 1.50.1 in the actions-minor-and-patch group ([#103](https://github.com/promptcorner/callboard/issues/103)) ([1a93116](https://github.com/promptcorner/callboard/commit/1a93116c19b4c8258bbdd2cdbe02fdbec1cbe16e))
+
 ## [2.1.0](https://github.com/josephfusco/callboard/compare/v2.0.1...v2.1.0) (2026-09-12)
 
 

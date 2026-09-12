@@ -2090,6 +2090,10 @@
 				continue;
 			}
 			const res = await c.match( norm( t.url ) );
+			if ( res?.headers.get( 'X-Callboard-Sideloaded' ) ) {
+				saved.add( t.url ); // came off a stick, not the server: a tagged copy is a different size on purpose
+				continue;
+			}
 			const len = Number( res?.headers.get( 'Content-Length' ) ) || 0;
 			if ( t.bytes && len && len !== t.bytes ) {
 				continue;
@@ -2180,6 +2184,49 @@
 			dlAborts.delete( t.url );
 		}
 	}
+	// ---- Filling the cache from a file, for a phone that cannot download 40 MB.
+	const fileBase = ( u ) =>
+		decodeURIComponent(
+			new URL( u, location.href ).pathname.split( '/' ).pop() || ''
+		);
+	const loose = ( s ) =>
+		s
+			.toLowerCase()
+			.replace( /\.[a-z0-9]+$/, '' )
+			.replace( /[^a-z0-9]+/g, ' ' )
+			.trim();
+	const unnumbered = ( s ) => loose( s ).replace( /^\d+\s*/, '' );
+	// In order: the track's own file name, which is exact for anything out of a .callboard file;
+	// then a leading number, which is how a car-format export is named; then the title.
+	function matchTrack( file, tracks, taken ) {
+		const free = tracks.filter( ( t ) => ! taken.has( t.url ) );
+		const name = loose( file.name );
+		const byName = free.find( ( t ) => loose( fileBase( t.url ) ) === name );
+		if ( byName ) {
+			return byName;
+		}
+		const n = /^0*(\d+)/.exec( file.name );
+		const byNumber =
+			n && free.find( ( t ) => Number( t.index ) === Number( n[ 1 ] ) );
+		if ( byNumber ) {
+			return byNumber;
+		}
+		const bare = unnumbered( file.name );
+		return free.find( ( t ) => loose( t.title ) === bare ) || null;
+	}
+	async function loadTrackFile( t, file ) {
+		const c = await caches.open( CACHE );
+		await c.put(
+			norm( t.url ),
+			new Response( file, {
+				headers: {
+					'Content-Type': file.type || 'audio/mpeg',
+					'Content-Length': String( file.size ),
+					'X-Callboard-Sideloaded': '1',
+				},
+			} )
+		);
+	}
 	async function removeTrack( t ) {
 		const c = await caches.open( CACHE );
 		await c.delete( norm( t.url ) );
@@ -2192,6 +2239,10 @@
 		}
 		if ( ! ( 'caches' in window ) || ! ( 'serviceWorker' in navigator ) ) {
 			offBtn.hidden = true; // no store to save into: the one case the button leaves
+			const noCache = $( 'load-label' );
+			if ( noCache ) {
+				noCache.hidden = true; // nothing to load into either
+			}
 			return;
 		}
 		const tracks = set.tracks.map( ( t, idx ) => ( { ...t, _i: idx } ) );
@@ -2254,6 +2305,45 @@
 				! navigator.onLine && ! busy && have.size !== tracks.length;
 		};
 		paintAll().catch( () => {} );
+
+		// Filling from a file: the control appears only now, because only now is there a cache to
+		// fill. Somebody with the audio on a stick can hand it to a phone that cannot download it.
+		const loadInput = $( 'load-files' );
+		const loadLabel = $( 'load-label' );
+		if ( loadInput && loadLabel ) {
+			loadInput.onchange = async () => {
+				const files = [ ...( loadInput.files || [] ) ];
+				loadInput.value = ''; // so picking the same file twice still fires
+				if ( ! files.length ) {
+					return;
+				}
+				if ( ! ls.get( 'callboard:persist' ) ) {
+					ls.set( 'callboard:persist', 1 );
+					navigator.storage?.persist?.().catch( () => {} );
+				}
+				const taken = new Set();
+				let loaded = 0;
+				for ( const file of files ) {
+					const t = matchTrack( file, tracks, taken );
+					if ( ! t ) {
+						continue;
+					}
+					taken.add( t.url );
+					try {
+						await loadTrackFile( t, file );
+						loaded++;
+					} catch {
+						// out of space, or a file the browser will not read: the count says so
+					}
+				}
+				await paintAll();
+				toast(
+					loaded
+						? tpl( T.loaded, loaded, files.length )
+						: T.load_none
+				);
+			};
+		}
 		// Once everything is saved the label is information. Removing is for freeing space, so it takes a
 		// press-and-hold (or Delete on the keyboard) to ask, then a tap to confirm; it forgets after a moment.
 		const arm = async () => {

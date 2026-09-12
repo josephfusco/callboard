@@ -41,9 +41,9 @@
   "homepage": "https://josephfus.co/callboard/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/josephfusco/callboard.git"
+    "url": "https://github.com/promptcorner/callboard.git"
   },
   "bugs": {
-    "url": "https://github.com/josephfusco/callboard/issues"
+    "url": "https://github.com/promptcorner/callboard/issues"
   }
 }

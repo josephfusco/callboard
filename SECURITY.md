@@ -6,7 +6,7 @@ Callboard is a small plugin for a private cast site, but it renders a public fro
 
 Do **not** open a public GitHub issue for security reports.
 
-Use [GitHub Security Advisories](https://github.com/josephfusco/callboard/security/advisories/new) to report privately. Expect an acknowledgement within 72 hours and a patched release within 14 days of that, faster if the issue is being exploited.
+Use [GitHub Security Advisories](https://github.com/promptcorner/callboard/security/advisories/new) to report privately. Expect an acknowledgement within 72 hours and a patched release within 14 days of that, faster if the issue is being exploited.
 
 ## Scope
 

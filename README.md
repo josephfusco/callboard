@@ -4,7 +4,9 @@
 
 A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the call. The cast opens it on their phones, taps a number, and the track plays. Works offline, installs from Safari, needs no accounts.
 
-<p><a href="https://josephfus.co/callboard/">Landing page and live demo</a> · <a href="https://playground.wordpress.net/?mode=seamless&blueprint-url=https://josephfus.co/callboard/blueprint.json">Open in WordPress Playground</a> · <a href="https://github.com/josephfusco/callboard/releases/latest">Latest release</a></p>
+<p><a href="https://josephfus.co/callboard/">Landing page and live demo</a> · <a href="https://playground.wordpress.net/?mode=seamless&blueprint-url=https://josephfus.co/callboard/blueprint.json">Open in WordPress Playground</a> · <a href="https://github.com/promptcorner/callboard/releases/latest">Latest release</a></p>
+
+<p><a href="https://github.com/promptcorner/callboard/actions/workflows/ci.yml"><img src="https://github.com/promptcorner/callboard/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="https://github.com/promptcorner/callboard/releases/latest"><img src="https://img.shields.io/github/v/release/promptcorner/callboard?label=release" alt="Latest release"></a> <img src="https://img.shields.io/badge/WordPress-6.5%2B-blue" alt="WordPress 6.5+"> <img src="https://img.shields.io/badge/PHP-8.1%2B-777bb4" alt="PHP 8.1+"> <img src="https://img.shields.io/badge/license-GPL--2.0--or--later-green" alt="GPL-2.0-or-later"></p>
 
 <table>
 <tr>
@@ -18,13 +20,13 @@ A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the ca
 
 - **Board.** The home page shows the next call: time, place, note, and the numbers being worked. Each number is a tap that starts the track. A call is a post under Sets. Publishing one sends a push notification.
 - **Sets.** A set is a post; its tracks are audio attachments. Fetch a playlist with WP-CLI, or import a folder of audio.
-- **Player.** Previous, play, next. Waveform scrubbing, an A/B loop (two fingers on the wave, or the bracket keys), count-in, lyrics and director's notes in time with the track, AirPlay, lock-screen controls, and a chip that hands the track itself to the phone next to you.
+- **Player.** A bar at the foot of every page: the artwork, what is playing, and previous, play, next. Tap it and Now Playing takes the screen — the cover large, the waveform, where you are and how much is left, and what the copy actually is. Waveform scrubbing, an A/B loop (two fingers on the wave, or the bracket keys), count-in, lyrics and director's notes in time with the track, AirPlay, and lock-screen controls. The browser tab carries the track too, for whoever has the board open behind a rehearsal PDF.
 - **Offline.** Save a set once. It plays from the phone with no connection, or load it from a file when there is no signal to save it with.
 - **Settings.** Site name, accent colour, badge, confetti behind a triple tap on the title. Hooks and template overrides for developers.
 
 ## Getting started
 
-1. Install `callboard.zip` from the [latest release](https://github.com/josephfusco/callboard/releases/latest). WordPress 6.5+, PHP 8.1+.
+1. Install `callboard.zip` from the [latest release](https://github.com/promptcorner/callboard/releases/latest). WordPress 6.5+, PHP 8.1+.
 2. Add a set. With `yt-dlp` and `ffmpeg` installed where WP-CLI runs: `wp callboard fetch '<playlist url>' --name="Spring Show"`. Otherwise put audio files and a `manifest.json` in `wp-content/uploads/callboard/<slug>/` and use Sets → Import. `wp callboard doctor` reports what is available.
 3. Post a call under Sets → Calls. Publish it or schedule it.
 4. Share the home page URL. On iPhone, the cast adds it to the Home Screen. The bell turns on notifications where the host supports Web Push (PHP with OpenSSL and GMP or BCMath).
@@ -269,13 +271,13 @@ Browser and WordPress features considered for this plugin, with a verdict, so no
 
 ## Tests
 
-Playwright tests in `tests/e2e/` run against wp-env, from a pre-commit hook that `npm install` sets up and again in GitHub Actions on every pull request. One test saves a set, takes the browser offline, and opens and plays it. Headless Chromium cannot decode mp3, so player tests assert on state, not audio.
+Two suites, both against wp-env. PHPUnit in `tests/php/` covers the PHP: the two security boundaries first — what a `.callboard` file is allowed to unpack, and who the gate lets through — then the data model, settings sanitizing, and the helpers behind every line of text a cast reads. Playwright in `tests/e2e/` covers the browser, from a pre-commit hook that `npm install` sets up and again in GitHub Actions on every pull request. One test saves a set, takes the browser offline, and opens and plays it. Headless Chromium cannot decode mp3, so player tests assert on state, not audio.
 
 Fixtures are LibriVox recordings of Shakespeare's Sonnets (book 229), built by `tests/fixtures/librivox.js` (needs ffmpeg, ffprobe, and a network connection): it pulls the LibriVox API, downloads the sections from archive.org, uses silence detection to skip past the reader's introduction, cuts a 40-second clip, encodes it, and writes `manifest.json`, `levels.json`, `notes.json`, and `tempo.json`. LibriVox recordings are public domain in the USA — no licence, no attribution required, commercial use is fine — which matters because this audio is committed here, served from the Pages site, and loaded into the Playground demo. Readers are credited anyway, in the manifest's uploader fields, which the app already renders in a set's footer. Two fixture sets remain: `demo-set` (the sonnets, ten tracks) and `empty-set`. Covers are drawn by the plugin's `Art` class.
 
 ## Source and maintainer
 
-Source, issues, and releases live on [GitHub](https://github.com/josephfusco/callboard). Made by [Joe Fusco](https://josephfus.co/). Security reports go through [private vulnerability reporting](https://github.com/josephfusco/callboard/security/advisories/new).
+Source, issues, and releases live on [GitHub](https://github.com/promptcorner/callboard). Made by [Joe Fusco](https://josephfus.co/). Security reports go through [private vulnerability reporting](https://github.com/promptcorner/callboard/security/advisories/new).
 
 ## Releases
 

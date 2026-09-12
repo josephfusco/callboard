@@ -14,9 +14,11 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels the run it replaces. Pushes to main don't: every merged commit
+# gets its own result.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # A required status check that every run reports, so the protected branch
@@ -96,12 +98,13 @@ jobs:
   # The one context main requires. A skipped reusable-workflow job reports
   # under its short name, so requiring "phpcs / WordPress Coding Standards"
   # directly would leave a docs-only pull request blocked forever. This job
-  # always runs, passes when every job above succeeded or was skipped, and
-  # fails on any failure or cancellation.
+  # runs unless the whole run was cancelled, passes when every job above
+  # succeeded or was skipped, and fails otherwise. A job that timed out still
+  # counts as a failure.
   status:
     name: CI status
     needs: [gate, changes, phpcs, phpunit, lint-js, typos, e2e]
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

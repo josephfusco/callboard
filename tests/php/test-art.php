@@ -1,9 +1,6 @@
 <?php
 /**
- * The artwork Callboard draws for a set that arrives without any.
- *
- * These read the PNG back rather than asking the drawing code what it meant to do: what matters is
- * whether the name ends up on the picture, not what size the loop settled on.
+ * The artwork Callboard draws for a set, and the colour it reads back out of a cover.
  *
  * @package Callboard
  */
@@ -16,27 +13,64 @@ use Callboard\Art;
 class Test_Callboard_Art extends WP_UnitTestCase {
 
 	/**
-	 * Where the drawn images go.
+	 * Where temporary files for these tests go.
 	 *
 	 * @var string
 	 */
 	private string $dir;
 
+	/**
+	 * Files written by a test, removed after it.
+	 *
+	 * @var string[]
+	 */
+	private array $files = array();
+
 	public function set_up(): void {
 		parent::set_up();
-		if ( ! function_exists( 'imagettftext' ) ) {
-			$this->markTestSkipped( 'GD without FreeType cannot draw the artwork.' );
-		}
 		$this->dir = sys_get_temp_dir() . '/callboard-art-' . wp_generate_password( 8, false );
 		wp_mkdir_p( $this->dir );
 	}
 
 	public function tear_down(): void {
-		foreach ( (array) glob( $this->dir . '/*' ) as $file ) {
-			wp_delete_file( $file );
+		foreach ( $this->files as $file ) {
+			if ( file_exists( $file ) ) {
+				wp_delete_file( $file );
+			}
 		}
-		rmdir( $this->dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- a temp folder this test made.
+		if ( isset( $this->dir ) && file_exists( $this->dir ) ) {
+			rmdir( $this->dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- a temp folder this test made.
+		}
 		parent::tear_down();
+	}
+
+	private function require_freetype(): void {
+		if ( ! function_exists( 'imagettftext' ) ) {
+			$this->markTestSkipped( 'GD without FreeType cannot draw the artwork.' );
+		}
+	}
+
+	private function temp( string $ext ): string {
+		$file          = $this->dir . '/callboard-art-' . wp_generate_password( 8, false ) . '.' . $ext;
+		$this->files[] = $file;
+		return $file;
+	}
+
+	/**
+	 * A flat PNG, optionally with a square of another colour in the middle.
+	 *
+	 * @param int[]      $ground RGB of the background.
+	 * @param int[]|null $mark   RGB of the square, if any.
+	 */
+	private function png( array $ground, ?array $mark = null ): string {
+		$im = imagecreatetruecolor( 64, 64 );
+		imagefill( $im, 0, 0, imagecolorallocate( $im, ...$ground ) );
+		if ( $mark ) {
+			imagefilledrectangle( $im, 24, 24, 39, 39, imagecolorallocate( $im, ...$mark ) );
+		}
+		$file = $this->temp( 'png' );
+		imagepng( $im, $file );
+		return $file;
 	}
 
 	/**
@@ -47,7 +81,8 @@ class Test_Callboard_Art extends WP_UnitTestCase {
 	 * @dataProvider cards
 	 */
 	public function test_a_long_one_word_name_stays_inside_the_artwork( string $kind, array $margin ): void {
-		$file = $this->dir . "/{$kind}.png";
+		$this->require_freetype();
+		$file = $this->temp( 'png' );
 		$this->assertTrue( Art::$kind( $this->manifest( 'Hadestown' ), $file ) );
 
 		// The left margin is always bare, so it says what the background is.
@@ -87,5 +122,43 @@ class Test_Callboard_Art extends WP_UnitTestCase {
 			'slug'   => sanitize_title( $name ),
 			'tracks' => array(),
 		);
+	}
+
+	public function test_a_cover_comes_back_as_a_square_png(): void {
+		$this->require_freetype();
+		$out      = $this->temp( 'png' );
+		$manifest = array(
+			'name'   => 'Shakespeare’s Sonnets',
+			'slug'   => 'demo-set',
+			'tracks' => array(),
+		);
+
+		$this->assertTrue( Art::cover( $manifest, $out ) );
+
+		$size = getimagesize( $out );
+		$this->assertSame( array( 1024, 1024, IMAGETYPE_PNG ), array( $size[0], $size[1], $size[2] ) );
+	}
+
+	/**
+	 * Mostly cream paper with one red mark on it reads as the mark.
+	 */
+	public function test_a_cover_is_tinted_by_the_colour_it_carries_not_the_paper(): void {
+		$tint = Art::tint( $this->png( array( 245, 240, 225 ), array( 200, 30, 30 ) ) );
+
+		$this->assertMatchesRegularExpression( '/^#[0-9a-f]{6}$/', (string) $tint );
+		[ $r, $g, $b ] = sscanf( (string) $tint, '#%02x%02x%02x' );
+		$this->assertGreaterThan( $g + 40, $r );
+		$this->assertGreaterThan( $b + 40, $r );
+	}
+
+	public function test_a_grey_cover_is_its_own_grey(): void {
+		$this->assertSame( '#808080', Art::tint( $this->png( array( 128, 128, 128 ) ) ) );
+	}
+
+	public function test_a_file_that_is_not_an_image_has_no_tint(): void {
+		$file = $this->temp( 'png' );
+		file_put_contents( $file, 'not a picture' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a temp file for the test.
+
+		$this->assertNull( Art::tint( $file ) );
 	}
 }

@@ -222,11 +222,17 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
    same three elements the bar uses. Nothing new to keep in step. */
 .deck.is-expanded{contain:layout style}
 .deck.is-expanded .deck-glow,.deck.is-expanded .deck-glow-hot{top:0}
-/* The bar's halo is driven frame by frame off the audio, which at two pixels reads as a wire with
-   current in it and at two hundred reads as a strobe. Here the room's light is part of the
-   background instead: one static gradient, no blur to recompute, no per-frame write. The wire above
-   still answers the audio, because that is the part that should. */
-.deck.is-expanded .deck-glow-halo{display:none}
+/* Sound as light, without making a phone pay for it. Three rules keep this on the compositor:
+   the gradient never changes, so there is nothing to repaint; there is no filter, so there is no
+   blur to recompute every frame; and the only property the script writes is opacity, which a
+   compositor can animate on its own thread.
+   
+   The transition is what turns it from a strobe into a flow. app.js writes an opacity per frame off
+   the level; a 500ms ease on the same property means each write is chased rather than jumped to, so
+   the light lags the audio slightly and swells instead of flashing. The colour is mixed down to 40%
+   so the amplitude reads as a room brightening, not a lamp being switched. */
+.deck.is-expanded .deck-glow-halo{top:0;height:220px;filter:none;background:linear-gradient(180deg,color-mix(in srgb,currentColor 40%,transparent),color-mix(in srgb,currentColor 12%,transparent) 45%,transparent);transition:opacity .5s ease-out;will-change:opacity}
+@media (prefers-reduced-motion:reduce){.deck.is-expanded .deck-glow-halo{transition:none;opacity:.25!important}}
 .deck.is-expanded{top:0;bottom:0;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto auto auto auto;padding-bottom:calc(var(--safe-b) + var(--s3));border-top:0;background-image:none;overflow:hidden}
 .deck.is-expanded::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 13%,transparent),transparent 190px),radial-gradient(130% 70% at 50% 0%,color-mix(in srgb,var(--tint,transparent) 20%,transparent),transparent 68%);pointer-events:none;z-index:0}
 @media (prefers-reduced-transparency:reduce){.deck.is-expanded::before{display:none}}

@@ -65,14 +65,20 @@ final class Extensions {
 	 *
 	 * @var array<string, array<string, mixed>>
 	 */
-	private static array $registered = array();
+	private static array $registered       = array();
 
 	/**
 	 * Active extensions for the current request and the filter state that produced them.
 	 *
 	 * @var array<string, array<string, mixed>>|null
 	 */
-	private static ?array $active_cache = null;
+	private static ?array $active_cache     = null;
+
+	/**
+	 * Signature of callboard_extension_enabled callbacks that produced the active cache.
+	 *
+	 * @var string
+	 */
 	private static string $active_cache_key = '';
 
 	/**
@@ -80,14 +86,14 @@ final class Extensions {
 	 *
 	 * @var bool
 	 */
-	private static bool $first_party = false;
+	private static bool $first_party      = false;
 
 	/**
 	 * Registrations so far, so equal priorities keep the order extensions arrived in.
 	 *
 	 * @var int
 	 */
-	private static int $sequence = 0;
+	private static int $sequence         = 0;
 
 	/**
 	 * Hook registration.
@@ -296,7 +302,9 @@ final class Extensions {
 		}
 		$parts = array();
 		foreach ( $hook->callbacks as $priority => $callbacks ) {
-			$parts[] = $priority . ':' . count( $callbacks );
+			foreach ( $callbacks as $id => $callback ) {
+				$parts[] = $priority . ':' . $id . ':' . (int) ( $callback['accepted_args'] ?? 0 );
+			}
 		}
 		return implode( '|', $parts );
 	}

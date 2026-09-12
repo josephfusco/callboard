@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Sets {
 
-	private const CACHE_KEY = 'callboard_sets_v1';
+	private const CACHE_KEY           = 'callboard_sets_v1';
 	private const LAST_CHANGED_OPTION = 'callboard_sets_last_changed';
 
 	/**

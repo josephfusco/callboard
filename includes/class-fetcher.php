@@ -104,6 +104,8 @@ final class Fetcher {
 			);
 		}
 		$manifest = array(
+			'version'      => Exporter::VERSION,
+			'generator'    => 'callboard/' . CALLBOARD_VERSION,
 			'name'         => $name,
 			'slug'         => sanitize_title( $slug ),
 			'order'        => 0,

@@ -28,6 +28,7 @@ final class Admin {
 		add_action( 'admin_notices', array( self::class, 'import_notice' ) );
 		add_filter( 'manage_' . Post_Types::SET . '_posts_columns', array( self::class, 'columns' ) );
 		add_action( 'manage_' . Post_Types::SET . '_posts_custom_column', array( self::class, 'column' ), 10, 2 );
+		add_filter( 'post_row_actions', array( self::class, 'row_actions' ), 10, 2 );
 	}
 
 	/**
@@ -331,6 +332,17 @@ final class Admin {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Import sets', 'callboard' ); ?></h1>
+			<?php if ( Exporter::available() ) : ?>
+			<h2><?php esc_html_e( 'From a file', 'callboard' ); ?></h2>
+			<p><?php esc_html_e( 'A .callboard file holds a whole set: the audio, the order, the levels, and anything written about it. Somebody can send you one.', 'callboard' ); ?></p>
+			<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="callboard_import_file">
+				<?php wp_nonce_field( 'callboard_import_file' ); ?>
+				<p><label for="callboard-file"><?php esc_html_e( 'Set file', 'callboard' ); ?></label><br><input type="file" id="callboard-file" name="callboard_file" accept=".callboard,application/zip" required></p>
+				<?php submit_button( __( 'Import the file', 'callboard' ), 'primary', 'submit', false ); ?>
+			</form>
+			<hr>
+			<?php endif; ?>
 			<h2><?php esc_html_e( 'From a folder on this server', 'callboard' ); ?></h2>
 			<p>
 				<?php
@@ -425,6 +437,24 @@ wp callboard run   <?php esc_html_e( '# or drain everything queued above', 'call
 		wp_enqueue_script( 'jquery-ui-sortable' );
 		wp_add_inline_script( 'jquery-ui-sortable', 'jQuery(function($){$("#callboard-tracks").sortable({handle:".dashicons-menu"});$("#callboard-tracks").on("click",".callboard-move",function(){var li=$(this).closest("li"),dir=+$(this).data("dir");if(dir<0){li.prev().before(li);}else{li.next().after(li);}$(this).focus();});});' );
 		wp_add_inline_style( 'wp-admin', '.callboard-move{padding:0 6px;font-size:16px;line-height:1}.callboard-tracks{margin:0}.callboard-tracks li{padding:6px 0;border-bottom:1px solid #dcdcde}.callboard-track-row{display:flex;align-items:center;gap:10px}.callboard-track-more{margin:4px 0 0 34px}.callboard-track-more summary{cursor:pointer;color:#2271b1}.callboard-track-more p{margin:8px 0}.callboard-tracks .dashicons-menu{cursor:grab;color:#787c82}.callboard-tracks input[type=text]{flex:1}.callboard-len{color:#646970;font-variant-numeric:tabular-nums;min-width:3em}' );
+	}
+
+	/**
+	 * An Export link beside each set on the list table.
+	 *
+	 * @param array<string, string> $actions Row actions.
+	 * @param WP_Post               $post    The row's post.
+	 * @return array<string, string>
+	 */
+	public static function row_actions( array $actions, WP_Post $post ): array {
+		if ( Post_Types::SET !== $post->post_type || ! Exporter::available() ) {
+			return $actions;
+		}
+		$url = wp_nonce_url( admin_url( 'admin-post.php?action=callboard_export&set=' . $post->ID ), 'callboard_export_' . $post->ID );
+
+		$actions['callboard_export'] = sprintf( '<a href="%1$s">%2$s</a>', esc_url( $url ), esc_html__( 'Export', 'callboard' ) );
+
+		return $actions;
 	}
 
 	/**

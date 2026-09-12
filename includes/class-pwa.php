@@ -22,6 +22,14 @@ final class Pwa {
 		add_action( 'update_option_blogname', array( self::class, 'write_files' ) );
 		add_action( 'callboard_imported', array( self::class, 'write_files' ) );
 		add_action( 'upgrader_process_complete', array( self::class, 'write_files' ) );
+		// The Home Screen shortcuts name the first four sets, so a set renamed or deleted in the
+		// admin has to reach the manifest — but not the service worker, which would drop every
+		// saved copy over a typo fixed in a title.
+		//
+		// The generic save_post, not save_post_{$type}: the typed hook fires first, and Sets::flush()
+		// is on the generic one, so the manifest would be written from the cache about to be cleared.
+		add_action( 'save_post', array( self::class, 'write_manifest_for_set' ), 20, 2 );
+		add_action( 'deleted_post', array( self::class, 'write_manifest_for_set' ), 20, 2 );
 	}
 
 	/**
@@ -103,11 +111,40 @@ final class Pwa {
 	}
 
 	/**
-	 * Write manifest.json and sw.js into the site root.
+	 * Write manifest.json and sw.js into the site root, and draw the splash screens.
 	 *
 	 * @return bool Whether both files were written.
 	 */
 	public static function write_files(): bool {
+		$manifest = self::write_manifest();
+		self::write_splash_screens();
+		return $manifest && self::write_sw();
+	}
+
+	/**
+	 * Rewrite the manifest when the post that changed was a set.
+	 *
+	 * @param int           $post_id Post ID.
+	 * @param \WP_Post|null $post    Post object, where the hook passes one.
+	 */
+	public static function write_manifest_for_set( int $post_id, $post = null ): void {
+		$type = $post instanceof \WP_Post ? $post->post_type : get_post_type( $post_id );
+		if ( Post_Types::SET === $type ) {
+			self::write_manifest();
+		}
+	}
+
+	/**
+	 * Write manifest.json alone.
+	 *
+	 * Separate from the service worker on purpose. sw.js carries a cache version stamped with
+	 * time(), so rewriting it evicts every saved set — which is the right thing when the plugin
+	 * updates and exactly the wrong thing when somebody renames a set in the admin. The manifest has
+	 * no such cost, so it can follow the sets as closely as it likes.
+	 *
+	 * @return bool Whether the file was written.
+	 */
+	public static function write_manifest(): bool {
 		global $wp_filesystem;
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		if ( ! WP_Filesystem() ) {
@@ -171,7 +208,25 @@ final class Pwa {
 				),
 			),
 		);
-		$assets   = array_map(
+		global $wp_filesystem;
+		if ( ! $wp_filesystem->put_contents( ABSPATH . 'manifest.json', wp_json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ), FS_CHMOD_FILE ) ) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Write sw.js alone. Stamps a fresh cache version, so every saved set is re-fetched after it.
+	 *
+	 * @return bool Whether the file was written.
+	 */
+	public static function write_sw(): bool {
+		global $wp_filesystem;
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		if ( ! WP_Filesystem() ) {
+			return false;
+		}
+		$assets = array_map(
 			'wp_make_link_relative',
 			array(
 				home_url( '/' ),
@@ -183,14 +238,11 @@ final class Pwa {
 				callboard_asset( 'assets/icon-180.png' ),
 			)
 		);
-		$sw       = str_replace(
+		$sw     = str_replace(
 			array( '__VERSION__', '__PLUGIN_PATH__', '__ASSETS__', '__APP_VERSION__', '__PUSH_API__' ),
 			array( (string) time(), wp_make_link_relative( CALLBOARD_URL ), wp_json_encode( $assets, JSON_UNESCAPED_SLASHES ), CALLBOARD_VERSION, Settings::get( 'push' ) && Push::available() ? wp_make_link_relative( rest_url( 'callboard/v1/push/' ) ) : '' ),
 			(string) $wp_filesystem->get_contents( CALLBOARD_DIR . 'pwa/sw.js' )
 		);
-		self::write_splash_screens();
-		$ok  = $wp_filesystem->put_contents( ABSPATH . 'manifest.json', wp_json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ), FS_CHMOD_FILE );
-		$ok2 = $wp_filesystem->put_contents( ABSPATH . 'sw.js', $sw, FS_CHMOD_FILE );
-		return (bool) ( $ok && $ok2 );
+		return (bool) $wp_filesystem->put_contents( ABSPATH . 'sw.js', $sw, FS_CHMOD_FILE );
 	}
 }

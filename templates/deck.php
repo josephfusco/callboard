@@ -26,7 +26,7 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 		<?php /* Expanded only: bytes and duration are already on every track, so a bitrate reads without waiting on richer attachment metadata. */ ?>
 		<?php /* translators: %1$s: file format (e.g. MP3), %2$s: bitrate in kbps. */ ?>
-		<span class="quality-pill" id="quality" hidden data-format="<?php echo esc_attr__( '%1$s · %2$s kbps', 'callboard' ); ?>"></span>
+		<span class="quality-pill" id="quality" hidden data-tier="" data-format="<?php echo esc_attr__( '%1$s · %2$s kbps', 'callboard' ); ?>"><b class="tier" id="quality-tier"></b><span id="quality-detail"></span></span>
 	</div>
 	<div class="seek-wrap">
 		<canvas class="wave wave-base" id="wave-base" aria-hidden="true"></canvas><canvas class="wave wave-hover" id="wave-hover" aria-hidden="true"></canvas><div class="wave-reveal" id="wave-reveal" aria-hidden="true"><canvas class="wave wave-played" id="wave-played"></canvas></div>

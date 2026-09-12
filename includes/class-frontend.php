@@ -87,6 +87,9 @@ final class Frontend {
 			/* translators: %s: track title. */
 			'saving_track'   => __( 'Saving %s, tap to cancel', 'callboard' ),
 			'share_failed'   => __( 'That track could not be sent', 'callboard' ),
+			'load_none'      => __( 'Nothing matched a track in this set', 'callboard' ),
+			/* translators: 1: files loaded, 2: files chosen. */
+			'loaded'         => __( 'Loaded %1$s of %2$s', 'callboard' ),
 			'notify'         => __( 'Notify me about new sets', 'callboard' ),
 			/* translators: %s: track title. */
 			'left_off'       => __( 'Left off at %s', 'callboard' ),

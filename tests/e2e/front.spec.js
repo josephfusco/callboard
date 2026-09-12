@@ -1,6 +1,7 @@
 /**
  * Front end: home, a set, the player, in-place navigation. Runs on desktop and an iPhone viewport.
  */
+const fs = require( 'node:fs' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
 test.describe( 'Front end', () => {
@@ -39,6 +40,55 @@ test.describe( 'Front end', () => {
 		expect( deckBox.y + deckBox.height ).toBeGreaterThanOrEqual(
 			viewport.height - 130
 		); // pinned to the bottom edge
+	} );
+
+	test( 'loading a set from files fills the offline copies without the network', async ( {
+		page,
+	} ) => {
+		const audio = fs.readFileSync(
+			'tests/fixtures/callboard/demo-set/01 - Ode to Joy [chip01].mp3'
+		);
+		const file = ( name ) => ( {
+			name,
+			mimeType: 'audio/mpeg',
+			buffer: audio,
+		} );
+
+		await page.goto( '/demo-set/' );
+		await page.waitForTimeout( 900 );
+		// The control appears only once the script knows there is a cache to fill.
+		await expect( page.locator( '#load-label' ) ).toBeVisible();
+
+		// One file per matching rule: the track's own name, a car export's leading number, the title.
+		await page.locator( '#load-files' ).setInputFiles( [
+			file( '01 - Ode to Joy [chip01].mp3' ),
+			file( '02 Anything At All.mp3' ),
+			file( 'Für Elise.mp3' ),
+			file( 'nothing-in-this-set.mp3' ),
+		] );
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			3,
+			{ timeout: 15000 }
+		);
+		await expect( page.locator( '#toast' ) ).toContainText( /Loaded 3 of 4/ );
+
+		// A copy off a stick is a different size from the server's and must not count as stale.
+		await page.reload();
+		await page.waitForTimeout( 1200 );
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			3
+		);
+
+		// A file matching nothing is said so, not guessed at.
+		await page
+			.locator( '#load-files' )
+			.setInputFiles( [ file( 'still-not-in-this-set.mp3' ) ] );
+		await expect( page.locator( '#toast' ) ).toContainText(
+			/Nothing matched/
+		);
+		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
+			3
+		);
 	} );
 
 	test( 'saving a set offline marks every track, including slashed titles', async ( {

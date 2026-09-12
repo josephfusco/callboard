@@ -63,12 +63,19 @@ jobs:
               - 'readme.txt'
               - '.distignore'
               - 'phpcs.xml.dist'
+              - 'phpunit.xml.dist'
+              - 'tests/php/**'
               - '.github/workflows/**'
 
   phpcs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/phpcs.yml
+
+  phpunit:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    uses: ./.github/workflows/phpunit.yml
 
   # The Playwright suite runs here on pull requests, pushes to main, and the weekly run, and locally from
   # the pre-commit hook. Plugin Check stays manual.
@@ -93,7 +100,7 @@ jobs:
   # fails on any failure or cancellation.
   status:
     name: CI status
-    needs: [gate, changes, phpcs, lint-js, typos, e2e]
+    needs: [gate, changes, phpcs, phpunit, lint-js, typos, e2e]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

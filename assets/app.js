@@ -17,6 +17,11 @@
 				localStorage.setItem( k, JSON.stringify( v ) );
 			} catch {}
 		},
+		del: ( k ) => {
+			try {
+				localStorage.removeItem( k );
+			} catch {}
+		},
 	};
 	const retrigger = ( el, cls ) => {
 		el.classList.remove( cls );
@@ -198,7 +203,10 @@
 		if ( deck.classList.contains( 'is-compact' ) ) {
 			openLyrics.setAttribute( 'aria-expanded', 'false' );
 			openLyrics.setAttribute( 'aria-controls', 'deck' );
-			openLyrics.setAttribute( 'aria-label', openLyrics.dataset.labelExpand );
+			openLyrics.setAttribute(
+				'aria-label',
+				openLyrics.dataset.labelExpand
+			);
 			return;
 		}
 		openLyrics.setAttribute( 'aria-controls', 'lyrics' );
@@ -249,7 +257,9 @@
 	let sheetKind = ''; // set by renderSheet(); declared here so syncOpenLyricsA11y() above can read it early
 	setDeckView(
 		ls.get( DECK_VIEW_KEY ) === 'expanded' ? 'expanded' : 'compact',
-		{ persist: false }
+		{
+			persist: false,
+		}
 	);
 
 	let looper = null, // the gapless loop, when one is running (see the A-B loop section)
@@ -1077,11 +1087,7 @@
 	repeatBtn?.addEventListener( 'click', () => {
 		haptic();
 		repeatMode =
-			repeatMode === 'off'
-				? 'set'
-				: repeatMode === 'set'
-				? 'one'
-				: 'off';
+			repeatMode === 'off' ? 'set' : repeatMode === 'set' ? 'one' : 'off';
 		ls.set( REPEAT_KEY, repeatMode );
 		paintRepeat();
 	} );
@@ -1230,7 +1236,11 @@
 			return load( i, { at: 0 } );
 		}
 		if ( repeatMode === 'off' && i === queue.tracks.length - 1 ) {
-			return; // the set played through; nothing repeats without being asked to
+			// The set played through. Forget where we were: a finished set that still says "left off at"
+			// the last track is telling you to resume something you just heard the end of.
+			ls.del( key() );
+			paintHomeResume();
+			return; // nothing repeats without being asked to
 		}
 		load( i + 1 );
 	} );
@@ -1510,7 +1520,10 @@
 			loopBand.classList.remove( 'on' );
 			if ( loopChip ) {
 				loopChip.dataset.state = '';
-				loopChip.setAttribute( 'aria-label', loopChip.dataset.labelOff );
+				loopChip.setAttribute(
+					'aria-label',
+					loopChip.dataset.labelOff
+				);
 			}
 			requestAnimationFrame( () => syncNotes( audio.currentTime, true ) );
 		}
@@ -1525,7 +1538,10 @@
 			loopFrom = audio.currentTime;
 			if ( loopChip ) {
 				loopChip.dataset.state = 'armed';
-				loopChip.setAttribute( 'aria-label', loopChip.dataset.labelArmed );
+				loopChip.setAttribute(
+					'aria-label',
+					loopChip.dataset.labelArmed
+				);
 			}
 			return;
 		}
@@ -2091,7 +2107,7 @@
 			);
 			el.textContent =
 				t && ( pos.i > 0 || pos.t >= 15 )
-					? ` · ${ tpl( T.left_off, t.title ) }`
+					? tpl( T.left_off, t.title )
 					: '';
 		} );
 	}
@@ -2193,14 +2209,14 @@
 	// Named `01 Title.mp3`, which is what the other end matches on when it loads the file into a set.
 	async function trackFile( t ) {
 		const cache = await caches.open( CACHE );
-		const res = ( await cache.match( norm( t.url ) ) ) || ( await fetch( t.url ) );
+		const res =
+			( await cache.match( norm( t.url ) ) ) || ( await fetch( t.url ) );
 		const blob = await res.blob();
 		const path = new URL( t.url, location.href ).pathname;
 		const ext = ( /\.[a-z0-9]+$/i.exec( path ) || [ '.mp3' ] )[ 0 ];
-		const name = `${ String( t.index ).padStart( 2, '0' ) } ${ t.title }${ ext }`.replace(
-			/[\\/:*?"<>|]+/g,
-			''
-		);
+		const name = `${ String( t.index ).padStart( 2, '0' ) } ${
+			t.title
+		}${ ext }`.replace( /[\\/:*?"<>|]+/g, '' );
 		return new File( [ blob ], name, {
 			type: blob.type || 'audio/mpeg',
 		} );
@@ -2435,7 +2451,9 @@
 	function matchTrack( file, tracks, taken ) {
 		const free = tracks.filter( ( t ) => ! taken.has( t.url ) );
 		const name = loose( file.name );
-		const byName = free.find( ( t ) => loose( fileBase( t.url ) ) === name );
+		const byName = free.find(
+			( t ) => loose( fileBase( t.url ) ) === name
+		);
 		if ( byName ) {
 			return byName;
 		}
@@ -2572,9 +2590,7 @@
 				}
 				await paintAll();
 				toast(
-					loaded
-						? tpl( T.loaded, loaded, files.length )
-						: T.load_none
+					loaded ? tpl( T.loaded, loaded, files.length ) : T.load_none
 				);
 			};
 		}

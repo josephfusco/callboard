@@ -100,11 +100,16 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .set{display:grid;grid-template-columns:56px 1fr auto auto;align-items:center;gap:14px;padding:12px 16px;margin:0 -16px;width:calc(100% + 32px);border-radius:10px;transition:background var(--t-fast),transform var(--t-fast);text-decoration:none;min-height:72px}
 .set:active{background:var(--surface-2);transform:scale(.995)}
 .set-mark,.set-art{width:56px;height:56px;border-radius:10px;flex:none}
-.set-mark{background:var(--surface-2);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:600;letter-spacing:-.02em}
+.set-mark{background:var(--surface-2);color:var(--ink-3);display:grid;place-items:center;font-size:1.25rem;font-weight:600;letter-spacing:-.02em;border:1px solid var(--line)} /* the same edge the real covers carry, so a letter reads as a choice */
 .set-art{object-fit:cover;display:block;background:var(--surface-2)}
 .set-text{display:flex;flex-direction:column;gap:3px;min-width:0}
 .set-name{font-size:1.0625rem;font-weight:600;letter-spacing:-.01em}
-.set-meta{color:var(--ink-3);font-size:.8125rem;font-variant-numeric:tabular-nums}
+/* where you left off leads, because it is the only part that is about you; the counts follow and are
+   the half that truncates on a narrow phone. One line either way, so no row changes height. */
+.set-meta{display:flex;align-items:baseline;min-width:0;color:var(--ink-3);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.set-resume{flex:none;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.set-resume:not(:empty)+.set-count::before{content:"·";margin:0 6px}
+.set-count{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .set-go{width:8px;height:8px;margin-right:6px;border-right:1.5px solid var(--line-strong);border-top:1.5px solid var(--line-strong);transform:rotate(45deg);justify-self:end;transition:transform var(--t) var(--ease-spring)}
 .set:active .set-go{transform:rotate(45deg) translate(3px,-3px)}
 
@@ -483,8 +488,7 @@ body:not(.has-deck) .a2hs{bottom:calc(var(--safe-b) + 12px)}
 .bell:active{background:var(--surface-2)}
 .bell[data-state="on"]{color:var(--ink)}
 .bell[data-state="on"]::after{content:"";position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)} /* on: the bell carries a dot, the way the phone shows it */
-.set-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.set.is-now .set-name::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:8px;vertical-align:middle} /* the set in the deck */
+body.has-deck .set.is-now .set-name::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:8px;vertical-align:middle} /* the set in the deck — and only while there is a deck to point at, since the idle one can be swiped away */
 body.is-loading{cursor:progress}
 .toast{position:fixed;left:50%;bottom:calc(var(--deck-h) + var(--safe-b) + 12px);transform:translateX(-50%);z-index:19;max-width:min(92vw,480px);margin:0;padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:.875rem;line-height:1.35;text-align:center;text-wrap:pretty;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:opacity var(--t),transform var(--t)}
 @starting-style{.toast{opacity:0;transform:translate(-50%,6px)}}

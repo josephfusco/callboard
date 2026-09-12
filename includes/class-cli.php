@@ -29,7 +29,10 @@ final class Cli {
 	 * ## OPTIONS
 	 *
 	 * <url>
-	 * : YouTube video or playlist URL.
+	 * : YouTube video or playlist URL. A search also works, using yt-dlp's own
+	 * ytsearch:/ytsearchN: syntax — Callboard then keeps only the best of the results: an
+	 * auto-generated "Topic" upload first, then a channel YouTube has verified, skipping
+	 * obvious live versions, covers and remixes where another copy exists.
 	 *
 	 * --name=<name>
 	 * : Set name shown to the cast.
@@ -40,6 +43,7 @@ final class Cli {
 	 * ## EXAMPLES
 	 *
 	 *     wp callboard fetch 'https://www.youtube.com/playlist?list=…' --name="Spring Show"
+	 *     wp callboard fetch 'ytsearch1:queen bohemian rhapsody' --name="Bohemian Rhapsody"
 	 *
 	 * @param string[]              $args       Positional args.
 	 * @param array<string, string> $assoc_args Named args.

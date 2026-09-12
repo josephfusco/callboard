@@ -14,6 +14,13 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Wraps yt-dlp to produce manifest.json, audio files, lyrics.json, cover.png and share.png.
+ *
+ * The rule for the audio itself: the truest copy available, not the most processed one.
+ * YouTube already serves lossy Opus or AAC, so re-encoding either of them again can only lose
+ * fidelity, and a re-encoder set to "best quality" will often produce a *bigger* file than the
+ * lossy source it came from — a bitrate that looks better while sounding worse. The native
+ * stream is kept whenever it is already something every browser can play (m4a/AAC); ffmpeg is
+ * only asked to convert when there is no such stream to keep.
  */
 final class Fetcher {
 
@@ -37,9 +44,22 @@ final class Fetcher {
 	}
 
 	/**
-	 * Fetch a playlist or video into <import dir>/<slug>/ and return the manifest.
+	 * Format selector for yt-dlp's `-f`: an already-AAC track first — by codec, not container,
+	 * since a container extension is not proof of what is inside it — so the common case
+	 * downloads exactly what YouTube serves with nothing to re-encode. `ba` is yt-dlp's own
+	 * shorthand for bestaudio; this is the same selector yt-dlp ships as its built-in `-t aac`
+	 * alias, not a homemade one.
+	 */
+	private const AAC_FIRST = 'ba[acodec^=aac]/ba[acodec^=mp4a.40.]/ba/b';
+
+	/**
+	 * Fetch a playlist, video, or search into <import dir>/<slug>/ and return the manifest.
 	 *
-	 * @param string   $url      YouTube URL.
+	 * A search (yt-dlp's own `ytsearch:` / `ytsearchN:` syntax, e.g. `ytsearch1:queen bohemian
+	 * rhapsody`) resolves to several candidates for what is really one desired track; only the
+	 * best of them is kept. See best_of_search() for how "best" is decided.
+	 *
+	 * @param string   $url      YouTube URL, playlist URL, or `ytsearch:` query.
 	 * @param string   $slug     Folder / set slug.
 	 * @param string   $name     Display name for the set.
 	 * @param callable $progress Receives a line of progress text.
@@ -66,15 +86,36 @@ final class Fetcher {
 		}
 		$entries = $source['entries'] ?? array( $source );
 
+		// A real playlist's entries are separate tracks and all of them are wanted. A search's
+		// entries are rival copies of the one track that was actually asked for; keep only the
+		// best. `youtube:search` is yt-dlp's own extractor name for this, not a guess.
+		if ( 'youtube:search' === strtolower( (string) ( $source['extractor'] ?? '' ) ) ) {
+			$picked  = self::best_of_search( $entries );
+			$entries = array( $picked );
+			$url     = (string) ( $picked['url'] ?? ( 'https://www.youtube.com/watch?v=' . ( $picked['id'] ?? '' ) ) );
+			// A search's own webpage_url is the literal query string, not a link to anything real.
+			$source['webpage_url']  = $url;
+			$source['uploader']     = (string) ( $picked['channel'] ?? $picked['uploader'] ?? '' );
+			$source['uploader_url'] = (string) ( $picked['channel_url'] ?? $picked['uploader_url'] ?? '' );
+		}
+
 		$progress( sprintf( /* translators: %d: number of videos. */ __( 'Downloading audio for %d videos…', 'callboard' ), count( $entries ) ) );
-		$cmd = array( $tools['ytdlp'], '-x', '--no-playlist-reverse', '--download-archive', $dir . '/.archive', '-o', $dir . '/%(playlist_index|1)02d - %(title)s [%(id)s].%(ext)s' );
+		$cmd = array( $tools['ytdlp'], '-x', '--no-playlist-reverse', '--download-archive', $dir . '/.archive', '-f', self::AAC_FIRST, '-o', $dir . '/%(playlist_index|1)02d - %(title)s [%(id)s].%(ext)s' );
 		if ( $tools['ffmpeg'] ) {
-			array_push( $cmd, '--audio-format', 'mp3', '--audio-quality', '0', '--ffmpeg-location', dirname( $tools['ffmpeg'] ) );
-		} else {
-			array_push( $cmd, '-f', 'bestaudio[ext=m4a]/bestaudio' );
+			// Only reached when the source truly has no AAC stream to keep. m4a/AAC is preferred
+			// even here since it is the format the app already plays everywhere, including
+			// Safari, where a bare .webm/Opus file is not safe. Re-encoding is already a lossy
+			// pass over a lossy source, so the target bitrate is fixed rather than left at
+			// ffmpeg's "quality 0" — for its native aac encoder that setting is poorly bounded
+			// and can quietly triple the size for no audible gain, the same mistake this class
+			// used to make encoding to mp3. mp3 itself is the last resort of all, for the rare
+			// ffmpeg build with no working aac encoder.
+			$audio_format = self::has_aac_encoder( $tools['ffmpeg'] ) ? 'm4a' : 'mp3';
+			array_push( $cmd, '--audio-format', $audio_format, '--audio-quality', '160K', '--ffmpeg-location', dirname( $tools['ffmpeg'] ) );
 		}
 		array_push( $cmd, '--write-auto-subs', '--sub-langs', 'en', '--sub-format', 'json3', '-o', 'subtitle:' . $dir . '/.subs/%(id)s', $url );
-		$out = self::run( $cmd, $progress );
+		$stderr = '';
+		$out    = self::run( $cmd, $progress, $stderr );
 		if ( is_wp_error( $out ) ) {
 			return $out;
 		}
@@ -101,6 +142,10 @@ final class Fetcher {
 				'url'          => (string) ( $e['url'] ?? 'https://www.youtube.com/watch?v=' . $vid ),
 				'uploader'     => (string) ( $e['uploader'] ?? $e['channel'] ?? '' ),
 				'uploader_url' => (string) ( $e['uploader_url'] ?? $e['channel_url'] ?? '' ),
+				// What was actually obtained, so the app can one day say "this is a re-encode".
+				// codec is read from the file itself, not assumed from its extension.
+				'codec'        => $file ? self::codec( $file, $tools['ffmpeg'] ) : null,
+				'reencoded'    => $file ? self::was_reencoded( $stderr, $vid ) : null,
 			);
 		}
 		$manifest = array(
@@ -187,6 +232,97 @@ final class Fetcher {
 	}
 
 	/**
+	 * The codec actually inside a fetched file, e.g. "aac", "mp3", "opus". Read from the file
+	 * itself via ffprobe when there is one, since a container's extension is not proof of what
+	 * is inside it; falls back to the extension's conventional codec when there is no ffprobe.
+	 *
+	 * @param string      $file   Audio file.
+	 * @param string|null $ffmpeg ffmpeg path (ffprobe sits beside it).
+	 */
+	private static function codec( string $file, ?string $ffmpeg ): string {
+		$ffprobe = $ffmpeg ? dirname( $ffmpeg ) . '/ffprobe' : self::which( 'ffprobe' );
+		if ( $ffprobe && is_executable( $ffprobe ) ) {
+			$out = self::run( array( $ffprobe, '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=codec_name', '-of', 'csv=p=0', $file ) );
+			if ( ! is_wp_error( $out ) && trim( $out ) ) {
+				return trim( $out );
+			}
+		}
+		$ext = strtolower( (string) pathinfo( $file, PATHINFO_EXTENSION ) );
+		return array(
+			'm4a'  => 'aac',
+			'opus' => 'opus',
+			'ogg'  => 'vorbis',
+		)[ $ext ] ?? $ext;
+	}
+
+	/**
+	 * Whether yt-dlp actually re-encoded this track's audio rather than keeping (or losslessly
+	 * remuxing into another container) what YouTube served. yt-dlp says so itself in its own log
+	 * line — "Not converting audio …; file is already …" versus "[ExtractAudio] Destination: …"
+	 * when a real conversion runs — so this only reads that, the same way the file names in $dir
+	 * are matched to entries elsewhere in this class: by the "[id]" yt-dlp's own output carries.
+	 *
+	 * @param string $stderr yt-dlp's stderr from the fetch, one run covering every track.
+	 * @param string $vid    This track's video id.
+	 */
+	private static function was_reencoded( string $stderr, string $vid ): bool {
+		foreach ( preg_split( '/\r\n|\r|\n/', $stderr ) as $line ) {
+			$line = trim( (string) $line );
+			if ( str_starts_with( $line, '[ExtractAudio]' ) && str_contains( $line, '[' . $vid . ']' ) && str_contains( $line, 'Destination:' ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Whether this ffmpeg build can actually encode AAC. Virtually every build can — libavcodec's
+	 * native "aac" encoder needs no external library and ships by default — but a stripped build
+	 * is possible, and mp3 is only worth reaching for when it truly is the only way out.
+	 *
+	 * @param string $ffmpeg ffmpeg binary.
+	 */
+	private static function has_aac_encoder( string $ffmpeg ): bool {
+		$out = self::run( array( $ffmpeg, '-hide_banner', '-encoders' ) );
+		return ! is_wp_error( $out ) && (bool) preg_match( '/\baac\b/', $out );
+	}
+
+	/**
+	 * Reduce a YouTube search's results to the single best candidate for the one track that was
+	 * actually asked for. In order: an auto-generated "Topic" channel — "Artist - Topic" is a
+	 * literal YouTube naming convention for the label's own catalogue upload, not a guess, and
+	 * usually the cleanest master — then a channel YouTube itself has verified (the closest
+	 * structural signal yt-dlp exposes to "official"; it is not scoped to this one song, so it is
+	 * a second choice, not a certainty), then anything left that does not look like a live
+	 * version, cover or remix, else give up and take yt-dlp's own top result.
+	 *
+	 * @param array<int, array<string, mixed>> $entries Flat search results, in yt-dlp's own order.
+	 * @return array<string, mixed>
+	 */
+	private static function best_of_search( array $entries ): array {
+		$entries = array_values( $entries );
+		if ( count( $entries ) < 2 ) {
+			return $entries[0] ?? array();
+		}
+
+		$not_a_cover = static fn( array $e ): bool => ! preg_match( '/\b(live|cover|remix|karaoke|reaction)\b/i', (string) ( $e['title'] ?? '' ) );
+		$clean       = array_values( array_filter( $entries, $not_a_cover ) );
+		$pool        = $clean ? $clean : $entries; // Nothing clean survives: a live version beats nothing.
+
+		foreach ( $pool as $e ) {
+			if ( str_ends_with( (string) ( $e['channel'] ?? $e['uploader'] ?? '' ), ' - Topic' ) ) {
+				return $e;
+			}
+		}
+		foreach ( $pool as $e ) {
+			if ( ! empty( $e['channel_is_verified'] ) ) {
+				return $e;
+			}
+		}
+		return $pool[0];
+	}
+
+	/**
 	 * Loudness envelopes for every audio file in a folder, keyed by video id: a string of digits 0-9, ten per second.
 	 * The app drives its light and level meters from this, so iPhones (which cannot analyse audio live) see real levels.
 	 *
@@ -250,9 +386,11 @@ final class Fetcher {
 	 *
 	 * @param string[]      $cmd      Argv.
 	 * @param callable|null $progress Line callback.
+	 * @param string|null   $stderr   Set to the command's full stderr, for callers that need more
+	 *                                than the lines $progress was shown (e.g. was_reencoded()).
 	 * @return string|WP_Error
 	 */
-	private static function run( array $cmd, ?callable $progress = null ) {
+	private static function run( array $cmd, ?callable $progress = null, ?string &$stderr = null ) {
 		$spec = array(
 			0 => array( 'pipe', 'r' ),
 			1 => array( 'pipe', 'w' ),
@@ -279,7 +417,8 @@ final class Fetcher {
 		$err .= (string) stream_get_contents( $pipes[2] );
 		fclose( $pipes[1] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		fclose( $pipes[2] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-		$code = proc_close( $proc );
+		$code   = proc_close( $proc );
+		$stderr = $err;
 		if ( 0 !== $code ) {
 			return new WP_Error( 'callboard_tool_failed', trim( $err ) ? trim( $err ) : sprintf( 'exit %d', $code ) );
 		}

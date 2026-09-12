@@ -1,6 +1,6 @@
 <?php
 /**
- * The artwork the plugin draws for a set, and the one colour it reads back out of a cover.
+ * The artwork Callboard draws for a set, and the colour it reads back out of a cover.
  *
  * @package Callboard
  */
@@ -13,23 +13,45 @@ use Callboard\Art;
 class Test_Callboard_Art extends WP_UnitTestCase {
 
 	/**
+	 * Where temporary files for these tests go.
+	 *
+	 * @var string
+	 */
+	private string $dir;
+
+	/**
 	 * Files written by a test, removed after it.
 	 *
 	 * @var string[]
 	 */
 	private array $files = array();
 
+	public function set_up(): void {
+		parent::set_up();
+		$this->dir = sys_get_temp_dir() . '/callboard-art-' . wp_generate_password( 8, false );
+		wp_mkdir_p( $this->dir );
+	}
+
 	public function tear_down(): void {
 		foreach ( $this->files as $file ) {
 			if ( file_exists( $file ) ) {
-				unlink( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- a temp file this test wrote.
+				wp_delete_file( $file );
 			}
+		}
+		if ( isset( $this->dir ) && file_exists( $this->dir ) ) {
+			rmdir( $this->dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- a temp folder this test made.
 		}
 		parent::tear_down();
 	}
 
+	private function require_freetype(): void {
+		if ( ! function_exists( 'imagettftext' ) ) {
+			$this->markTestSkipped( 'GD without FreeType cannot draw the artwork.' );
+		}
+	}
+
 	private function temp( string $ext ): string {
-		$file          = trailingslashit( get_temp_dir() ) . 'callboard-art-' . wp_generate_password( 8, false ) . '.' . $ext;
+		$file          = $this->dir . '/callboard-art-' . wp_generate_password( 8, false ) . '.' . $ext;
 		$this->files[] = $file;
 		return $file;
 	}
@@ -51,10 +73,59 @@ class Test_Callboard_Art extends WP_UnitTestCase {
 		return $file;
 	}
 
-	public function test_a_cover_comes_back_as_a_square_png(): void {
-		if ( ! function_exists( 'imagettftext' ) ) {
-			$this->markTestSkipped( 'GD here has no FreeType, so there is no cover to draw.' );
+	/**
+	 * #93. "Hadestown" is one word, and at the size the cover starts from it is wider than the column.
+	 * Wrapping happens between words, so a count of lines said it fit and the name ran off the right
+	 * edge. Nothing but the background may sit in the margin beside the title.
+	 *
+	 * @dataProvider cards
+	 */
+	public function test_a_long_one_word_name_stays_inside_the_artwork( string $kind, array $margin ): void {
+		$this->require_freetype();
+		$file = $this->temp( 'png' );
+		$this->assertTrue( Art::$kind( $this->manifest( 'Hadestown' ), $file ) );
+
+		// The left margin is always bare, so it says what the background is.
+		$im    = imagecreatefrompng( $file );
+		$bg    = imagecolorat( $im, 4, (int) ( imagesy( $im ) / 2 ) );
+		$inked = 0;
+		for ( $x = $margin[0]; $x <= $margin[1]; $x++ ) {
+			for ( $y = $margin[2]; $y <= $margin[3]; $y++ ) {
+				$inked += imagecolorat( $im, $x, $y ) === $bg ? 0 : 1;
+			}
 		}
+
+		$this->assertSame( 0, $inked, "The name reaches the {$kind}'s right margin." );
+	}
+
+	/**
+	 * The right margin beside each card's title: clear of the accent dot above and the level bars below.
+	 *
+	 * @return array<string, array{0: string, 1: array{0: int, 1: int, 2: int, 3: int}}>
+	 */
+	public function cards(): array {
+		return array(
+			'the square cover'      => array( 'cover', array( 950, 1023, 200, 880 ) ),
+			'the link-preview card' => array( 'share', array( 920, 1199, 150, 490 ) ),
+		);
+	}
+
+	/**
+	 * A manifest with nothing but a name, the way a folder of dropped-in audio produces one.
+	 *
+	 * @param string $name Set name.
+	 * @return array<string, mixed>
+	 */
+	private function manifest( string $name ): array {
+		return array(
+			'name'   => $name,
+			'slug'   => sanitize_title( $name ),
+			'tracks' => array(),
+		);
+	}
+
+	public function test_a_cover_comes_back_as_a_square_png(): void {
+		$this->require_freetype();
 		$out      = $this->temp( 'png' );
 		$manifest = array(
 			'name'   => 'Shakespeare’s Sonnets',

@@ -5,7 +5,9 @@ name: Playground Preview Publish
 # to a per-PR preview-pr-N branch that raw.githubusercontent.com serves with
 # CORS, and posts (or updates) a sticky comment with the Playground link. Every
 # PR-derived input is validated; the blueprint comes from the base ref, only
-# asset URLs are rewritten, and those always point at this repository.
+# asset URLs are rewritten, and those always point at this repository. The demo
+# set rides along in the build artifact, and only the files the base-ref
+# blueprint names are copied out of it.
 
 on:
   workflow_run: # zizmor: ignore[dangerous-triggers] never checks out or executes pull request code
@@ -52,6 +54,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/release-assets artifacts/pr-meta
+          # The pull request wrote these archives, so refuse any entry that is a link or leaves its folder
+          # before unzip can restore it: a link would let the copy below publish a file from this runner.
+          for z in release-assets.zip pr-meta.zip; do
+            if zipinfo -1 "$z" | grep -qE '(^/|(^|/)\.\.(/|$))'; then echo "::error::$z has an entry outside its folder"; exit 1; fi
+            if zipinfo "$z" | grep -qE '^l'; then echo "::error::$z contains a symlink"; exit 1; fi
+          done
           unzip -q -o -d artifacts/release-assets release-assets.zip
           unzip -q -o -d artifacts/pr-meta pr-meta.zip
           test -f artifacts/release-assets/callboard.zip
@@ -75,6 +83,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "preview/${HEAD_SHA}" && cp artifacts/release-assets/callboard.zip "preview/${HEAD_SHA}/"
+          # Only the demo files the base-ref blueprint names, each checked to be a plain file of a sane size,
+          # laid out beside the zip the same way Pages lays them out.
+          node .github/scripts/demo-blueprint.js stage blueprint.json artifacts/release-assets/demo "preview/${HEAD_SHA}/demo"
           cd preview
           git init -q -b "preview-pr-${PR_NUMBER}"
           git add -A
@@ -89,11 +100,13 @@ jobs:
           HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
         run: |
           set -euo pipefail
-          PLUGIN_URL="https://raw.githubusercontent.com/${REPO}/preview-pr-${PR_NUMBER}/${HEAD_SHA}/callboard.zip"
-          for _ in $(seq 30); do curl -sf -o /dev/null "$PLUGIN_URL" && break; sleep 2; done
-          curl -sf -o /dev/null "$PLUGIN_URL" || { echo "Preview never appeared at $PLUGIN_URL"; exit 1; }
-          BLUEPRINT=$(jq --arg plugin "$PLUGIN_URL" '.steps |= map(if .step == "installPlugin" and .pluginData.resource == "url" then .pluginData.url = $plugin else . end)' blueprint.json)
-          echo "url=https://playground.wordpress.net/#$(printf '%s' "$BLUEPRINT" | base64 -w0)" >> "$GITHUB_OUTPUT"
+          # blueprint.json names its zip and demo files relative to itself, so the preview branch, laid out
+          # like the Pages site, resolves every one of them to this pull request's own copy.
+          BASE="https://raw.githubusercontent.com/${REPO}/preview-pr-${PR_NUMBER}/${HEAD_SHA}/"
+          node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" > preview-blueprint.json
+          # A link to a demo that cannot load its files is worse than no link; wait out the push, then fail.
+          node .github/scripts/demo-blueprint.js check preview-blueprint.json 30
+          echo "url=https://playground.wordpress.net/#$(jq -c . preview-blueprint.json | base64 -w0)" >> "$GITHUB_OUTPUT"
       - name: Post or update the sticky comment
         if: steps.meta.outputs.skipped != 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

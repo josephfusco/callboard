@@ -1,13 +1,33 @@
 name: Workflow Scripts Tests
 
+# demo-blueprint.test.js reads the blueprint, the landing page, the workflows, the demo fixtures, and
+# the files that carry the landing page's address, so a change to any of them runs it too.
 on:
   push:
     branches: [main]
     paths:
       - '.github/scripts/**'
+      - '.github/workflows/**'
+      - 'blueprint.json'
+      - 'site/index.html'
+      - 'tests/fixtures/callboard/demo-set/**'
+      - 'README.md'
+      - 'readme.txt'
+      - 'callboard.php'
+      - 'composer.json'
+      - 'package.json'
   pull_request:
     paths:
       - '.github/scripts/**'
+      - '.github/workflows/**'
+      - 'blueprint.json'
+      - 'site/index.html'
+      - 'tests/fixtures/callboard/demo-set/**'
+      - 'README.md'
+      - 'readme.txt'
+      - 'callboard.php'
+      - 'composer.json'
+      - 'package.json'
 
 # Disable permissions for all available scopes by default.
 # Any needed permissions should be configured at the job level.

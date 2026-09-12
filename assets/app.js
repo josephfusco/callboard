@@ -2671,7 +2671,19 @@
 					have.has( t.url ) ? 1 : 0
 				)
 			);
-			const busy = tracks.some( ( t ) => dlAborts.has( t.url ) );
+			// Every track is here, but the set is only saved once the page it opens from is too. Keep it now if it
+			// is missing (a first visit, or a worker update that cleared the old copies) and hold the label until then.
+			if (
+				have.size === tracks.length &&
+				navigator.onLine &&
+				! kept.has( set.slug ) &&
+				! ( await pageKept( set.slug ) )
+			) {
+				warmPage( set.slug ).then( () => paintAll() );
+			}
+			const busy =
+				tracks.some( ( t ) => dlAborts.has( t.url ) ) ||
+				kept.get( set.slug ) instanceof Promise;
 			offBtn.classList.toggle( 'is-busy', busy );
 			offBtn.classList.toggle(
 				'is-done',
@@ -2825,7 +2837,7 @@
 				}
 			};
 			await Promise.all( [ worker(), worker() ] );
-			warmPage( set.slug ); // the set is saved; its page should open offline too
+			await warmPage( set.slug ); // the set is saved; its page should open offline too
 			if ( full ) {
 				return noSpace( await freeSpace() );
 			}
@@ -2909,17 +2921,55 @@
 			fetchFragment( slug );
 		}
 	};
-	const warmed = new Set();
+	// slug -> true once the worker has kept the set's page this visit, false if it could not, or the promise
+	// of one of those while it is on its way
+	const kept = new Map();
 	function warmPage( slug ) {
-		// a saved set has to open offline: fetch its fragment once while online so the worker holds a copy
-		if ( warmed.has( slug ) || ! navigator.onLine ) {
-			return;
+		// A saved set has to open offline, from a tap on home (the fragment) or a cold start (the document).
+		// The worker fetches and stores both and answers once they are in, so "Saved offline" can wait for it.
+		const have = kept.get( slug );
+		if ( have === true || have instanceof Promise ) {
+			return Promise.resolve( have );
 		}
-		warmed.add( slug );
-		fetch( fragmentUrl( slug ), { cache: 'no-cache' } ).catch( () =>
-			warmed.delete( slug )
-		);
+		if ( ! navigator.onLine || ! navigator.serviceWorker ) {
+			return Promise.resolve( false );
+		}
+		const p = ( async () => {
+			const reg = await Promise.race( [
+				navigator.serviceWorker.ready,
+				new Promise( ( r ) => setTimeout( r, 10000 ) ),
+			] );
+			if ( ! reg?.active ) {
+				return false;
+			}
+			return new Promise( ( resolve ) => {
+				const ch = new MessageChannel();
+				const timer = setTimeout( () => resolve( false ), 30000 );
+				ch.port1.onmessage = ( e ) => {
+					clearTimeout( timer );
+					resolve( e.data === true );
+				};
+				reg.active.postMessage(
+					{
+						type: 'callboard:keep',
+						urls: [ fragmentUrl( slug ), `${ G.home }${ slug }/` ],
+					},
+					[ ch.port2 ]
+				);
+			} );
+		} )()
+			.catch( () => false )
+			.then( ( ok ) => {
+				kept.set( slug, ok );
+				return ok;
+			} );
+		kept.set( slug, p );
+		return p;
 	}
+	// Whether a set's page is already in a cache, from this visit or an earlier one.
+	const pageKept = async ( slug ) =>
+		!! ( await caches.match( fragmentUrl( slug ) ) ) &&
+		!! ( await caches.match( `${ G.home }${ slug }/` ) );
 	async function go( url, push = true, animate = true ) {
 		const slug = routeOf( url );
 		if ( slug === null ) {

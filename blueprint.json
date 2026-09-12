@@ -18,7 +18,7 @@
       "step": "installPlugin",
       "pluginData": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/callboard.zip"
+        "url": "callboard.zip"
       }
     },
     {
@@ -30,7 +30,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/manifest.json",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/manifest.json"
+        "url": "demo/manifest.json"
       }
     },
     {
@@ -38,7 +38,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/levels.json",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/levels.json"
+        "url": "demo/levels.json"
       }
     },
     {
@@ -46,7 +46,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/cover.png",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/cover.png"
+        "url": "demo/cover.png"
       }
     },
     {
@@ -54,7 +54,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/01 - Sonnets 1–10 [son01].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/01%20-%20Sonnets%201%E2%80%9310%20%5Bson01%5D.mp3"
+        "url": "demo/01%20-%20Sonnets%201%E2%80%9310%20%5Bson01%5D.mp3"
       }
     },
     {
@@ -62,7 +62,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/02 - Sonnets 11–20 [son02].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/02%20-%20Sonnets%2011%E2%80%9320%20%5Bson02%5D.mp3"
+        "url": "demo/02%20-%20Sonnets%2011%E2%80%9320%20%5Bson02%5D.mp3"
       }
     },
     {
@@ -70,7 +70,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/03 - Sonnets 21–30 [son03].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/03%20-%20Sonnets%2021%E2%80%9330%20%5Bson03%5D.mp3"
+        "url": "demo/03%20-%20Sonnets%2021%E2%80%9330%20%5Bson03%5D.mp3"
       }
     },
     {
@@ -78,7 +78,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/04 - Sonnets 31–40 [son04].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/04%20-%20Sonnets%2031%E2%80%9340%20%5Bson04%5D.mp3"
+        "url": "demo/04%20-%20Sonnets%2031%E2%80%9340%20%5Bson04%5D.mp3"
       }
     },
     {
@@ -86,7 +86,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/05 - Sonnets 41–50 [son05].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/05%20-%20Sonnets%2041%E2%80%9350%20%5Bson05%5D.mp3"
+        "url": "demo/05%20-%20Sonnets%2041%E2%80%9350%20%5Bson05%5D.mp3"
       }
     },
     {
@@ -94,7 +94,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/06 - Sonnets 51–60 [son06].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/06%20-%20Sonnets%2051%E2%80%9360%20%5Bson06%5D.mp3"
+        "url": "demo/06%20-%20Sonnets%2051%E2%80%9360%20%5Bson06%5D.mp3"
       }
     },
     {
@@ -102,7 +102,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/07 - Sonnets 61–70 [son07].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/07%20-%20Sonnets%2061%E2%80%9370%20%5Bson07%5D.mp3"
+        "url": "demo/07%20-%20Sonnets%2061%E2%80%9370%20%5Bson07%5D.mp3"
       }
     },
     {
@@ -110,7 +110,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/08 - Sonnets 71–80 [son08].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/08%20-%20Sonnets%2071%E2%80%9380%20%5Bson08%5D.mp3"
+        "url": "demo/08%20-%20Sonnets%2071%E2%80%9380%20%5Bson08%5D.mp3"
       }
     },
     {
@@ -118,7 +118,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/09 - Sonnets 81–90 [son09].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/09%20-%20Sonnets%2081%E2%80%9390%20%5Bson09%5D.mp3"
+        "url": "demo/09%20-%20Sonnets%2081%E2%80%9390%20%5Bson09%5D.mp3"
       }
     },
     {
@@ -126,7 +126,7 @@
       "path": "/wordpress/wp-content/uploads/callboard/demo-set/10 - Sonnets 91–100 [son10].mp3",
       "data": {
         "resource": "url",
-        "url": "https://josephfus.co/callboard/demo/10%20-%20Sonnets%2091%E2%80%93100%20%5Bson10%5D.mp3"
+        "url": "demo/10%20-%20Sonnets%2091%E2%80%93100%20%5Bson10%5D.mp3"
       }
     },
     {

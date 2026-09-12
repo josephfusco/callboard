@@ -1562,8 +1562,8 @@
 	const canLoopGapless = () =>
 		'AudioContext' in window && document.visibilityState === 'visible';
 	const playhead = () => {
-		if ( ! looper || ! loop ) {
-			return audio.currentTime;
+		if ( ! looper?.src || ! loop ) {
+			return audio.currentTime; // a looper still loading has no clock of its own yet
 		}
 		const len = loop.b - loop.a,
 			t =
@@ -1592,7 +1592,9 @@
 				};
 			}
 		} catch {
-			looper = null; // no decode here: the element's own loop stands
+			if ( looper === ticket ) {
+				looper = null; // no decode here: the element's own loop stands
+			}
 			return;
 		}
 		if (
@@ -1602,7 +1604,9 @@
 			! canLoopGapless() ||
 			looperCtx.state !== 'running' // autoplay policy kept the context shut: never mute the element for a silent looper
 		) {
-			looper = null;
+			if ( looper === ticket ) {
+				looper = null; // a later start owns the looper now: leave its ticket alone
+			}
 			return;
 		}
 		const src = looperCtx.createBufferSource();

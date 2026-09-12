@@ -296,7 +296,7 @@ final class Exporter {
 	/**
 	 * The cover as a JPEG beside the audio, named the way head units and desktop players both
 	 * look for it. Embedded artwork is read far more widely as JPEG than as PNG, and the plugin
-	 * draws PNGs, so convert where GD can and fall back to copying where it cannot.
+	 * draws them, so convert where GD can and fall back to copying where it cannot.
 	 *
 	 * @param string|null $cover Absolute path to the set's cover, or null.
 	 * @param string      $dir   The folder being written.

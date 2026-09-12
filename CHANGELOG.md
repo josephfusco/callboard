@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.3.0](https://github.com/promptcorner/callboard/compare/v2.2.0...v2.3.0) (2026-09-12)
+
+
+### Features
+
+* an extension standard, and the first three features built on it ([#137](https://github.com/promptcorner/callboard/issues/137)) ([de885f8](https://github.com/promptcorner/callboard/commit/de885f8ce85947fa8560935538ee9912d02be80b))
+* show how much each track was practiced since the last call ([#157](https://github.com/promptcorner/callboard/issues/157)) ([33e7031](https://github.com/promptcorner/callboard/commit/33e70312b85c836ddc9e1bd5fbf123b16abe1f57))
+
+
+### Bug Fixes
+
+* a set only says it is saved once it can open without a signal ([#135](https://github.com/promptcorner/callboard/issues/135)) ([c18ef33](https://github.com/promptcorner/callboard/commit/c18ef33487bc9fa50c8365b5c3054f46838b1520))
+* clean up extension commands and discard stale badge results ([#164](https://github.com/promptcorner/callboard/issues/164)) ([6e47029](https://github.com/promptcorner/callboard/commit/6e47029f20b146b68f70766c76dd09768cdd2bc0))
+* keep player scripts in footer ([#153](https://github.com/promptcorner/callboard/issues/153)) ([24ae648](https://github.com/promptcorner/callboard/commit/24ae648082394c4f3569eee769efa11d3cfd0c71))
+* make the landing page demo preview accurate and easy to start ([#156](https://github.com/promptcorner/callboard/issues/156)) ([a06ad5e](https://github.com/promptcorner/callboard/commit/a06ad5efdb535514823574dd2347e305a582089d))
+* preserve extension assets in the offline cache after updates ([#152](https://github.com/promptcorner/callboard/issues/152)) ([106948c](https://github.com/promptcorner/callboard/commit/106948c976d09cf0d9921fdb12df23dab8534065))
+* replace the Now Playing swipe gesture with native back and close controls ([#154](https://github.com/promptcorner/callboard/issues/154)) ([8926af4](https://github.com/promptcorner/callboard/commit/8926af4840c401115b06ae686a5675830d1ad0a6))
+* stabilize extension cache variants and memoize active registry resolution ([#150](https://github.com/promptcorner/callboard/issues/150)) ([d24449d](https://github.com/promptcorner/callboard/commit/d24449d886c9c2af56ec4e26e3548d675c839d70))
+* start the gapless loop when both ends are set quickly ([#167](https://github.com/promptcorner/callboard/issues/167)) ([540c31b](https://github.com/promptcorner/callboard/commit/540c31b8b159230986d89df9478232e5dcc968ef))
+* stop calling imagedestroy(), which PHP 8.5 deprecates ([#136](https://github.com/promptcorner/callboard/issues/136)) ([75c1a70](https://github.com/promptcorner/callboard/commit/75c1a70d5b2f6c2791658487ac89ebd109670ec5))
+* the demo stopped loading when the repository moved ([#132](https://github.com/promptcorner/callboard/issues/132)) ([2fd1be5](https://github.com/promptcorner/callboard/commit/2fd1be5f4566f913c2b2412c7126291a191f93a4))
+* the filament stays lit on home while a track plays ([#122](https://github.com/promptcorner/callboard/issues/122)) ([0e54d9c](https://github.com/promptcorner/callboard/commit/0e54d9cfb328ec930f9fa6b6e420adb7367bf364))
+
 ## [2.2.0](https://github.com/promptcorner/callboard/compare/v2.1.0...v2.2.0) (2026-09-12)
 
 

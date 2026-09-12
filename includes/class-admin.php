@@ -450,10 +450,12 @@ wp callboard run   <?php esc_html_e( '# or drain everything queued above', 'call
 		if ( Post_Types::SET !== $post->post_type || ! Exporter::available() ) {
 			return $actions;
 		}
-		$url = wp_nonce_url( admin_url( 'admin-post.php?action=callboard_export&set=' . $post->ID ), 'callboard_export_' . $post->ID );
+		$base    = admin_url( 'admin-post.php?action=callboard_export&set=' . $post->ID );
+		$url     = wp_nonce_url( $base, 'callboard_export_' . $post->ID );
+		$car_url = wp_nonce_url( add_query_arg( 'format', 'car', $base ), 'callboard_export_' . $post->ID );
 
 		$actions['callboard_export']     = sprintf( '<a href="%1$s">%2$s</a>', esc_url( $url ), esc_html__( 'Export', 'callboard' ) );
-		$actions['callboard_export_car'] = sprintf( '<a href="%1$s">%2$s</a>', esc_url( add_query_arg( 'format', 'car', $url ) ), esc_html__( 'Export for a car', 'callboard' ) );
+		$actions['callboard_export_car'] = sprintf( '<a href="%1$s">%2$s</a>', esc_url( $car_url ), esc_html__( 'Export for a car', 'callboard' ) );
 
 		return $actions;
 	}

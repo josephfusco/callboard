@@ -217,6 +217,12 @@ final class Exporter {
 		}
 
 		$dir = trailingslashit( $into ) . self::folder_name( $set );
+		if ( file_exists( $dir ) ) {
+			if ( ! is_dir( $dir ) ) {
+				return new WP_Error( 'callboard_mkdir', __( 'Could not create the folder.', 'callboard' ) );
+			}
+			self::rmdir( $dir );
+		}
 		if ( ! wp_mkdir_p( $dir ) ) {
 			return new WP_Error( 'callboard_mkdir', __( 'Could not create the folder.', 'callboard' ) );
 		}

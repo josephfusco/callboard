@@ -71,9 +71,13 @@ final class Id3 {
 		}
 
 		// The header's size is syncsafe: seven bits per byte, and it excludes the header itself.
-		$size = ( ord( $data[6] ) << 21 ) | ( ord( $data[7] ) << 14 ) | ( ord( $data[8] ) << 7 ) | ord( $data[9] );
+		$size   = ( ord( $data[6] ) << 21 ) | ( ord( $data[7] ) << 14 ) | ( ord( $data[8] ) << 7 ) | ord( $data[9] );
+		$offset = 10 + $size;
+		if ( 4 === ord( $data[3] ) && ( ord( $data[5] ) & 0x10 ) ) {
+			$offset += 10;
+		}
 
-		return substr( $data, 10 + $size );
+		return substr( $data, $offset );
 	}
 
 	/**

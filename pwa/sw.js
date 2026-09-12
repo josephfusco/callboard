@@ -116,6 +116,35 @@ self.addEventListener( 'notificationclick', ( e ) => {
 	);
 } );
 
+/* A saved set has to open with no signal, so the page asks the worker to keep the set's page: the fragment a tap
+   swaps in and the whole document a cold start asks for. The answer comes back once both are stored, inside
+   waitUntil, so the page can hold "Saved offline" until it is true. */
+self.addEventListener( 'message', ( e ) => {
+	if ( e.data?.type !== 'callboard:keep' || ! e.ports[ 0 ] ) {
+		return;
+	}
+	e.waitUntil(
+		( async () => {
+			const cache = await caches.open( SHELL );
+			const kept = await Promise.all(
+				e.data.urls.map( async ( u ) => {
+					try {
+						const res = await fetch( u, { cache: 'no-cache' } );
+						if ( res.ok ) {
+							await cache.put( u, res );
+							return true;
+						}
+					} catch {
+						// no signal: a copy kept earlier still counts
+					}
+					return !! ( await cache.match( u ) );
+				} )
+			);
+			e.ports[ 0 ].postMessage( kept.every( Boolean ) );
+		} )()
+	);
+} );
+
 self.addEventListener( 'fetch', ( e ) => {
 	const req = e.request;
 	if ( req.method !== 'GET' ) {
@@ -188,7 +217,7 @@ async function page( req, e, fragment ) {
 	try {
 		const res = ( await e.preloadResponse ) || ( await fetch( req ) );
 		if ( res.ok ) {
-			cache.put( req.url, res.clone() );
+			e.waitUntil( cache.put( req.url, res.clone() ) ); // the copy is what opens offline; don't let the worker stop before it lands
 		}
 		return res;
 	} catch {

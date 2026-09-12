@@ -97,20 +97,14 @@ test.describe( 'PWA and previews', () => {
 			/Saved offline/,
 			{ timeout: 30000 }
 		);
-		// A saved set warms its own page into the worker's cache, and nothing waits for that write:
-		// the page fires the fetch without awaiting it and the worker stores the answer outside
-		// waitUntil. Wait for the copy to exist, because going dark without it leaves nothing to open.
-		// Polled through evaluate, which awaits: waitForFunction takes the returned promise itself as
-		// truthy and would move on at once.
-		await expect
-			.poll(
-				() =>
-					page.evaluate( async () =>
-						Boolean( await caches.match( '/demo-set/?fragment=1' ) )
-					),
-				{ timeout: 30000 }
+		// "Saved offline" waits for the worker to keep the set's page, so the copy is already here the
+		// moment the label says so. Checked through evaluate, which awaits: waitForFunction takes a
+		// returned promise itself as truthy.
+		expect(
+			await page.evaluate( async () =>
+				Boolean( await caches.match( '/demo-set/?fragment=1' ) )
 			)
-			.toBe( true );
+		).toBe( true );
 
 		await context.setOffline( true );
 		await page.goto( '/' ); // home, from the precached shell
@@ -164,5 +158,46 @@ test.describe( 'PWA and previews', () => {
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			0
 		);
+	} );
+
+	test( 'a set that says it is saved opens with no signal straight after', async ( {
+		page,
+		context,
+	} ) => {
+		// A server slow to render the set's page, which is most shared hosting. The save used to say
+		// "Saved offline" while the page it opens from was still on its way, and the moment the signal
+		// went the page was lost with it.
+		await context.route( /\/demo-set\/\?fragment=1/, async ( route ) => {
+			await new Promise( ( r ) => setTimeout( r, 1500 ) );
+			await route.continue().catch( () => {} );
+		} );
+		// A first visit, straight from a link: the worker takes over this page without it being fetched
+		// again, so nothing has stored the document either.
+		await page.goto( '/demo-set/' );
+		await page.waitForFunction(
+			() => navigator.serviceWorker?.controller,
+			null,
+			{ timeout: 15000 }
+		);
+		await expect( page.locator( '#offline[data-some]' ) ).toBeAttached( {
+			timeout: 15000,
+		} );
+		await page.locator( '#offline' ).click();
+		await expect( page.locator( '#offline' ) ).toContainText(
+			/Saved offline/,
+			{ timeout: 30000 }
+		);
+		await context.setOffline( true ); // the moment it says so
+
+		await page.goto( '/' );
+		await page
+			.locator( 'a.set', { hasText: 'Shakespeare’s Sonnets' } )
+			.click();
+		await expect( page ).toHaveURL( /\/demo-set\/$/ );
+		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
+
+		await page.goto( '/demo-set/' ); // a cold start on the set itself
+		await expect( page.locator( '.track' ) ).toHaveCount( 10 );
+		await context.setOffline( false );
 	} );
 } );

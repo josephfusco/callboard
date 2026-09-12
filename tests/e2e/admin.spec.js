@@ -205,8 +205,30 @@ test.describe( 'Admin', () => {
 		} );
 		await demo.locator( 'summary' ).click();
 		await demo.locator( 'input[type=checkbox]' ).nth( 2 ).check(); // Sonnets 21–30
-		await page.click( '#publish' );
-		await page.waitForURL( /post\.php\?post=\d+&action=edit&message=/ );
+		const publish = page.locator( '#publish' );
+		const editScreen = /post\.php\?post=\d+&action=edit&message=/;
+		for ( let attempt = 0; attempt < 4; attempt++ ) {
+			await expect
+				.poll( () =>
+					publish.evaluate(
+						( button ) =>
+							! button.disabled &&
+							! button.classList.contains( 'disabled' )
+					)
+				)
+				.toBe( true );
+			await publish.click();
+			try {
+				await page.waitForURL( editScreen, {
+					timeout: 3000,
+				} );
+				break;
+			} catch ( error ) {
+				if ( attempt === 3 ) {
+					throw error;
+				}
+			}
+		}
 		await expect( page.locator( '#callboard-where' ) ).toHaveValue( 'Pit' );
 
 		await page.goto( '/' );

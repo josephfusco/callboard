@@ -19,7 +19,7 @@ A WordPress plugin for a cast's rehearsal tracks. The stage manager posts the ca
 - **Board.** The home page shows the next call: time, place, note, and the numbers being worked. Each number is a tap that starts the track. A call is a post under Sets. Publishing one sends a push notification.
 - **Sets.** A set is a post; its tracks are audio attachments. Fetch a playlist with WP-CLI, or import a folder of audio.
 - **Player.** Previous, play, next. Waveform scrubbing, an A/B loop (two fingers on the wave, or the bracket keys), count-in, lyrics and director's notes in time with the track, AirPlay, lock-screen controls.
-- **Offline.** Save a set once. It plays from the phone with no connection.
+- **Offline.** Save a set once. It plays from the phone with no connection, or load it from a file when there is no signal to save it with.
 - **Settings.** Site name, accent colour, badge, confetti behind a triple tap on the title. Hooks and template overrides for developers.
 
 ## Getting started
@@ -97,6 +97,8 @@ Hosts that cannot run binaries: build the folder on a laptop with the same comma
 <summary>Offline</summary>
 
 The service worker precaches the shell and the home fragment. Saving a set streams each track into the Cache API and fetches the set's fragment. The worker serves cached audio and answers `Range` requests, so seeking works offline. Saved sets are re-fetched on the home screen after an update because the shell cache is versioned. The Cache API is used instead of IndexedDB or OPFS because it serves whole files with Range support, which is what the media element needs.
+
+**Load from files** fills the same cache without the network, for a phone on bad signal standing next to somebody who has the audio on a stick. Files are matched to tracks by the track's own file name, then by a leading number, which is how a car-format export is named, then by title; anything unmatched is reported rather than guessed at. A sideloaded copy carries a marker, because it can be a different size from the server's — a car export has ID3 tags the original does not — and without it the next check would call it stale and download it again.
 
 </details>
 

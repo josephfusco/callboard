@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.0](https://github.com/josephfusco/callboard/compare/v2.0.1...v2.1.0) (2026-09-12)
+
+
+### Features
+
+* export a set as a folder a car stereo can read ([#89](https://github.com/josephfusco/callboard/issues/89)) ([c8e6a1b](https://github.com/josephfusco/callboard/commit/c8e6a1b480601ae78763264c369be76aa1a5ccc5))
+* export and import a set as a single .callboard file ([#87](https://github.com/josephfusco/callboard/issues/87)) ([402d2eb](https://github.com/josephfusco/callboard/commit/402d2eb206c8556355442bd0eb80b3fbdff444f7))
+* fill a set's offline copies from a file ([#91](https://github.com/josephfusco/callboard/issues/91)) ([a72ad94](https://github.com/josephfusco/callboard/commit/a72ad94e62f6097a1a56010d8ae819e2e741447f))
+* gate the front end with whatever auth the site already has ([#90](https://github.com/josephfusco/callboard/issues/90)) ([75e10a8](https://github.com/josephfusco/callboard/commit/75e10a85b95c9c4e0835106070d063317682d094))
+* send the playing track to the phone next to you ([#92](https://github.com/josephfusco/callboard/issues/92)) ([20940b1](https://github.com/josephfusco/callboard/commit/20940b1c6fd23d1e589dd4c56875d6a63324b636))
+
 ## [2.0.1](https://github.com/josephfusco/callboard/compare/v2.0.0...v2.0.1) (2026-09-11)
 
 

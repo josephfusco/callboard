@@ -276,7 +276,18 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* width:100% matters: `margin:0 auto` on a grid item stops it stretching and hands it its
    max-content width instead — which for this row is a bare range input, about 170px. */
 .deck.is-expanded .deck-inner,.deck.is-expanded .seek-wrap{width:100%;max-width:640px;margin-inline:auto}
-.deck.is-expanded .seek-wrap{padding:0 max(20px,env(safe-area-inset-left,0px))}
+/* The wave ran twenty pixels proud of the title, the times and the transport on both sides. Its
+   layers are absolutely positioned, and an absolutely positioned child is placed against the
+   padding box, so padding on this wrapper never moved them. Narrowing the wrapper itself does —
+   and it is the only fix that also works on a canvas, whose width comes from its bitmap the moment
+   CSS stops saying 100%. */
+.deck.is-expanded .seek-wrap{padding:0;width:calc(100% - 2 * max(20px,env(safe-area-inset-left,0px)));max-width:600px;margin-inline:auto}
+/* Small caps, not an uppercase transform: "kHz" and "kbps" are unit symbols whose casing is part of
+   how they are spelled, and text-transform throws that away. This keeps the letters and only
+   changes how they are drawn. */
+.deck.is-expanded .quality-pill{text-transform:none;font-variant-caps:all-small-caps;letter-spacing:.08em}
+/* A hairline so a cream cover is seated on the dark rather than floating cut out of it. */
+.deck.is-expanded .deck-cover img{box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.09)}
 .deck.is-expanded .deck-controls{justify-content:space-between;gap:0;padding:0 var(--s2)}
 .deck.is-expanded .deck-controls-secondary,.deck.is-expanded .deck-controls-primary{display:contents}
 .deck.is-expanded .deck-transport{padding-top:var(--s4);padding-bottom:var(--s3)}

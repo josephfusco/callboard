@@ -169,6 +169,7 @@ final class Sets {
 				'notes'    => is_array( $notes ) ? array_values( $notes ) : array(),
 				'artist'   => '' !== $by ? $by : null,
 				'quality'  => callboard_quality( $meta ),
+				'tier'     => callboard_quality_tier( $meta ),
 			);
 			$uploader = get_post_meta( $track->ID, '_callboard_uploader', true );
 			if ( $uploader ) {

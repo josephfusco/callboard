@@ -272,7 +272,9 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck.is-expanded .deck-time .sep{display:none}
 .deck.is-expanded #dur{justify-self:end}
 .deck.is-expanded .deck-top{gap:var(--s1);align-items:center}
-.deck.is-expanded .quality-pill{grid-column:2;justify-self:center;align-self:baseline;order:0;margin:0;padding:0;border:0;background:none;font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase}
+/* The middle column is the Now Playing metadata slot: extensions fill it, the quality pill among them. */
+.deck.is-expanded .deck-meta{grid-column:2;justify-self:center;align-self:baseline;display:inline-flex;align-items:baseline;gap:var(--s1);min-width:0;order:0}
+.deck.is-expanded .quality-pill{margin:0;padding:0;border:0;background:none;font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase}
 /* Five controls, evenly spaced. The bar groups them because it has no room; a full screen does. */
 /* width:100% matters: `margin:0 auto` on a grid item stops it stretching and hands it its
    max-content width instead — which for this row is a bare range input, about 170px. */
@@ -382,7 +384,7 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
 .deck-time{color:var(--ink-3);font-size:.8125rem}
 /* compact: title and play/pause only. Everything else on the display line — times, the cast/share chips, the
    quality pill below — goes together, since none of it is nothing without the other. */
-.deck.is-compact .deck-time,.deck.is-compact .quality-pill,.deck.is-compact .seek-wrap{display:none}
+.deck.is-compact .deck-time,.deck.is-compact .deck-meta,.deck.is-compact .seek-wrap{display:none}
 /* AirPlay in Safari, Cast in Chrome: an icon chip that only appears while a device is in reach */
 .remote-chip{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-3);width:30px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:color var(--t),border-color var(--t)}
 .remote-chip svg{width:16px;height:16px;fill:currentColor}
@@ -632,3 +634,9 @@ body.is-loading{cursor:progress}
 body:not(.has-deck) .toast{bottom:calc(var(--safe-b) + 12px)}
 #offline:hover,#offline:focus-visible,#notify:hover,#notify:focus-visible{color:var(--ink)}
 #offline.is-busy{color:var(--ink-2)}
+
+/* Extension items: a badge or a line of metadata a feature contributed through a slot. They take the
+   type of wherever they sit; a tone is the one thing an item may ask for. */
+.cb-item[data-tone="accent"]{color:var(--accent-text)}
+.cb-item[data-tone="muted"]{color:var(--ink-3)}
+.track .by>*+*{margin-left:8px}

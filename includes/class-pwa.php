@@ -238,11 +238,20 @@ final class Pwa {
 				callboard_asset( 'assets/icon-180.png' ),
 			)
 		);
+		// Core's hooks script and every active extension's assets, at the exact URLs the page asks for,
+		// so an installed app opens with its extensions when there is no network.
+		$assets = array_values( array_unique( array_merge( $assets, Extensions::precache_urls() ) ) );
 		$sw     = str_replace(
 			array( '__VERSION__', '__PLUGIN_PATH__', '__ASSETS__', '__APP_VERSION__', '__PUSH_API__' ),
 			array( (string) time(), wp_make_link_relative( CALLBOARD_URL ), wp_json_encode( $assets, JSON_UNESCAPED_SLASHES ), CALLBOARD_VERSION, Settings::get( 'push' ) && Push::available() ? wp_make_link_relative( rest_url( 'callboard/v1/push/' ) ) : '' ),
 			(string) $wp_filesystem->get_contents( CALLBOARD_DIR . 'pwa/sw.js' )
 		);
-		return (bool) $wp_filesystem->put_contents( ABSPATH . 'sw.js', $sw, FS_CHMOD_FILE );
+		if ( ! $wp_filesystem->put_contents( ABSPATH . 'sw.js', $sw, FS_CHMOD_FILE ) ) {
+			return false;
+		}
+		// Whatever wrote the worker (an update, an import, the admin noticing a new extension), this is
+		// what went into it. Extensions::maybe_refresh_worker() compares against it.
+		update_option( 'callboard_extension_assets', Extensions::assets_fingerprint(), false );
+		return true;
 	}
 }

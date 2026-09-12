@@ -28,6 +28,8 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 				<label class="btn btn-quiet load-files" id="load-label" for="load-files"><?php esc_html_e( 'Load from files', 'callboard' ); ?></label>
 				<input type="file" id="load-files" class="load-input" multiple accept="audio/*">
 			<?php endif; ?>
+			<?php /** Slot set_header: extension controls beside the set's own. */ ?>
+			<?php callboard_slot( 'set_header', $callboard_set ); ?>
 		</div>
 		<?php endif; ?>
 	</header>
@@ -42,7 +44,9 @@ $callboard_badge = Callboard\Settings::get( 'badge' );
 				<span class="num"><span class="digits"><?php echo esc_html( str_pad( (string) $callboard_t['index'], 2, '0', STR_PAD_LEFT ) ); ?></span><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span></span>
 				<?php $callboard_has_lyrics = isset( $callboard_set['lyrics']->{$callboard_t['id']} ) || ( is_array( $callboard_set['lyrics'] ) && isset( $callboard_set['lyrics'][ $callboard_t['id'] ] ) ); ?>
 				<span class="title"><?php echo esc_html( $callboard_t['title'] ); ?><?php echo $callboard_has_lyrics ? ' <span class="has-lyrics">' . esc_html__( 'lyrics', 'callboard' ) . '</span>' : ''; ?></span>
-				<?php echo ! empty( $callboard_t['artist'] ) ? '<span class="by">' . esc_html( $callboard_t['artist'] ) . '</span>' : ''; ?><span class="len"><?php echo $callboard_badge ? '<span class="hh" aria-hidden="true">' . esc_html( $callboard_badge ) . '</span>' : ''; ?><?php echo ! empty( $callboard_t['bpm'] ) ? '<span class="bpm" aria-label="' . esc_attr( sprintf( /* translators: %d: beats per minute. */ __( '%d beats per minute, counts in', 'callboard' ), $callboard_t['bpm'] ) ) . '">♩ ' . (int) $callboard_t['bpm'] . '</span>' : ''; ?><?php echo esc_html( callboard_fmt( $callboard_t['duration'] ) ); ?></span>
+				<?php /** Slot track_meta: extension items in the row's second line, beside the artist. */ ?>
+				<?php $callboard_row_meta = callboard_get_slot( 'track_meta', $callboard_t, $callboard_set ); ?>
+				<?php echo ! empty( $callboard_t['artist'] ) || '' !== $callboard_row_meta ? '<span class="by">' . ( ! empty( $callboard_t['artist'] ) ? '<span class="by-name">' . esc_html( $callboard_t['artist'] ) . '</span>' : '' ) . $callboard_row_meta . '</span>' : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- slot items are escaped by the registry. ?><span class="len"><?php echo $callboard_badge ? '<span class="hh" aria-hidden="true">' . esc_html( $callboard_badge ) . '</span>' : ''; ?><?php /** Slot track_badges: extension items before the track's length. */ callboard_slot( 'track_badges', $callboard_t, $callboard_set ); ?><?php echo esc_html( callboard_fmt( $callboard_t['duration'] ) ); ?></span>
 			</button>
 			<?php if ( Callboard\Settings::get( 'offline' ) ) : ?>
 			<button type="button" class="dl" data-i="<?php echo (int) $callboard_i; ?>" data-state="" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: track title. */ __( 'Save %s offline', 'callboard' ), $callboard_t['title'] ) ); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="dl-track" cx="12" cy="12" r="9"/><circle class="dl-ring" cx="12" cy="12" r="9"/><path class="dl-arrow" d="M12 7v8m0 0l-3.5-3.5M12 15l3.5-3.5"/><path class="dl-check" d="M7.5 12.5l3 3 6-6.5"/></svg></button>

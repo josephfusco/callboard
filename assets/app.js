@@ -46,6 +46,74 @@
 		window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
 	const setBy = ( slug ) => G.sets.find( ( s ) => s.slug === slug );
 
+	// ---- The extension API's lower layer. Events are wp.hooks actions named callboard.<event>, and each
+	// is also a DOM event named callboard:<event> on document, so a script with no dependencies can listen.
+	// Filters are wp.hooks filters named callboard.<point>. Every call site names its hook in full, so
+	// the public-surface check reads them. docs/extending.md has the contract; window.callboard is built
+	// at the bottom of this file, once everything it reaches is defined.
+	const hooks = window.wp?.hooks || null;
+	const report = ( id, err ) =>
+		// eslint-disable-next-line no-console
+		console.error( `[callboard] ${ id }:`, err );
+	const doAction = ( name, detail = {} ) => {
+		try {
+			hooks?.doAction( name, detail );
+		} catch ( err ) {
+			report( name, err );
+		}
+		document.dispatchEvent(
+			new CustomEvent(
+				`callboard:${ name.replace( /^callboard\./, '' ) }`,
+				{
+					detail,
+				}
+			)
+		);
+	};
+	const applyFilters = ( name, value, ...args ) => {
+		if ( ! hooks?.hasFilter( name ) ) {
+			return value;
+		}
+		try {
+			return hooks.applyFilters( name, value, ...args );
+		} catch ( err ) {
+			report( name, err );
+			return value;
+		}
+	};
+	// Extensions read copies. A set or a track handed out by reference is one assignment away from
+	// changing what the player itself plays.
+	const freeze = ( v ) => {
+		if ( v && typeof v === 'object' && ! Object.isFrozen( v ) ) {
+			Object.values( v ).forEach( freeze );
+			Object.freeze( v );
+		}
+		return v;
+	};
+	const snapshot = ( v ) => {
+		if ( v === null || v === undefined ) {
+			return null;
+		}
+		try {
+			return freeze(
+				typeof structuredClone === 'function'
+					? structuredClone( v )
+					: JSON.parse( JSON.stringify( v ) )
+			);
+		} catch {
+			return null;
+		}
+	};
+	// PHP sends an empty map as []. An extension should never have to check which one it got.
+	const asMap = ( v ) => ( v && ! Array.isArray( v ) ? v : {} );
+	const owns = ( o, k ) => Object.prototype.hasOwnProperty.call( o, k );
+	G.ext = asMap( G.ext );
+	G.extensions = asMap( G.extensions );
+	G.sets.forEach( ( set ) => {
+		set.ext = asMap( set.ext );
+		set.tracks.forEach( ( t ) => ( t.ext = asMap( t.ext ) ) );
+	} );
+
 	( window.requestIdleCallback || ( ( f ) => setTimeout( f, 1000 ) ) )(
 		() => {
 			if ( 'serviceWorker' in navigator ) {
@@ -188,9 +256,7 @@
 		seek = $( 'seek' ),
 		seekFill = $( 'seek-fill' ),
 		cur = $( 'cur' ),
-		dur = $( 'dur' ),
-		quality = $( 'quality' ),
-		qualityDetail = $( 'quality-detail' );
+		dur = $( 'dur' );
 	const lyricsSheet = $( 'lyrics' ),
 		lyricsList = $( 'lyrics-lines' ),
 		openLyrics = $( 'open-lyrics' );
@@ -784,8 +850,6 @@
 			} );
 		} catch {}
 	}
-	// Bytes and duration are on every track already; an average bitrate reads without waiting on the richer
-	// bit-depth/sample-rate metadata WordPress keeps but does not yet send to the front end.
 	// Now Playing's artwork and wash. Both come off the set, since a set has one cover; a per-track
 	// cover would be a data-model change, not a rendering one.
 	function paintCover() {
@@ -807,27 +871,6 @@
 		}
 		deck.style.setProperty( '--tint', queue?.tint || 'transparent' );
 	}
-	function paintQuality( t ) {
-		if ( ! quality ) {
-			return;
-		}
-		// t.quality, once the attachment's own bit depth/sample rate reaches the payload, reads directly; until
-		// then this approximates a bitrate from what every track already carries, so the pill is never empty.
-		if ( t.quality ) {
-			quality.hidden = false;
-			qualityDetail.textContent = t.quality;
-			return;
-		}
-		const kbps =
-			t.bytes && t.duration
-				? Math.round( ( t.bytes * 8 ) / t.duration / 1000 )
-				: 0;
-		const ext = ( /\.([a-z0-9]+)(?:\?.*)?$/i.exec( t.url ) || [] )[ 1 ];
-		quality.hidden = ! kbps;
-		qualityDetail.textContent = kbps
-			? tpl( quality.dataset.format, ( ext || '' ).toUpperCase(), kbps )
-			: '';
-	}
 	function load( n, { play = true, at = 0 } = {} ) {
 		if ( ! queue?.tracks.length ) {
 			return;
@@ -844,31 +887,39 @@
 		nowTitle.classList.remove( 'is-note' );
 		setTitle( t.title );
 		dur.textContent = remaining( t.duration, 0 );
-		paintQuality( t );
 		lastSec = -1;
 		setProgress( 0 );
 		clearLoop();
-		countStop();
+		holdStop();
 		paint( true );
 		renderSheet( t.id );
 		paintMarks( t );
 		drawWave();
 		syncRows();
-		document.dispatchEvent(
-			new CustomEvent( 'callboard:track', {
-				detail: { set: queue.slug, track: t, index: i },
-			} )
-		);
+		/**
+		 * A track loaded into the deck, playing or not. Detail: { set, track, index }.
+		 */
+		doAction( 'callboard.track', {
+			set: queue.slug,
+			track: snapshot( t ),
+			index: i,
+		} );
+		renderNowPlayingMeta();
 		if ( play ) {
 			ensureAnalyser();
-			const countin = S.count_in && t.bpm && ! at;
-			morph( countin ? 'play' : 'pause' );
-			if ( countin ) {
-				countIn( t.bpm ).then(
-					( ok ) => ok && audio.play().catch( () => {} )
-				);
-			} else {
+			// An extension can hold the start: the count-in taps four beats first. Play pressed while
+			// one holds skips the wait (see the toggle below).
+			const start = holdStart( {
+				set: queue.slug,
+				track: snapshot( t ),
+				index: i,
+				at,
+			} );
+			morph( start === true ? 'pause' : 'play' );
+			if ( start === true ) {
 				audio.play().catch( () => {} );
+			} else if ( start ) {
+				start.then( ( ok ) => ok && audio.play().catch( () => {} ) );
 			}
 		}
 		// The tab strip is the lock screen for a laptop, so it learns the track at the same moment.
@@ -927,7 +978,7 @@
 		if ( i < 0 ) {
 			return;
 		}
-		countStop();
+		holdStop();
 		remember();
 		audio.pause();
 		audio.removeAttribute( 'src' );
@@ -1124,7 +1175,7 @@
 	} );
 	toggle.addEventListener( 'click', () => {
 		haptic();
-		if ( countStop() ) {
+		if ( holdStop() ) {
 			morph( 'pause' );
 			return audio.play().catch( () => {} );
 		}
@@ -1172,70 +1223,91 @@
 		paintRepeat();
 	} );
 
-	// ---- Count-in: with a tempo, Play from the top taps four beats first (a soft click, and the count on the title)
-	let countCancel = null,
-		clickCtx = null;
-	const click = ( first ) => {
-		try {
-			clickCtx =
-				clickCtx ||
-				new ( window.AudioContext || window.webkitAudioContext )();
-			const o = clickCtx.createOscillator(),
-				g = clickCtx.createGain(),
-				at = clickCtx.currentTime;
-			o.frequency.value = first ? 1320 : 880;
-			g.gain.setValueAtTime( 0.0001, at );
-			g.gain.exponentialRampToValueAtTime( 0.18, at + 0.006 );
-			g.gain.exponentialRampToValueAtTime( 0.0001, at + 0.07 );
-			o.connect( g ).connect( clickCtx.destination );
-			o.start( at );
-			o.stop( at + 0.08 );
-		} catch {}
-	};
-	function countStop() {
-		if ( ! countCancel ) {
+	// ---- Holding the start. Extensions contribute to callboard.beforePlay: each gets the track about to
+	// play and a signal, and returns nothing to let it start, false to stop it, or a promise of either. They
+	// run one after another in priority order, and the track starts once every one has said yes. Play
+	// pressed while one is waiting, another track, or a dismissed deck aborts the signal.
+	let starting = null;
+	function holdStop() {
+		if ( ! starting ) {
 			return false;
 		}
-		countCancel();
-		countCancel = null;
+		const h = starting;
+		starting = null;
+		h.abort();
 		return true;
 	}
-	function countIn( bpm ) {
-		countStop();
-		const beat = 60000 / bpm;
-		return new Promise( ( resolve ) => {
-			const timers = [];
-			deck.classList.add( 'counting' );
-			nowTitle.classList.add( 'is-count' );
-			const done = ( ok ) => {
-				timers.forEach( clearTimeout );
-				deck.classList.remove( 'counting' );
-				nowTitle.classList.remove( 'is-count' );
-				countCancel = null;
-				if ( i >= 0 ) {
-					setTitle( queue.tracks[ i ].title );
+	function holdStart( context ) {
+		holdStop();
+		/**
+		 * Contributions that may hold the start of a track: [ { id, callback( context, signal ) } ]. Context: { set, track, index, at }.
+		 */
+		const gates = applyFilters( 'callboard.beforePlay', [], context );
+		if ( ! Array.isArray( gates ) || ! gates.length ) {
+			return true;
+		}
+		const ctl = new AbortController();
+		let k = 0;
+		const step = () => {
+			for ( ; k < gates.length; k++ ) {
+				const gate = gates[ k ];
+				const fn = typeof gate === 'function' ? gate : gate?.callback;
+				let out;
+				try {
+					out = fn?.( context, ctl.signal );
+				} catch ( err ) {
+					report( gate?.id || 'callboard.beforePlay', err );
+					continue;
 				}
-				resolve( ok );
-			};
-			countCancel = () => done( false );
-			for ( let k = 1; k <= 4; k++ ) {
-				timers.push(
-					setTimeout(
-						() => {
-							setTitle(
-								Array.from(
-									{ length: k },
-									( _, n ) => n + 1
-								).join( '   ' )
-							); // the count accumulates: 1, 1 2, 1 2 3, 1 2 3 4
-							click( k === 1 ); // the beat is audible only: a timer is not a gesture, so no haptic can ride on it
-						},
-						( k - 1 ) * beat
-					)
-				);
+				if ( out === false ) {
+					return false;
+				}
+				if ( out && typeof out.then === 'function' ) {
+					k++;
+					return Promise.resolve( out ).then(
+						( ok ) =>
+							ok !== false && ! ctl.signal.aborted && step(),
+						( err ) => {
+							report( gate?.id || 'callboard.beforePlay', err );
+							return ! ctl.signal.aborted && step();
+						}
+					);
+				}
 			}
-			timers.push( setTimeout( () => done( true ), 4 * beat ) );
-		} );
+			return true;
+		};
+		const result = step();
+		if ( result && typeof result.then === 'function' ) {
+			starting = ctl;
+			result.finally( () => {
+				if ( starting === ctl ) {
+					starting = null;
+				}
+			} );
+		}
+		return result;
+	}
+	// What the title line shows while an extension holds it (the count, say). Null gives it back.
+	let shown = '';
+	function display( text, { detail = '', className = '' } = {} ) {
+		if ( shown ) {
+			nowTitle.classList.remove( ...shown.split( ' ' ) );
+			shown = '';
+		}
+		if ( text === null || text === undefined ) {
+			if ( i >= 0 ) {
+				setTitle( queue.tracks[ i ].title );
+			}
+			return;
+		}
+		shown = String( className )
+			.split( /\s+/ )
+			.filter( ( c ) => /^[a-z][\w-]*$/i.test( c ) )
+			.join( ' ' );
+		if ( shown ) {
+			nowTitle.classList.add( ...shown.split( ' ' ) );
+		}
+		setTitle( String( text ), String( detail || '' ) );
 	}
 	// Play or pause: a state on the button; the stylesheet slides the glyph's points between the two shapes.
 	const morph = ( to ) => {
@@ -1280,6 +1352,48 @@
 		if ( loop ) {
 			looperStart();
 		}
+	} );
+	const playing = () => ( {
+		set: queue?.slug || '',
+		track: snapshot( queue?.tracks[ i ] ),
+		index: i,
+		position: audio.currentTime || 0,
+	} );
+	/**
+	 * The element started playing. Detail: { set, track, index, position }.
+	 */
+	audio.addEventListener( 'play', () =>
+		doAction( 'callboard.play', playing() )
+	);
+	/**
+	 * The element paused. Detail: { set, track, index, position }.
+	 */
+	audio.addEventListener( 'pause', () =>
+		doAction( 'callboard.pause', playing() )
+	);
+	/**
+	 * A track played to its end. Detail: { set, track, index, position }.
+	 */
+	audio.addEventListener( 'ended', () =>
+		doAction( 'callboard.ended', playing() )
+	);
+	// Where a seek started is where the playhead last was: by the time the element says it is
+	// seeking, currentTime already reads the destination.
+	let seekFrom = 0;
+	audio.addEventListener( 'timeupdate', () => {
+		if ( ! audio.seeking ) {
+			seekFrom = audio.currentTime;
+		}
+	} );
+	audio.addEventListener( 'seeked', () => {
+		/**
+		 * The playhead moved by a seek. Detail: { from, to } in seconds.
+		 */
+		doAction( 'callboard.seek', {
+			from: seekFrom,
+			to: audio.currentTime,
+		} );
+		seekFrom = audio.currentTime;
 	} );
 	audio.addEventListener( 'play', () => {
 		played = true;
@@ -1582,11 +1696,16 @@
 		audio.play().catch( () => {} );
 		looperStart();
 		keepAwake(); // a loop means the phone is on the stand
+		/**
+		 * An A-B loop was set ({ a, b } in seconds) or cleared (null).
+		 */
+		doAction( 'callboard.loop', { a, b } );
 	}
 	let loopFrom = null;
 	function clearLoop() {
 		if ( loop ) {
 			haptic();
+			doAction( 'callboard.loop', null );
 		}
 		looperStop();
 		if ( lyricsSheet.hidden ) {
@@ -2073,14 +2192,23 @@
 				! navigator.onLine && ! b.classList.contains( 'is-done' );
 		}
 	};
-	window.addEventListener( 'online', paintNet );
-	window.addEventListener( 'offline', paintNet );
+	window.addEventListener( 'online', () => {
+		paintNet();
+		/**
+		 * The browser came back online.
+		 */
+		doAction( 'callboard.online', {} );
+	} );
+	window.addEventListener( 'offline', () => {
+		paintNet();
+		/**
+		 * The browser went offline.
+		 */
+		doAction( 'callboard.offline', {} );
+	} );
 	paintNet();
 
-	// ---- Notifications (Web Push) and the app badge
-	if ( 'clearAppBadge' in navigator ) {
-		navigator.clearAppBadge().catch( () => {} );
-	}
+	// ---- Notifications (Web Push). The app badge is a contribution point: see paintBadge().
 	const urlBase64ToUint8Array = ( b64 ) => {
 		const s = ( b64 + '='.repeat( ( 4 - ( b64.length % 4 ) ) % 4 ) )
 			.replace( /-/g, '+' )
@@ -2384,11 +2512,7 @@
 		bindShare( set );
 		paintTip();
 		syncRows();
-		document.dispatchEvent(
-			new CustomEvent( 'callboard:view', {
-				detail: { set: set?.slug || '' },
-			} )
-		);
+		viewEnter();
 	}
 	// ---- Share: the system sheet where there is one (iPhone, Android, Windows), the clipboard elsewhere.
 	// The link alone is enough; the set's share card rides along as its Open Graph image.
@@ -2523,6 +2647,11 @@
 			return Infinity;
 		}
 	}
+	const savedDetail = ( t, state ) => ( {
+		set: G.sets.find( ( s ) => s.tracks.includes( t ) )?.slug || '',
+		track: snapshot( t ),
+		state,
+	} );
 	async function saveTrack( t, retry = true ) {
 		if ( dlAborts.has( t.url ) ) {
 			return;
@@ -2576,6 +2705,10 @@
 				await c.put( norm( t.url ), new Response( body, { headers } ) );
 			}
 			paintDl( t, 'saved', 1 );
+			/**
+			 * A track was saved for offline. Detail: { set, track, state }, where state is saved (downloaded) or loaded (from a file).
+			 */
+			doAction( 'callboard.save', savedDetail( t, 'saved' ) );
 			return 'saved';
 		} catch ( err ) {
 			paintDl( t, '', 0 );
@@ -2635,11 +2768,16 @@
 				},
 			} )
 		);
+		doAction( 'callboard.save', savedDetail( t, 'loaded' ) );
 	}
 	async function removeTrack( t ) {
 		const c = await caches.open( CACHE );
 		await c.delete( norm( t.url ) );
 		paintDl( t, '', 0 );
+		/**
+		 * A track's offline copy was removed. Detail: { set, track, state }.
+		 */
+		doAction( 'callboard.unsave', savedDetail( t, '' ) );
 	}
 	function bindOffline( set ) {
 		const offBtn = $( 'offline' );
@@ -2965,6 +3103,7 @@
 				location.href = url;
 				return;
 			}
+			viewLeave();
 			$( 'main' ).replaceWith( main );
 			viewTitle( set );
 			document.body.dataset.slug = slug;
@@ -3009,6 +3148,774 @@
 	// Installed to the Home Screen is the moment iOS actually grants persistence, and the only moment
 	// worth asking outside a deliberate save: Firefox puts a prompt behind this, so it is not free
 	// everywhere. Reading the state costs nothing, so that happens either way.
+	// ---- Extensions: window.callboard. The contract is docs/extending.md; the PHP half is
+	// includes/class-extensions.php. An extension registers here with the same id it registered on the
+	// server, and PHP decides which ids reach the page, so a feature switched off there cannot come back
+	// on here. Callboard's own extensions are the sections after this function, and they can reach
+	// nothing but this object.
+	const API_VERSION = 1;
+	const ID = /^[a-z0-9-]+\/[a-z0-9-]+$/;
+	const registry = new Map();
+	const commandMap = new Map();
+	const warned = new Set();
+	let currentView = null;
+	const warn = ( msg ) => {
+		if ( ! warned.has( msg ) ) {
+			warned.add( msg );
+			// eslint-disable-next-line no-console
+			console.warn( `[callboard] ${ msg }` );
+		}
+	};
+	// The same shape as @wordpress/deprecated, without loading it.
+	function deprecated(
+		name,
+		{ since = '', alternative = '', hint = '' } = {}
+	) {
+		warn(
+			`${ name } is deprecated${
+				since ? ` since version ${ since }` : ''
+			}.${ alternative ? ` Please use ${ alternative } instead.` : '' }${
+				hint ? ` Note: ${ hint }` : ''
+			}`
+		);
+	}
+	// Top-level track fields that belong to an extension now. Reading one still works for API v1, and
+	// says so where the site runs with SCRIPT_DEBUG.
+	if ( G.debug ) {
+		const moved = {
+			bpm: "track.ext[ 'callboard/count-in' ].bpm",
+			quality: "track.ext[ 'callboard/quality' ].quality",
+		};
+		G.sets.forEach( ( set ) =>
+			set.tracks.forEach( ( t ) =>
+				Object.entries( moved ).forEach( ( [ field, alternative ] ) => {
+					if ( ! ( field in t ) ) {
+						return;
+					}
+					const value = t[ field ];
+					Object.defineProperty( t, field, {
+						configurable: true,
+						enumerable: false,
+						get: () => {
+							deprecated( `track.${ field }`, {
+								since: '2.3.0',
+								alternative,
+							} );
+							return value;
+						},
+					} );
+				} )
+			)
+		);
+	}
+
+	const SLOT_HOOKS = {
+		trackBadges: 'callboard.slot.trackBadges',
+		trackMeta: 'callboard.slot.trackMeta',
+		nowPlayingMeta: 'callboard.slot.nowPlayingMeta',
+	};
+	const TONES = [ 'default', 'accent', 'muted' ];
+	// An item is text, never markup: built with textContent, classes checked one at a time.
+	function itemEl( item ) {
+		if (
+			! item ||
+			item.text === undefined ||
+			item.text === null ||
+			String( item.text ) === ''
+		) {
+			return null;
+		}
+		const el = document.createElement( 'span' );
+		el.className = [ 'cb-item' ]
+			.concat(
+				String( item.className || '' )
+					.split( /\s+/ )
+					.filter( ( c ) => /^[a-z][\w-]*$/i.test( c ) )
+			)
+			.join( ' ' );
+		if ( item.extension ) {
+			el.dataset.extension = item.extension;
+		}
+		el.dataset.client = '';
+		if ( TONES.includes( item.tone ) && item.tone !== 'default' ) {
+			el.dataset.tone = item.tone;
+		}
+		if ( item.title ) {
+			el.title = String( item.title );
+		}
+		if ( item.label ) {
+			el.setAttribute( 'aria-label', String( item.label ) );
+		}
+		el.textContent = String( item.text );
+		return el;
+	}
+	const viewInfo = () => ( {
+		slug: view(),
+		set: snapshot( setBy( view() ) ),
+		main: $( 'main' ),
+	} );
+	// Client items on the rows: badges before the length, metadata in the second line.
+	function renderRowSlots() {
+		document
+			.querySelectorAll( '#tracks [data-client]' )
+			.forEach( ( el ) => el.remove() );
+		const set = setBy( view() );
+		if (
+			! set ||
+			! (
+				hooks?.hasFilter( SLOT_HOOKS.trackBadges ) ||
+				hooks?.hasFilter( SLOT_HOOKS.trackMeta )
+			)
+		) {
+			return;
+		}
+		const info = viewInfo();
+		document.querySelectorAll( '#tracks .track' ).forEach( ( row ) => {
+			const t = set.tracks[ +row.dataset.i ];
+			if ( ! t ) {
+				return;
+			}
+			const copy = snapshot( t );
+			/**
+			 * Items for a track row, before its length: [ { text, label, title, tone, className } ]. Args: track, view.
+			 */
+			const badges = applyFilters(
+				'callboard.slot.trackBadges',
+				[],
+				copy,
+				info
+			)
+				.map( itemEl )
+				.filter( Boolean );
+			const len = row.querySelector( '.len' );
+			if ( len && badges.length ) {
+				const time = [ ...len.childNodes ].find(
+					( n ) => n.nodeType === Node.TEXT_NODE
+				);
+				badges.forEach( ( el ) =>
+					len.insertBefore( el, time || null )
+				);
+			}
+			/**
+			 * Items for a track row's second line, beside the artist. Args: track, view.
+			 */
+			const meta = applyFilters(
+				'callboard.slot.trackMeta',
+				[],
+				copy,
+				info
+			)
+				.map( itemEl )
+				.filter( Boolean );
+			if ( meta.length ) {
+				let by = row.querySelector( '.by' );
+				if ( ! by ) {
+					by = document.createElement( 'span' );
+					by.className = 'by';
+					by.dataset.client = '';
+					len?.before( by );
+				}
+				meta.forEach( ( el ) => by.appendChild( el ) );
+			}
+		} );
+	}
+	function renderNowPlayingMeta() {
+		const box = $( 'deck-meta' );
+		if ( ! box ) {
+			return;
+		}
+		box.textContent = '';
+		const t = queue && i >= 0 ? queue.tracks[ i ] : null;
+		if ( t ) {
+			/**
+			 * Items for Now Playing, between the elapsed and remaining times. Args: track, window.callboard.
+			 */
+			applyFilters(
+				'callboard.slot.nowPlayingMeta',
+				[],
+				snapshot( t ),
+				callboard
+			)
+				.map( itemEl )
+				.filter( Boolean )
+				.forEach( ( el ) => box.appendChild( el ) );
+		}
+		box.hidden = ! box.childElementCount;
+	}
+	// The Home Screen badge is the sum of what extensions contribute. With no contributors the page
+	// leaves the badge alone; with contributors, zero clears it.
+	async function paintBadge() {
+		if (
+			! ( 'setAppBadge' in navigator ) ||
+			! hooks?.hasFilter( 'callboard.badge' )
+		) {
+			return;
+		}
+		/**
+		 * Contributions to the Home Screen badge: numbers, or promises of them, summed.
+		 */
+		const list = applyFilters( 'callboard.badge', [], callboard );
+		if ( ! Array.isArray( list ) || ! list.length ) {
+			return;
+		}
+		const values = await Promise.all(
+			list.map( ( v ) => Promise.resolve( v ).catch( () => 0 ) )
+		);
+		const n = values.reduce(
+			( sum, v ) =>
+				sum +
+				( Number.isFinite( +v ) && +v > 0 ? Math.floor( +v ) : 0 ),
+			0
+		);
+		( n ? navigator.setAppBadge( n ) : navigator.clearAppBadge() ).catch(
+			() => {}
+		);
+	}
+	document.addEventListener( 'visibilitychange', () => {
+		if ( document.visibilityState === 'visible' ) {
+			paintBadge();
+		}
+	} );
+	function invalidate( ...points ) {
+		const all = [ 'trackBadges', 'trackMeta', 'nowPlayingMeta', 'badge' ];
+		const which = points.length ? points : all;
+		if (
+			which.includes( 'trackBadges' ) ||
+			which.includes( 'trackMeta' )
+		) {
+			renderRowSlots();
+		}
+		if ( which.includes( 'nowPlayingMeta' ) ) {
+			renderNowPlayingMeta();
+		}
+		if ( which.includes( 'badge' ) ) {
+			paintBadge();
+		}
+		which
+			.filter( ( p ) => ! all.includes( p ) )
+			.forEach( ( p ) =>
+				warn( `invalidate(): there is no point called "${ p }".` )
+			);
+	}
+
+	// One extension's view: its own signal, so unregistering one aborts only its listeners.
+	function initOne( ext, v ) {
+		ext.view?.abort();
+		ext.view = new AbortController();
+		try {
+			ext.args.init?.( { ...v, signal: ext.view.signal } );
+		} catch ( err ) {
+			report( ext.id, err );
+		}
+	}
+	function teardownOne( ext, v ) {
+		if ( ! ext.view ) {
+			return;
+		}
+		try {
+			ext.args.teardown?.( { ...v, signal: ext.view.signal } );
+		} catch ( err ) {
+			report( ext.id, err );
+		}
+		ext.view.abort();
+		ext.view = null;
+	}
+	function viewEnter() {
+		currentView = viewInfo();
+		registry.forEach( ( ext ) => initOne( ext, currentView ) );
+		renderRowSlots();
+		/**
+		 * A view is on screen and every extension has run init for it. Detail: { view: home or set, set: slug }.
+		 */
+		doAction( 'callboard.view', {
+			view: currentView.slug ? 'set' : 'home',
+			set: currentView.slug,
+		} );
+	}
+	function viewLeave() {
+		if ( ! currentView ) {
+			return;
+		}
+		/**
+		 * The view is about to be replaced; extensions' teardown runs next. Detail: { view, set }.
+		 */
+		doAction( 'callboard.viewTeardown', {
+			view: currentView.slug ? 'set' : 'home',
+			set: currentView.slug,
+		} );
+		registry.forEach( ( ext ) => teardownOne( ext, currentView ) );
+		currentView = null;
+	}
+
+	const point = ( value, priority ) => {
+		if ( typeof value === 'function' ) {
+			return { callback: value, priority };
+		}
+		if ( value && typeof value.callback === 'function' ) {
+			return {
+				callback: value.callback,
+				priority: Number.isFinite( value.priority )
+					? value.priority
+					: priority,
+			};
+		}
+		return null;
+	};
+	function registerExtension( id, args = {} ) {
+		if ( ! ID.test( id ) ) {
+			warn(
+				`"${ id }" is not an extension id: "namespace/name", lowercase.`
+			);
+			return false;
+		}
+		if ( ! owns( G.extensions, id ) ) {
+			warn(
+				`${ id } is not active on this page. Register it with callboard_register_extension() in PHP first; a disabled extension stays off here too.`
+			);
+			return false;
+		}
+		if ( registry.has( id ) ) {
+			warn( `${ id } is already registered.` );
+			return false;
+		}
+		if ( ( args.apiVersion ?? 1 ) !== API_VERSION ) {
+			warn(
+				`${ id } was written for API version ${ args.apiVersion }; this page runs version ${ API_VERSION }.`
+			);
+			return false;
+		}
+		if ( ! hooks ) {
+			warn( `wp.hooks is not loaded, so ${ id } cannot run.` );
+			return false;
+		}
+		const priority = Number.isFinite( args.priority ) ? args.priority : 10;
+		const ext = { id, args, hooks: new Set(), commands: [], view: null };
+		const guard =
+			( fn, fallback ) =>
+			( ...a ) => {
+				try {
+					return fn( ...a );
+				} catch ( err ) {
+					report( id, err );
+					return fallback( ...a );
+				}
+			};
+		const addFilter = ( hook, value, wrap ) => {
+			const p = point( value, priority );
+			if ( ! p ) {
+				warn(
+					`${ id } gave ${ hook } something that is not a function.`
+				);
+				return;
+			}
+			hooks.addFilter( hook, id, wrap( p.callback ), p.priority );
+			ext.hooks.add( hook );
+		};
+		Object.entries( args.slots || {} ).forEach( ( [ name, value ] ) => {
+			if ( ! SLOT_HOOKS[ name ] ) {
+				warn(
+					`${ id } asks for a slot called "${ name }", which does not exist.`
+				);
+				return;
+			}
+			addFilter( SLOT_HOOKS[ name ], value, ( cb ) =>
+				guard(
+					( items, ...a ) =>
+						items.concat(
+							[].concat( cb( ...a ) || [] ).map( ( item ) => ( {
+								...item,
+								extension: id,
+							} ) )
+						),
+					( items ) => items
+				)
+			);
+		} );
+		if ( args.badge ) {
+			addFilter( 'callboard.badge', args.badge, ( cb ) =>
+				guard(
+					( list, app ) => list.concat( [ cb( app ) ] ),
+					( list ) => list
+				)
+			);
+		}
+		if ( args.beforePlay ) {
+			addFilter(
+				'callboard.beforePlay',
+				args.beforePlay,
+				( cb ) => ( gates ) => gates.concat( [ { id, callback: cb } ] )
+			);
+		}
+		Object.entries( args.events || {} ).forEach( ( [ name, value ] ) => {
+			const p = point( value, priority );
+			const hook = name.includes( '.' ) ? name : `callboard.${ name }`;
+			if ( ! p ) {
+				warn(
+					`${ id } gave ${ hook } something that is not a function.`
+				);
+				return;
+			}
+			hooks.addAction(
+				hook,
+				id,
+				guard( p.callback, () => {} ),
+				p.priority
+			);
+			ext.hooks.add( hook );
+		} );
+		registry.set( id, ext );
+		Object.entries( args.commands || {} ).forEach( ( [ name, fn ] ) => {
+			if ( registerCommand( `${ id }/${ name }`, fn ) ) {
+				ext.commands.push( `${ id }/${ name }` );
+			}
+		} );
+		try {
+			args.setup?.( callboard );
+		} catch ( err ) {
+			report( id, err );
+		}
+		if ( currentView ) {
+			initOne( ext, currentView );
+		}
+		invalidate();
+		return true;
+	}
+	function unregisterExtension( id ) {
+		const ext = registry.get( id );
+		if ( ! ext ) {
+			warn( `${ id } is not registered.` );
+			return false;
+		}
+		if ( currentView ) {
+			teardownOne( ext, currentView );
+		}
+		ext.hooks.forEach( ( hook ) => {
+			hooks.removeFilter( hook, id );
+			hooks.removeAction( hook, id );
+		} );
+		ext.commands.forEach( ( c ) => commandMap.delete( c ) );
+		registry.delete( id );
+		document
+			.querySelectorAll( `[data-client][data-extension="${ id }"]` )
+			.forEach( ( el ) => el.remove() );
+		invalidate();
+		return true;
+	}
+	function registerCommand( name, fn ) {
+		const owner = name.split( '/' ).slice( 0, 2 ).join( '/' );
+		if (
+			! /^[a-z0-9-]+\/[a-z0-9-]+\/[a-zA-Z0-9-]+$/.test( name ) ||
+			! registry.has( owner ) ||
+			typeof fn !== 'function'
+		) {
+			warn(
+				`Command "${ name }" needs a name of "namespace/name/command", a function, and a registered extension that owns it.`
+			);
+			return false;
+		}
+		commandMap.set( name, fn );
+		return true;
+	}
+	function run( name, ...args ) {
+		const fn = commandMap.get( name );
+		if ( ! fn ) {
+			warn( `There is no command called "${ name }".` );
+			return undefined;
+		}
+		try {
+			return fn( ...args );
+		} catch ( err ) {
+			report( name, err );
+			return undefined;
+		}
+	}
+	function emit( name, detail ) {
+		const owner = name.split( '.' ).slice( 0, 2 ).join( '/' );
+		if (
+			! /^[a-z0-9-]+\.[a-z0-9-]+\.[a-zA-Z0-9]+$/.test( name ) ||
+			! registry.has( owner )
+		) {
+			warn(
+				`Event "${ name }" needs a name of "namespace.name.event" and a registered extension that owns it.`
+			);
+			return false;
+		}
+		doAction( name, detail );
+		return true;
+	}
+
+	const commands = Object.freeze( {
+		play() {
+			if ( holdStop() ) {
+				morph( 'pause' );
+				audio.play().catch( () => {} );
+				return true;
+			}
+			if ( i >= 0 ) {
+				audio.play().catch( () => {} );
+				return true;
+			}
+			const set = queue || setBy( view() );
+			if ( ! set?.tracks.length ) {
+				return false;
+			}
+			startSet( set, 0 );
+			return true;
+		},
+		pause() {
+			holdStop();
+			audio.pause();
+			return true;
+		},
+		seek( seconds ) {
+			if ( i < 0 || ! Number.isFinite( +seconds ) ) {
+				return false;
+			}
+			audio.currentTime = Math.max(
+				0,
+				Math.min( +seconds, trackDur() || +seconds )
+			);
+			return true;
+		},
+		next() {
+			if ( ! queue ) {
+				return false;
+			}
+			load( i < 0 ? 0 : i + 1 );
+			return true;
+		},
+		prev() {
+			if ( ! queue ) {
+				return false;
+			}
+			prev();
+			return true;
+		},
+		// Open a set and start one of its tracks, the way a number on the board does.
+		async goTo( slug, index = 0, { at = 0, play = true } = {} ) {
+			const set = setBy( slug );
+			if ( ! set?.tracks[ index ] ) {
+				return false;
+			}
+			if ( view() !== slug ) {
+				await go( `${ G.home }${ slug }/` );
+			}
+			startSet( set, index, { at, play } );
+			return true;
+		},
+		display,
+	} );
+
+	const state = Object.freeze(
+		Object.defineProperties(
+			{},
+			{
+				view: { enumerable: true, get: () => view() },
+				set: { enumerable: true, get: () => snapshot( queue ) },
+				track: {
+					enumerable: true,
+					get: () =>
+						snapshot( queue && i >= 0 ? queue.tracks[ i ] : null ),
+				},
+				index: { enumerable: true, get: () => i },
+				position: {
+					enumerable: true,
+					get: () => ( i >= 0 ? playhead() : 0 ),
+				},
+				duration: {
+					enumerable: true,
+					get: () => ( i >= 0 ? trackDur() : 0 ),
+				},
+				paused: { enumerable: true, get: () => audio.paused },
+				loop: {
+					enumerable: true,
+					get: () =>
+						loop ? Object.freeze( { a: loop.a, b: loop.b } ) : null,
+				},
+				online: { enumerable: true, get: () => navigator.onLine },
+			}
+		)
+	);
+
+	const callboard = Object.freeze( {
+		apiVersion: API_VERSION,
+		version: G.version,
+		hooks,
+		state,
+		commands,
+		registerExtension,
+		unregisterExtension,
+		extensions: () => [ ...registry.keys() ],
+		isActive: ( id ) => owns( G.extensions, id ),
+		data: ( id ) => snapshot( G.ext[ id ] ),
+		registerCommand,
+		run,
+		emit,
+		invalidate,
+		deprecated,
+	} );
+	/**
+	 * The extension API: registry, state, commands, and the hooks underneath. See docs/extending.md.
+	 */
+	window.callboard = callboard;
+
 	durable( { ask: standalone } );
 	bindView();
+	// Ready once every deferred script has run, extensions included, so an extension that loads after
+	// this file still hears it. A script that arrives later than that registers late, which is fine.
+	let readied = false;
+	const ready = () => {
+		if ( readied ) {
+			return;
+		}
+		readied = true;
+		/**
+		 * The page and every deferred script, extensions included, have run. Detail: { view, set }.
+		 */
+		doAction( 'callboard.ready', {
+			view: view() ? 'set' : 'home',
+			set: view(),
+		} );
+		paintBadge();
+	};
+	if ( document.readyState === 'complete' ) {
+		ready();
+	} else {
+		document.addEventListener( 'DOMContentLoaded', ready, { once: true } );
+		window.addEventListener( 'load', ready, { once: true } );
+	}
+} )();
+
+// ---- callboard/count-in. A track with a tempo, played from the top, taps four beats first: a soft
+// click and the count on the title. Built on window.callboard alone, through beforePlay.
+( () => {
+	const cb = window.callboard;
+	if ( ! cb ) {
+		return;
+	}
+	let ctx = null;
+	const click = ( first ) => {
+		try {
+			ctx =
+				ctx ||
+				new ( window.AudioContext || window.webkitAudioContext )();
+			const o = ctx.createOscillator(),
+				g = ctx.createGain(),
+				at = ctx.currentTime;
+			o.frequency.value = first ? 1320 : 880;
+			g.gain.setValueAtTime( 0.0001, at );
+			g.gain.exponentialRampToValueAtTime( 0.18, at + 0.006 );
+			g.gain.exponentialRampToValueAtTime( 0.0001, at + 0.07 );
+			o.connect( g ).connect( ctx.destination );
+			o.start( at );
+			o.stop( at + 0.08 );
+		} catch {}
+	};
+	/**
+	 * Count-in, as an extension: holds the start of a track through beforePlay.
+	 */
+	cb.registerExtension( 'callboard/count-in', {
+		version: '1.0.0',
+		apiVersion: 1,
+		beforePlay( { track, at }, signal ) {
+			const bpm = track?.ext?.[ 'callboard/count-in' ]?.bpm;
+			if ( ! cb.data( 'callboard/count-in' )?.enabled || ! bpm || at ) {
+				return;
+			}
+			const deck = document.getElementById( 'deck' );
+			const beat = 60000 / bpm;
+			return new Promise( ( resolve ) => {
+				const timers = [];
+				const done = ( ok ) => {
+					timers.forEach( clearTimeout );
+					deck?.classList.remove( 'counting' );
+					cb.commands.display( null );
+					resolve( ok );
+				};
+				signal.addEventListener( 'abort', () => done( false ), {
+					once: true,
+				} );
+				deck?.classList.add( 'counting' );
+				for ( let k = 1; k <= 4; k++ ) {
+					timers.push(
+						setTimeout(
+							() => {
+								// the count accumulates: 1, 1 2, 1 2 3, 1 2 3 4
+								cb.commands.display(
+									Array.from(
+										{ length: k },
+										( _, n ) => n + 1
+									).join( '   ' ),
+									{ className: 'is-count' }
+								);
+								click( k === 1 ); // the beat is audible only: a timer is not a gesture, so no haptic can ride on it
+							},
+							( k - 1 ) * beat
+						)
+					);
+				}
+				timers.push( setTimeout( () => done( true ), 4 * beat ) );
+			} );
+		},
+	} );
+} )();
+
+// ---- callboard/quality. What the copy is, in Now Playing: the attachment's own bit depth and sample
+// rate when the server knows them, otherwise an average bitrate from the size and length every track has.
+( () => {
+	const cb = window.callboard;
+	if ( ! cb ) {
+		return;
+	}
+	const pattern = ( s, ...a ) =>
+		String( s || '' ).replace( /%(\d)\$s/g, ( m, n ) => a[ n - 1 ] );
+	/**
+	 * Quality, as an extension: a nowPlayingMeta item.
+	 */
+	cb.registerExtension( 'callboard/quality', {
+		version: '1.0.0',
+		apiVersion: 1,
+		slots: {
+			nowPlayingMeta( track ) {
+				const known = track.ext?.[ 'callboard/quality' ]?.quality;
+				if ( known ) {
+					return [ { text: known, className: 'quality-pill' } ];
+				}
+				const kbps =
+					track.bytes && track.duration
+						? Math.round(
+								( track.bytes * 8 ) / track.duration / 1000
+						  )
+						: 0;
+				if ( ! kbps ) {
+					return [];
+				}
+				const ext = ( /\.([a-z0-9]+)(?:\?.*)?$/i.exec( track.url ) ||
+					[] )[ 1 ];
+				return [
+					{
+						text: pattern(
+							cb.data( 'callboard/quality' )?.format,
+							( ext || '' ).toUpperCase(),
+							kbps
+						),
+						className: 'quality-pill',
+					},
+				];
+			},
+		},
+	} );
+} )();
+
+// ---- callboard/badging. A notification puts a number on the Home Screen icon; opening the app is
+// reading what it was for. This contributes zero, and contributions that add up to zero clear the badge.
+( () => {
+	/**
+	 * Badging, as an extension: a badge contributor of zero.
+	 */
+	window.callboard?.registerExtension( 'callboard/badging', {
+		version: '1.0.0',
+		apiVersion: 1,
+		badge: () => 0,
+	} );
 } )();

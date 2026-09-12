@@ -19,6 +19,7 @@ final class Plugin {
 	 */
 	public static function boot(): void {
 		add_action( 'init', array( self::class, 'maybe_upgrade' ), 1 );
+		Extensions::register_hooks();
 		Post_Types::register_hooks();
 		Meta::register_hooks();
 		Calls::register_hooks();

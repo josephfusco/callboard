@@ -16,8 +16,7 @@ const {
 const ids = ( surfaces ) => surfaces.map( ( s ) => s.id );
 const php = ( source ) =>
 	ids( findSurfaces( source, 'includes/class-frontend.php' ) );
-const js = ( source ) =>
-	ids( findSurfaces( source, 'assets/app.js' ) );
+const js = ( source ) => ids( findSurfaces( source, 'assets/app.js' ) );
 const surface = ( id, documented = false ) => ( { id, documented } );
 
 // ---------------------------------------------------------------------------
@@ -25,10 +24,9 @@ const surface = ( id, documented = false ) => ( { id, documented } );
 // ---------------------------------------------------------------------------
 
 test( 'reads filters and actions apart', () => {
-	assert.deepEqual(
-		php( "apply_filters( 'callboard_app_data', 30 );" ),
-		[ 'filter:callboard_app_data' ]
-	);
+	assert.deepEqual( php( "apply_filters( 'callboard_app_data', 30 );" ), [
+		'filter:callboard_app_data',
+	] );
 	assert.deepEqual( php( "do_action( 'callboard_call_published' );" ), [
 		'action:callboard_call_published',
 	] );
@@ -119,7 +117,10 @@ test( 'a guarded define and a read of it are the one surface', () => {
   `;
 	assert.deepEqual(
 		ids(
-			newSurfaces( [], findSurfaces( source, 'includes/class-frontend.php' ) )
+			newSurfaces(
+				[],
+				findSurfaces( source, 'includes/class-frontend.php' )
+			)
 		),
 		[ 'constant:CALLBOARD_CACHE_TTL' ]
 	);
@@ -171,9 +172,7 @@ test( "a constant defined in one file is the plugin's own in every other", () =>
 	const reader = "if ( defined( 'CALLBOARD_MAX_SUBSCRIBERS' ) ) {}";
 
 	// Alone, the reading file cannot tell an internal from a promise.
-	assert.deepEqual( php( reader ), [
-		'constant:CALLBOARD_MAX_SUBSCRIBERS',
-	] );
+	assert.deepEqual( php( reader ), [ 'constant:CALLBOARD_MAX_SUBSCRIBERS' ] );
 
 	// Weighed with the file that defines it, the way the CLI weighs a whole ref.
 	const own = ownConstants( [ bootstrap, reader ] );
@@ -256,6 +255,50 @@ test( 'reads wp.hooks calls', () => {
 	assert.deepEqual( js( "wp.hooks.applyFilters( 'callboard.track', x );" ), [
 		'js-filter:callboard.track',
 	] );
+} );
+
+test( 'reads the extension API global', () => {
+	assert.deepEqual( js( 'window.callboard = callboard;' ), [
+		'js-global:window.callboard',
+	] );
+} );
+
+test( 'an extension id reads the same from PHP and from the script', () => {
+	const fromPhp = php(
+		"callboard_register_extension( 'callboard/quality', array() );"
+	);
+	const fromJs = js(
+		"cb.registerExtension( 'callboard/quality', { apiVersion: 1 } );"
+	);
+	assert.deepEqual( fromPhp, [ 'extension:callboard/quality' ] );
+	assert.deepEqual( fromJs, fromPhp );
+	assert.deepEqual(
+		newSurfaces(
+			[ surface( 'extension:callboard/quality', true ) ],
+			findSurfaces(
+				"cb.registerExtension( 'callboard/quality', {} );",
+				'assets/app.js'
+			)
+		),
+		[]
+	);
+} );
+
+test( 'reads the slots a template prints', () => {
+	const source =
+		"<?php callboard_slot( 'track_badges', $t, $set ); ?><?php echo callboard_get_slot( 'track_meta', $t ); ?>";
+	assert.deepEqual( ids( findSurfaces( source, 'templates/set.php' ) ), [
+		'slot:track_badges',
+		'slot:track_meta',
+	] );
+	assert.ok( isScanned( 'templates/set.php' ) );
+} );
+
+test( 'the contract version counts, though the plugin defines it outright', () => {
+	assert.deepEqual( php( "define( 'CALLBOARD_API_VERSION', 1 );" ), [
+		'contract:CALLBOARD_API_VERSION',
+	] );
+	assert.deepEqual( php( "define( 'CALLBOARD_VERSION', '2.2.0' );" ), [] );
 } );
 
 test( 'php rules do not run against a js file, or the reverse', () => {

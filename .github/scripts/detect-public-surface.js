@@ -10,7 +10,12 @@
 // The plugin ships what is in these paths. `tests/` calls `apply_filters` and
 // `do_action` constantly without publishing anything. There is no build step,
 // so `assets/` is the source and nothing under it duplicates anything.
-const SCANNED = [ /^includes\//, /^assets\//, /^callboard\.php$/ ];
+const SCANNED = [
+	/^includes\//,
+	/^assets\//,
+	/^templates\//,
+	/^callboard\.php$/,
+];
 const IGNORED = [ /\/test\//, /\.test\.js$/ ];
 
 // WordPress's own, which a plugin reads without ever owning. `ABSPATH` alone
@@ -199,15 +204,37 @@ const PHP_RULES = [
 		( m ) => `rest:${ route( m[ 1 ] ) }`,
 	],
 	[ /WP_CLI::add_command\s*\(\s*(['"])(.*?)\1/g, ( m ) => `cli:${ m[ 2 ] }` ],
+	// An extension id is a promise the other way round: a site that unregisters
+	// `callboard/quality` by name breaks when that name changes. PHP and the
+	// script register the same id, so both read as the one surface.
+	[
+		/\bcallboard_register_extension\s*\(\s*(['"])(.*?)\1/g,
+		( m ) => `extension:${ m[ 2 ] }`,
+	],
+	// A slot a template prints is a place extensions put things.
+	[
+		/\bcallboard_(?:get_)?slot\s*\(\s*(['"])(.*?)\1/g,
+		( m ) => `slot:${ m[ 2 ] }`,
+	],
+	// The extension contract's version. The plugin defines it outright, so the
+	// constant rule counts it as internal, but extensions compare against it.
+	[
+		/\bdefine\s*\(\s*(['"])([A-Z][A-Z0-9_]*_API_VERSION)\1/g,
+		( m ) => `contract:${ m[ 2 ] }`,
+	],
 ];
 
 const JS_RULES = [
 	// `window.CALLBOARD` itself is emitted by `wp_localize_script`, so it is
 	// caught on the PHP side through `callboard_app_data`. This is here for a
-	// global the script assigns on its own, which today it never does.
+	// global the script assigns on its own: `window.callboard`, the extension API.
 	[
-		/\bwindow\.(CALLBOARD[\w$]*)\s*=(?!=)/g,
+		/\bwindow\.(CALLBOARD[\w$]*|callboard)\s*=(?!=)/g,
 		( m ) => `js-global:window.${ m[ 1 ] }`,
+	],
+	[
+		/\bregisterExtension\s*\(\s*(['"`])(.*?)\1/g,
+		( m ) => `extension:${ m[ 2 ] }`,
 	],
 	[
 		/\b(?:wp\.hooks\.)?(applyFilters|doAction)\s*\(\s*(['"`])(.*?)\2/g,

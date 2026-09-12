@@ -2384,6 +2384,34 @@
 		}
 		return saved;
 	}
+	// ---- Durable storage. A browser may throw saved audio away to reclaim space, and a set that has
+	// quietly evicted itself the night before a show is the worst thing this app can do.
+	//
+	// persist() is the only lever, and it is worth pulling more than once. Browsers grant it on
+	// engagement, on an install to the Home Screen, on a bookmark — none of which have happened the
+	// first time somebody taps Save, which is exactly when this used to ask, once, and record that it
+	// had asked rather than what the answer was. No current browser shows a prompt for it, so asking
+	// again is free, and the answer changes.
+	let durableState = null;
+	async function durable( { ask = false } = {} ) {
+		if ( ! navigator.storage?.persisted ) {
+			return null; // no way to know; not the same as "no"
+		}
+		try {
+			if ( durableState !== true ) {
+				durableState = await navigator.storage.persisted();
+				if ( ! durableState && ask ) {
+					durableState =
+						( await navigator.storage.persist?.() ) ?? false;
+				}
+			}
+		} catch {
+			return null;
+		}
+		document.body?.classList.toggle( 'is-durable', !! durableState );
+		return durableState;
+	}
+
 	// How much the browser will still let this origin store. Unknown counts as plenty.
 	async function freeSpace() {
 		try {
@@ -2402,10 +2430,7 @@
 		const ctl = new AbortController();
 		dlAborts.set( t.url, ctl );
 		paintDl( t, 'saving', 0 );
-		if ( ! ls.get( 'callboard:persist' ) ) {
-			ls.set( 'callboard:persist', 1 );
-			navigator.storage?.persist?.().catch( () => {} ); // keeps saved audio out of eviction where the browser honors it
-		}
+		durable( { ask: true } );
 		try {
 			const r = await fetch( t.url, {
 				cache: 'no-store',
@@ -2601,10 +2626,7 @@
 				if ( ! files.length ) {
 					return;
 				}
-				if ( ! ls.get( 'callboard:persist' ) ) {
-					ls.set( 'callboard:persist', 1 );
-					navigator.storage?.persist?.().catch( () => {} );
-				}
+				durable( { ask: true } );
 				const taken = new Set();
 				let loaded = 0;
 				for ( const file of files ) {
@@ -2882,5 +2904,9 @@
 		);
 	}
 
+	// Installed to the Home Screen is the moment iOS actually grants persistence, and the only moment
+	// worth asking outside a deliberate save: Firefox puts a prompt behind this, so it is not free
+	// everywhere. Reading the state costs nothing, so that happens either way.
+	durable( { ask: standalone } );
 	bindView();
 } )();

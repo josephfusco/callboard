@@ -205,6 +205,13 @@ test.describe( 'Admin', () => {
 		} );
 		await demo.locator( 'summary' ).click();
 		await demo.locator( 'input[type=checkbox]' ).nth( 2 ).check(); // Sonnets 21–30
+		// Leaving the title of a new post queues an autosave 200ms later, and core drops a click on
+		// Publish while that save is out. The button can still read enabled a few milliseconds before
+		// the save starts, so wait for the save itself to come back (#131).
+		await expect( page.locator( '.autosave-message' ) ).toHaveText(
+			/Draft saved/
+		);
+		await expect( page.locator( '#publish' ) ).not.toHaveClass( /disabled/ );
 		await page.click( '#publish' );
 		await page.waitForURL( /post\.php\?post=\d+&action=edit&message=/ );
 		await expect( page.locator( '#callboard-where' ) ).toHaveValue( 'Pit' );

@@ -452,7 +452,8 @@ wp callboard run   <?php esc_html_e( '# or drain everything queued above', 'call
 		}
 		$url = wp_nonce_url( admin_url( 'admin-post.php?action=callboard_export&set=' . $post->ID ), 'callboard_export_' . $post->ID );
 
-		$actions['callboard_export'] = sprintf( '<a href="%1$s">%2$s</a>', esc_url( $url ), esc_html__( 'Export', 'callboard' ) );
+		$actions['callboard_export']     = sprintf( '<a href="%1$s">%2$s</a>', esc_url( $url ), esc_html__( 'Export', 'callboard' ) );
+		$actions['callboard_export_car'] = sprintf( '<a href="%1$s">%2$s</a>', esc_url( add_query_arg( 'format', 'car', $url ) ), esc_html__( 'Export for a car', 'callboard' ) );
 
 		return $actions;
 	}

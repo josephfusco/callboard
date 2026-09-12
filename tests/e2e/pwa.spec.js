@@ -1,6 +1,8 @@
 /**
  * Installable app: manifest, service worker, head tags, link previews.
  */
+const fs = require( 'fs' );
+const path = require( 'path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
 test.describe( 'PWA and previews', () => {
@@ -67,6 +69,46 @@ test.describe( 'PWA and previews', () => {
 			'content',
 			/viewport-fit=cover/
 		);
+	} );
+
+	test( 'the site icon is the Home Screen icon when one is set', async ( {
+		page,
+		request,
+		requestUtils,
+	} ) => {
+		const media = await requestUtils.uploadMedia( {
+			name: 'callboard-e2e-site-icon.png',
+			mimeType: 'image/png',
+			buffer: fs.readFileSync(
+				path.join( __dirname, '../../assets/icon-512.png' )
+			),
+		} );
+		try {
+			await requestUtils.updateSiteSettings( { site_icon: media.id } );
+
+			await page.goto( '/demo-set/' );
+			const icon = page.locator( 'link[rel=apple-touch-icon]' );
+			await expect( icon ).toHaveCount( 1 ); // core's own site icon tags are not printed as well
+			await expect( icon ).toHaveAttribute(
+				'href',
+				/\/uploads\/.*callboard-e2e-site-icon/
+			);
+
+			const manifest = await (
+				await request.get( '/manifest.json' )
+			).json();
+			for ( const { src } of manifest.icons ) {
+				expect( src ).not.toContain( 'assets/icon-' );
+			}
+		} finally {
+			await requestUtils.updateSiteSettings( { site_icon: 0 } );
+			await requestUtils.deleteMedia( media.id );
+		}
+
+		await page.goto( '/demo-set/' );
+		await expect(
+			page.locator( 'link[rel=apple-touch-icon]' )
+		).toHaveAttribute( 'href', /assets\/icon-180\.png/ );
 	} );
 
 	test( 'a saved set opens and plays with the network off', async ( {

@@ -409,8 +409,20 @@
 		coolRaf = requestAnimationFrame( step );
 	};
 	let glowAnim = null;
+	// The wire's heat, and the level it has learned to call full. Kept out here so that restarting the meter
+	// while the audio never stopped (a view swap, a row appearing) carries both over: starting cold would dip
+	// the filament on every navigation, and a fresh reference would hold a quiet reading dim for seconds.
+	let bright = 0,
+		ember = 0,
+		ref = 0.5;
 	const eqStart = ( row ) => {
+		const warm = eqRaf !== 0;
 		eqStop();
+		if ( ! warm ) {
+			bright = 0;
+			ember = 0;
+			ref = 0.5;
+		}
 		if ( reduce() ) {
 			if ( glow ) {
 				paintGlow( 0.5 );
@@ -457,10 +469,7 @@
 			}
 			return;
 		}
-		let bright = 0,
-			ember = 0,
-			ref = 0.5,
-			last = 0;
+		let last = 0;
 		cancelAnimationFrame( coolRaf ); // power is back on
 		const tick = ( now = 0 ) => {
 			const dt = last ? Math.min( 0.1, ( now - last ) / 1000 ) : 0.016;
@@ -524,8 +533,11 @@
 			r.classList.toggle( 'playing', on && ! audio.paused );
 			r.setAttribute( 'aria-current', on ? 'true' : 'false' );
 		} );
-		if ( same && i >= 0 && ! audio.paused ) {
-			eqStart( rows[ i ] );
+		// The bars belong to a row, so they only move on the set that is playing. The filament belongs to the
+		// deck, which outlives every view swap, so it follows the audio on any page: home, another set, or
+		// Now Playing opened over either.
+		if ( i >= 0 && ! audio.paused ) {
+			eqStart( same ? rows[ i ] : null );
 		} else {
 			eqStop();
 		}

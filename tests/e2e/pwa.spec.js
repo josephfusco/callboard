@@ -135,25 +135,25 @@ test.describe( 'PWA and previews', () => {
 		expect( audio.readyState ).toBeGreaterThanOrEqual( 1 ); // metadata arrived from the cache
 		await context.setOffline( false );
 
-		// Leave no copies behind: press and hold asks, the next tap removes. The view arrived as a
-		// swapped-in fragment, so this button and every row control are new elements waiting to be
-		// bound; a hold on an unbound button asks nothing, and the tap after it reads as a plain tap
-		// on a set that is already saved, which is meant to do nothing at all.
+		// Remove the copies: a tap on "Saved offline" asks, the next tap removes. The set page was swapped
+		// in, so wait for the button to be bound first.
 		await expect( page.locator( '#offline' ) ).toHaveAttribute(
 			'data-some',
 			'1',
 			{ timeout: 15000 }
 		);
-		await page.locator( '#offline' ).hover();
-		await page.mouse.down();
-		// Hold until the button has asked rather than for a moment that is usually long enough.
+		// A double tap only asks; the second tap does not confirm.
+		await page.locator( '#offline' ).dblclick();
+		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
+		await expect(
+			page.locator( '.dl[data-state="saved"]' )
+		).not.toHaveCount( 0 );
+		// Confirm once the button accepts it (data-confirm="1").
 		await expect( page.locator( '#offline' ) ).toHaveAttribute(
 			'data-confirm',
 			'1',
 			{ timeout: 15000 }
 		);
-		await page.mouse.up();
-		await expect( page.locator( '#offline' ) ).toContainText( /Tap again/ );
 		await page.locator( '#offline' ).click();
 		await expect( page.locator( '.dl[data-state="saved"]' ) ).toHaveCount(
 			0

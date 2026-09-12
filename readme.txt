@@ -75,10 +75,10 @@ Set an accent colour in Settings. Beyond that, `callboard_template_path` swaps a
 
 == Screenshots ==
 
-1. The home page of sets, and a set open with the player running.
-2. The player: transport, progress, a level meter on the playing track, and an offline mark per track.
-3. Light and dark follow the phone.
-4. The same set on a wide screen.
+1. The home page with the next rehearsal: date, time, place, and the tracks to practice. Tapping a track plays it.
+2. A set's track list, with the player bar at the bottom of the screen.
+3. The full-screen player: cover art, waveform scrubbing, repeat, and A/B loop controls.
+4. Editing a rehearsal in the admin: date and time, place, note, and the tracks to practice.
 
 == Changelog ==
 

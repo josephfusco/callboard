@@ -33,7 +33,8 @@ const setTime = ( page, t ) =>
 // The deck now opens compact (title, artist, play/pause only) and remembers the last view in localStorage;
 // most of this file predates that and expects the full transport, seek, and waveform on screen the moment
 // a track loads, so it starts every test already expanded. The compact/expanded behaviour itself — the
-// default, the tap to expand, the swipe to collapse — gets its own describe block below.
+// default and the tap to expand — gets its own describe block below. Closing it (back, Escape, the close button)
+// is tested in front.spec.js under "Touch", so it runs on the iPhone project too.
 const expandDeck = ( page ) => page.locator( '#open-lyrics' ).click();
 
 test.describe( 'Controls', () => {
@@ -206,7 +207,11 @@ test.describe( 'Controls', () => {
 		await page.keyboard.press( '\\' );
 		await expect( page.locator( '#loop-band' ) ).not.toHaveClass( /on/ );
 		await page.evaluate( () => document.getElementById( 'audio' ).pause() ); // no decode leaves paused unsettled
-		await page.keyboard.press( 'Escape' ); // paused, so Escape dismisses the deck
+		// Escape closes Now Playing first, then dismisses the paused player bar.
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
+		await expect( page.locator( '#deck' ) ).toBeVisible();
+		await page.keyboard.press( 'Escape' );
 		await expect( page.locator( '#deck' ) ).toBeHidden();
 		await expect( page.locator( '.track.active' ) ).toHaveCount( 0 );
 	} );
@@ -360,31 +365,6 @@ test.describe( 'Deck view: compact and expanded', () => {
 		await expect( page.locator( '#deck' ) ).not.toHaveClass(
 			/is-expanded/
 		);
-	} );
-
-	test( 'swiping down on the expanded deck collapses it back to compact', async ( {
-		page,
-	} ) => {
-		await page.goto( '/demo-set/' );
-		await page.locator( '.track' ).first().click();
-		await expandDeck( page );
-		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
-		await page.locator( '#deck' ).evaluate( ( deck ) => {
-			const fire = ( type, clientY ) =>
-				deck.dispatchEvent(
-					new PointerEvent( type, {
-						clientX: 60,
-						clientY,
-						pointerId: 7,
-						pointerType: 'touch',
-						bubbles: true,
-					} )
-				);
-			fire( 'pointerdown', 40 );
-			fire( 'pointermove', 140 );
-			fire( 'pointerup', 140 );
-		} );
-		await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
 	} );
 
 	test( 'repeat cycles off, set, one, and remembers the choice', async ( {

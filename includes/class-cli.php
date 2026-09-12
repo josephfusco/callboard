@@ -107,12 +107,74 @@ final class Cli {
 	}
 
 	/**
-	 * Import every set folder in the uploads/callboard directory.
+	 * Write a set out as a .callboard file.
+	 *
+	 * A whole set in one file: the audio, the order, the levels, the lyrics, the notes and the
+	 * tempo. Unzip it and it is an import folder; leave it zipped and `wp callboard import
+	 * --file=` reads it back on another site.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The set's slug.
+	 *
+	 * [--out=<path>]
+	 * : Where to write it. Defaults to <slug>.callboard in the working directory.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp callboard export spring-show
+	 *     wp callboard export spring-show --out=/tmp/spring.callboard
+	 *
+	 * @param string[]              $args       Positional args.
+	 * @param array<string, string> $assoc_args Named args.
+	 */
+	public function export( array $args, array $assoc_args ): void {
+		$slug = sanitize_title( (string) ( $args[0] ?? '' ) );
+		$set  = $slug ? Sets::post_by_slug( $slug ) : null;
+		if ( ! $set ) {
+			WP_CLI::error( sprintf( 'No set with the slug "%s".', $slug ) );
+		}
+
+		$path   = (string) ( $assoc_args['out'] ?? getcwd() . '/' . Exporter::filename( $set ) );
+		$result = Exporter::write( $set, $path );
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		WP_CLI::success( sprintf( '%s: %s (%s)', $set->post_title, $result, size_format( (int) filesize( $result ) ) ) );
+	}
+
+	/**
+	 * Import every set folder in the uploads/callboard directory, or one .callboard file.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--file=<path>]
+	 * : Import this .callboard file instead of scanning the import directory.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp callboard import
+	 *     wp callboard import --file=spring-show.callboard
 	 *
 	 * @param string[]              $args       Positional args.
 	 * @param array<string, string> $assoc_args Named args.
 	 */
 	public function import( array $args, array $assoc_args ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- WP-CLI signature.
+		if ( isset( $assoc_args['file'] ) ) {
+			$file = (string) $assoc_args['file'];
+			if ( ! is_readable( $file ) ) {
+				WP_CLI::error( sprintf( 'Cannot read %s', $file ) );
+			}
+			$dir = Exporter::unpack( $file );
+			if ( is_wp_error( $dir ) ) {
+				WP_CLI::error( $dir->get_error_message() );
+			}
+			WP_CLI::success( Importer::import_folder( $dir ) );
+			return;
+		}
+
 		$results = Importer::import_all();
 		if ( ! $results ) {
 			WP_CLI::log( 'Nothing to import in ' . Importer::source_dir() );

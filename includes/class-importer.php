@@ -27,6 +27,7 @@ final class Importer {
 	public static function register_hooks(): void {
 		add_action( 'init', array( self::class, 'maybe_import' ), 20 );
 		add_action( 'admin_post_callboard_import', array( self::class, 'handle_admin_import' ) );
+		add_action( 'admin_post_callboard_import_file', array( self::class, 'handle_admin_import_file' ) );
 	}
 
 	/**
@@ -350,6 +351,30 @@ final class Importer {
 		check_admin_referer( 'callboard_import' );
 		$results = self::import_all();
 		set_transient( 'callboard_import_notice', $results ? $results : array( __( 'Nothing to import.', 'callboard' ) ), 60 );
+		wp_safe_redirect( admin_url( 'edit.php?post_type=' . Post_Types::SET ) );
+		exit;
+	}
+
+	/**
+	 * Admin: a .callboard file was uploaded. Unpack it into a set folder and import that.
+	 */
+	public static function handle_admin_import_file(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Not allowed.', 'callboard' ) );
+		}
+		check_admin_referer( 'callboard_import_file' );
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- a tmp path from PHP, checked with is_uploaded_file() before it is read.
+		$tmp = isset( $_FILES['callboard_file']['tmp_name'] ) ? (string) $_FILES['callboard_file']['tmp_name'] : '';
+
+		if ( ! $tmp || ! is_uploaded_file( $tmp ) ) {
+			$notice = array( __( 'No file arrived.', 'callboard' ) );
+		} else {
+			$dir    = Exporter::unpack( $tmp );
+			$notice = is_wp_error( $dir ) ? array( $dir->get_error_message() ) : array( self::import_folder( $dir ) );
+		}
+
+		set_transient( 'callboard_import_notice', $notice, 60 );
 		wp_safe_redirect( admin_url( 'edit.php?post_type=' . Post_Types::SET ) );
 		exit;
 	}

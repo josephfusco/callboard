@@ -87,6 +87,8 @@ Design rules: animate only transform and opacity, never use font weight for stat
 
 Hosts that cannot run binaries: build the folder on a laptop with the same command, upload it, import. `Requests` is an admin queue of URLs; `wp callboard run` drains it where the tools exist.
 
+3. **The file.** `Exporter` writes that same folder as a single `.callboard` file, and reads one back. The manifest carries a `version`; a reader refuses a file newer than it understands. Unzipped it *is* an import folder, so `Importer` reads it without knowing it was ever a file, and somebody with no Callboard still has playable mp3s in the right order with a cover. Entries are extracted by name, never with `extractTo()`, since a set is a flat folder and anything carrying a path separator is not ours to write.
+
 </details>
 
 <details>
@@ -123,7 +125,7 @@ The service worker precaches the shell and the home fragment. Saving a set strea
 | Path | Purpose |
 | --- | --- |
 | `callboard.php` | Plugin header, constants, autoload |
-| `includes/` | One class per concern: `Plugin`, `Router`, `Frontend`, `Sets`, `Calls`, `Post_Types`, `Admin`, `Settings`, `Importer`, `Fetcher`, `Requests`, `Push`, `Pwa`, `Privacy`, `Art`, `Cli`. `helpers.php` has icons and formatting |
+| `includes/` | One class per concern: `Plugin`, `Router`, `Frontend`, `Sets`, `Calls`, `Post_Types`, `Admin`, `Settings`, `Importer`, `Exporter`, `Fetcher`, `Requests`, `Push`, `Pwa`, `Privacy`, `Art`, `Cli`. `helpers.php` has icons and formatting |
 | `templates/` | `index.php` (shell), `fragment.php`, `home.php`, `board.php`, `set.php`, `deck.php` (player), `footer.php` |
 | `assets/` | `app.js`, `app.css` |
 | `pwa/sw.js` | Service worker source |
@@ -158,7 +160,8 @@ The service worker precaches the shell and the home fragment. Saving a set strea
 | --- | --- |
 | `wp callboard fetch <url> --name=<name> [--slug=<slug>]` | Fetch a YouTube video or playlist into a set |
 | `wp callboard run [--interval=<seconds>]` | Process the admin's fetch queue |
-| `wp callboard import` | Import every folder under `uploads/callboard/` |
+| `wp callboard import [--file=<path>]` | Import every folder under `uploads/callboard/`, or one `.callboard` file |
+| `wp callboard export <slug> [--out=<path>]` | Write a set out as a `.callboard` file |
 | `wp callboard levels <slug>` | Measure loudness for a set that has none |
 | `wp callboard notify <message> [--title=<title>] [--url=<url>]` | Send a push notification |
 | `wp callboard doctor` | Check for `yt-dlp`, `ffmpeg`, and PHP extensions |

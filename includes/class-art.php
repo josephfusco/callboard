@@ -159,7 +159,18 @@ final class Art {
 		$size = $start;
 		do {
 			$lines = self::wrap( $title, $size, $max_w );
-			if ( count( $lines ) <= $max_lines ) {
+			// Line count is not enough: wrap() breaks between words, so a single word longer than the
+			// column comes back as one over-wide line and would run off the edge. Shrink until every
+			// line fits, not just until there are few enough of them.
+			$fits = count( $lines ) <= $max_lines;
+			foreach ( $lines as $line ) {
+				$box = imagettfbbox( $size, 0, self::font( 'Bold' ), $line );
+				if ( $box && ( $box[2] - $box[0] ) > $max_w ) {
+					$fits = false;
+					break;
+				}
+			}
+			if ( $fits ) {
 				break;
 			}
 			$size -= 8;

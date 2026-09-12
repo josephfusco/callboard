@@ -453,6 +453,50 @@ test.describe( 'Front end', () => {
 		await expect( page.locator( '#now-title .mq span' ) ).toHaveCount( 2 );
 	} );
 
+	test( 'the deck sends the playing track itself, named so it can be matched back', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			window.__sharedFiles = [];
+			navigator.canShare = () => true;
+			navigator.share = ( d ) => {
+				window.__sharedFiles.push( {
+					title: d.title,
+					names: ( d.files || [] ).map( ( f ) => f.name ),
+					sizes: ( d.files || [] ).map( ( f ) => f.size ),
+					types: ( d.files || [] ).map( ( f ) => f.type ),
+				} );
+				return Promise.resolve();
+			};
+		} );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track[data-i="0"]' ).click();
+		const chip = page.locator( '#share-track' );
+		await expect( chip ).toBeVisible();
+		await chip.click();
+
+		await expect
+			.poll( () => page.evaluate( () => window.__sharedFiles.length ) )
+			.toBe( 1 );
+		const sent = await page.evaluate( () => window.__sharedFiles[ 0 ] );
+		expect( sent.title ).toBe( 'Ode to Joy' );
+		// The number and the title are both what the receiving end matches on.
+		expect( sent.names[ 0 ] ).toBe( '01 Ode to Joy.mp3' );
+		expect( sent.types[ 0 ] ).toMatch( /^audio\// );
+		expect( sent.sizes[ 0 ] ).toBeGreaterThan( 0 );
+	} );
+
+	test( 'without file sharing the deck does not offer to send a track', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			navigator.canShare = () => false; // shares links, not files
+		} );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track[data-i="0"]' ).click();
+		await expect( page.locator( '#share-track' ) ).toBeHidden();
+	} );
+
 	test( 'Share hands the set link to the system sheet', async ( {
 		page,
 	} ) => {

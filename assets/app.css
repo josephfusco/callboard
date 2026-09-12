@@ -51,6 +51,11 @@ body.has-deck .app{padding-bottom:calc(var(--deck-h) + var(--safe-b) + 40px)}
 .pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;margin-right:8px;border:1px solid var(--line-strong);border-radius:999px;color:var(--ink-3);font-size:.6875rem;font-variant-numeric:tabular-nums;white-space:nowrap}
 @media (max-width:420px){.pill{display:none}} /* the times matter more than the pedigree on a narrow phone */
 
+/* where you are, as a line rather than as the filament's length. Muted, not accent: the glow above it is
+   the warm thing, and two warm things on one edge is a smear. */
+.deck::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--line-strong);transform:scaleX(var(--progress,0));transform-origin:0 50%;will-change:transform;pointer-events:none;z-index:1}
+@media (prefers-reduced-motion:reduce){.deck::before{will-change:auto}}
+
 /* type */
 .label{margin:0;color:var(--ink-3);font-size:.9375rem}
 h1{margin:6px 0 0;font-size:2.125rem;line-height:1.1;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
@@ -105,7 +110,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 /* tracks: the same feTurbulence the body wears, laid straight over the list so it reads as velvet rather
    than flat colour. No background-color of its own — the noise composites over whatever is already behind
    the list — so the row bleed (.tracks li's negative margin, for the tap target) never meets a hard edge. */
-.tracks{list-style:none;margin:0;padding:0;background-image:var(--grain);background-size:200px 200px}
+.tracks{list-style:none;margin:0;padding:0;background-color:var(--bg);background-image:var(--grain);background-size:200px 200px;background-blend-mode:overlay} /* base colour and blend, like body: grain on its own paints a grey wash, not a texture */
 @media (prefers-reduced-transparency:reduce){.tracks{background-image:none}}
 .tracks li{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;margin:0 -16px;padding:0 16px;border-radius:10px;transition:background var(--t-fast)}
 .tracks li::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:1px;background:var(--line)} /* the same width as the rule above the list: the number is content, not chrome, so nothing is inset past it */
@@ -174,14 +179,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:transparent;border:0}
 .deck-display .deck-text{touch-action:pan-x}
-/* filament + progress, one edge treatment: the wire only carries current up to the playhead, so its lit length
-   IS the 2px position line the compact bar needs — no second bar stacked under it. --progress (0–1, set once per
+/* The filament runs the whole width and always has. It is a wire with current in it: it brightens and settles
+   with the audio, it does not fill up like a gauge. Position is a separate, quieter line underneath, because a
+   glowing thing that also measures something is neither. --progress (0–1, set once per
    frame by setProgress() in app.js, the same transform-only cadence the seek fill already uses) scales it from
    the left post; the script's opacity/colour writes still ride on top for the live level within that length. */
-.deck-glow,.deck-glow-hot,.deck-glow-halo{position:absolute;left:0;right:0;top:-1px;opacity:0;will-change:opacity,transform;pointer-events:none;transform:scaleX(var(--progress,0));transform-origin:0 50%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.deck-glow,.deck-glow-hot,.deck-glow-halo{position:absolute;left:0;right:0;top:-1px;opacity:0;will-change:opacity;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
 .deck-glow{height:2px;color:var(--accent);background:currentColor;box-shadow:0 0 6px 1px currentColor} /* the wire is the deck's top edge; a tight bloom */
 .deck-glow-hot{height:2px;background:linear-gradient(90deg,transparent,#ffd2a8 30%,#fff1dc 50%,#ffd2a8 70%,transparent);box-shadow:0 0 10px 2px rgba(255,232,200,.6)} /* the white heart of the coil */
-.deck-glow-halo{top:-19px;height:18px;color:var(--accent);background:linear-gradient(180deg,transparent,currentColor);filter:blur(6px);transform:scaleX(var(--progress,0)) translateZ(0)}
+.deck-glow-halo{top:-19px;height:18px;color:var(--accent);background:linear-gradient(180deg,transparent,currentColor);filter:blur(6px);transform:translateZ(0)}
 @media (prefers-reduced-transparency:reduce){.deck-glow-halo{display:none}.deck-glow{box-shadow:none}}
 /* marks on the seek line: ticks above it where singing resumes, pins for notes */
 .seek-marks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
@@ -215,7 +221,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-open{appearance:none;background:transparent;border:0;padding:0;text-align:left;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:var(--s1);cursor:pointer;color:inherit;border-radius:8px}
 /* compact: the open-lyrics button is the whole tap-to-expand bar, so it keeps clear of the play button that
    floats over it (see .deck.is-compact #toggle below) rather than running text under a control */
-.deck.is-compact .deck-open{padding-right:calc(52px + var(--s2))}
+.deck.is-compact .deck-open{padding-right:calc(130px + var(--s2))}
 .deck-open:active .deck-title{opacity:.6}
 .deck-open::after{content:attr(data-line);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* the sheet's name, or the set's: never blank, so the deck's constant height is honest */
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
@@ -262,13 +268,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-controls-secondary{gap:var(--s2)}
 /* compact: play/pause floats up over the display line (see .deck-open's reserved padding above) — no prev/next,
    no repeat, no loop; nothing here escapes .deck itself, so top/right below read off .deck's own edges */
-.deck.is-compact .deck-controls-secondary,.deck.is-compact .ctl.skip{display:none}
+.deck.is-compact .deck-controls-secondary{display:none} /* the loop and repeat can wait; previous and next cannot */
 .deck.is-compact .deck-transport{padding:0}
 /* .deck-controls is itself position:relative (for its own z-index); drop that in compact so #toggle's
    position:absolute escapes all the way out to .deck and reads off --edge-r, not off a box down in the
    (now collapsed) transport row */
-.deck.is-compact .deck-controls{position:static}
-.deck.is-compact #toggle{position:absolute;top:var(--s1);right:var(--edge-r)}
+.deck.is-compact .deck-controls{position:absolute;top:var(--s1);right:var(--edge-r);gap:var(--s2)}
+.deck.is-compact .ctl.skip{width:34px;height:34px}
+.deck.is-compact #toggle{width:44px;height:44px}
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .ctl svg{width:26px;height:26px;fill:currentColor}
 .deck-controls .ctl.skip{width:52px;height:52px}

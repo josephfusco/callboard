@@ -240,19 +240,22 @@ test.describe( 'Deck view: compact and expanded', () => {
 		await page.goto( '/demo-set/' ); // no seeded preference: compact is the default
 	} );
 
-	test( 'starts compact: title, artist, and play/pause only', async ( {
+	test( 'starts compact: the track, and moving through it', async ( {
 		page,
 	} ) => {
 		await page.locator( '.track' ).first().click();
 		const deck = page.locator( '#deck' );
 		await expect( deck ).toHaveClass( /is-compact/ );
 		await expect( deck ).not.toHaveClass( /is-expanded/ );
-		await expect( page.locator( '#toggle' ) ).toBeVisible();
 		await expect( page.locator( '#now-title' ) ).toBeVisible();
-		await expect( page.locator( '#prev' ) ).toBeHidden();
-		await expect( page.locator( '#next' ) ).toBeHidden();
+		// Skipping between numbers is the job; a bar you have to open first is not compact.
+		await expect( page.locator( '#prev' ) ).toBeVisible();
+		await expect( page.locator( '#toggle' ) ).toBeVisible();
+		await expect( page.locator( '#next' ) ).toBeVisible();
+		// What you set once can wait for the expanded view.
 		await expect( page.locator( '#seek' ) ).toBeHidden();
 		await expect( page.locator( '.deck-time' ) ).toBeHidden();
+		await expect( page.locator( '.deck-controls-secondary' ) ).toBeHidden();
 	} );
 
 	test( 'tapping the compact bar expands it; the play button does not', async ( {

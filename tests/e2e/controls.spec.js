@@ -93,6 +93,55 @@ test.describe( 'Controls', () => {
 		expect( await time( page ) ).toBeLessThan( 5 );
 	} );
 
+	// The media keys on a keyboard, the lock screen, and the Dynamic Island all arrive the same way:
+	// the OS calls a Media Session action handler with the page unfocused and no arguments. Nothing
+	// covered that path, so a change to load() or prev() could quietly break every hardware control
+	// on the device while every button on screen kept working.
+	test( 'the media keys move through the set with the page unfocused', async ( {
+		page,
+	} ) => {
+		await page.addInitScript( () => {
+			window.__mediaHandlers = {};
+			const real = navigator.mediaSession?.setActionHandler?.bind(
+				navigator.mediaSession
+			);
+			if ( real ) {
+				navigator.mediaSession.setActionHandler = ( action, fn ) => {
+					window.__mediaHandlers[ action ] = fn;
+					return real( action, fn );
+				};
+			}
+		} );
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'Sonnets 1–10'
+		);
+
+		const registered = await page.evaluate( () =>
+			Object.keys( window.__mediaHandlers )
+		);
+		for ( const action of [
+			'previoustrack',
+			'nexttrack',
+			'play',
+			'pause',
+		] ) {
+			expect( registered ).toContain( action );
+		}
+
+		// Called with no arguments, the way the OS calls them.
+		await page.evaluate( () => window.__mediaHandlers.nexttrack() );
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'Sonnets 11–20'
+		);
+
+		await page.evaluate( () => window.__mediaHandlers.previoustrack() );
+		await expect( page.locator( '#now-title' ) ).toContainText(
+			'Sonnets 1–10'
+		);
+	} );
+
 	test( 'the seek control scrubs and announces the position', async ( {
 		page,
 	} ) => {

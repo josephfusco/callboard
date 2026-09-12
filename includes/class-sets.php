@@ -181,6 +181,17 @@ final class Sets {
 			}
 		}
 
+		// A set from one playlist has one uploader, and it belongs in the footer said once. A set
+		// gathered from everywhere has a different artist per track, and it belongs on the row. Doing
+		// both gives you eighteen names in the footer, or the same name on ten rows.
+		if ( count( $uploaders ) < 2 ) {
+			foreach ( $tracks as $k => $callboard_unused ) {
+				$tracks[ $k ]['artist'] = null;
+			}
+		} else {
+			$uploaders = array();
+		}
+
 		$set = array(
 			'id'      => $post->ID,
 			'slug'    => $post->post_name,

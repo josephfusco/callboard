@@ -27,6 +27,11 @@ button{font:inherit;color:inherit}
 .app{max-width:640px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) 40px max(20px,env(safe-area-inset-left,0px))} /* landscape iPhone: the column clears the island and the corners */
 body.has-deck .app{padding-bottom:calc(var(--deck-h) + var(--safe-b) + 40px)}
 
+/* the gate: the app's own page when the site asks for a sign-in, so nobody lands on wp-login */
+.gate{min-height:100svh;display:flex;flex-direction:column;justify-content:center}
+.gate .label{margin-top:8px}
+.gate .btn{margin-top:18px;text-decoration:none}
+
 /* loading offline copies from a file: a label that behaves like the buttons beside it */
 .load-files{cursor:pointer}
 .load-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}

@@ -35,6 +35,7 @@ final class Settings {
 			'notify_new_sets' => true,
 			'notify_calls'    => true,
 			'count_in'        => false,
+			'require_signin'  => false,
 		);
 	}
 
@@ -77,6 +78,7 @@ final class Settings {
 			'notify_new_sets' => ! empty( $input['notify_new_sets'] ),
 			'notify_calls'    => ! empty( $input['notify_calls'] ),
 			'count_in'        => ! empty( $input['count_in'] ),
+			'require_signin'  => ! empty( $input['require_signin'] ),
 		);
 	}
 

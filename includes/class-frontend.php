@@ -36,6 +36,9 @@ final class Frontend {
 	 * Our script and its data.
 	 */
 	public static function enqueue(): void {
+		if ( ! Gate::allowed() ) {
+			return; // The gate needs no player, and app data is every set and every track URL.
+		}
 		wp_enqueue_script( 'callboard', callboard_asset( 'assets/app.js' ), array(), null, array( 'strategy' => 'defer' ) ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		$data             = Sets::app_data( Router::view() );
 		$data['settings'] = Settings::for_client();
@@ -192,6 +195,9 @@ final class Frontend {
 	 * Open Graph and Twitter tags, per view.
 	 */
 	public static function link_previews(): void {
+		if ( ! Gate::allowed() ) {
+			return; // A gated site does not describe its sets to a crawler or a chat unfurl.
+		}
 		$view  = Router::view();
 		$set   = $view ? Sets::by_slug( $view ) : null;
 		$title = Router::page_title();

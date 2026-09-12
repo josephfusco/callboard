@@ -5,7 +5,7 @@
  * Version: 2.2.0
  * Requires at least: 6.5
  * Requires PHP: 8.1
- * Plugin URI: https://josephfus.co/callboard/
+ * Plugin URI: https://promptcorner.github.io/callboard/
  * Author: Joe Fusco
  * Author URI: https://josephfus.co/
  * License: GPL-2.0-or-later

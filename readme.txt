@@ -12,7 +12,7 @@ Rehearsal tracks for a cast. Sets of audio, a persistent player, installable as 
 
 == Description ==
 
-Source and issues: https://github.com/promptcorner/callboard. Landing page: https://josephfus.co/callboard/
+Source and issues: https://github.com/promptcorner/callboard. Landing page: https://promptcorner.github.io/callboard/
 
 Callboard turns a WordPress site into a small, private music app for a cast or choir: a home page of sets, a track list per set, a player that keeps playing while you move around, lock-screen controls, optional offline saving, and an "Add to Home Screen" flow on iPhone. The whole front end is rendered by the plugin, whatever theme is active, and the site is kept out of search engines.
 

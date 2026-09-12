@@ -3,6 +3,7 @@ name: Pages
 # Publishes the landing page with GitHub Pages (source "GitHub Actions"), and with it everything the live
 # demo needs: callboard.zip built from main, blueprint.json, and the demo set's audio, all with URLs
 # stamped by commit so caches never serve an old build. The page embeds WordPress Playground, which fetches those from the Pages origin.
+# blueprint.json names those files relative to itself; this workflow resolves them against wherever Pages serves.
 # Runs on every push to main; the weekly run catches commits that do not start push workflows.
 
 on:
@@ -49,21 +50,38 @@ jobs:
           test -f build/callboard/vendor/autoload.php
           find build/callboard -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
       - name: Assemble the site
+        id: site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           mkdir -p out/demo
           cp -R site/. out/
           cp build/callboard.zip out/
           find tests/fixtures/callboard/demo-set -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} out/demo/ \;
+          # Where Pages serves this repository, asked rather than written down: the address changed once
+          # already, when the repository moved accounts, and every hardcoded URL went dead. Playground runs
+          # on https and a browser will not fetch http from it, so the scheme is always https.
+          BASE=$(gh api "repos/${GH_REPO}/pages" --jq .html_url | sed -E 's#^http://#https://#; s#/*$#/#')
+          [[ "$BASE" =~ ^https://[^/]+/ ]] || { echo "::error::Unexpected Pages URL: $BASE"; exit 1; }
           # Pages caches for four hours. Stamp every asset URL with the commit so a deploy is always a new URL:
           # the page's images and its blueprint fetch, and the blueprint's zip and demo files.
           V="${GITHUB_SHA::7}"
-          sed -i -E "s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(content=\"https://josephfus.co/callboard/og\.png)\"#\1?v=${V}\"#; s#fetch\( 'blueprint\.json' \)#fetch( 'blueprint.json?v=${V}' )#" out/index.html
-          jq --arg v "$V" '(.steps[] | (.pluginData?, .data?) | select(. != null and .resource? == "url") | .url) |= (. + "?v=" + $v)' blueprint.json > out/blueprint.json
+          sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(content=\"[^\"?]+/og\.png)\"#\1?v=${V}\"#; s#fetch\( 'blueprint\.json' \)#fetch( 'blueprint.json?v=${V}' )#" out/index.html
+          if grep -n '{{' out/index.html; then echo "::error::A placeholder survived in index.html"; exit 1; fi
+          node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" "$V" > out/blueprint.json
           grep -c "?v=${V}" out/index.html out/blueprint.json
           ls -la out out/demo
+          { echo "base=$BASE"; echo "version=$V"; } >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: out
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      # The deploy reports success whether or not the demo can load what it names. Ask for each file the
+      # way Playground will, from another origin, so a dead URL fails here instead of on a visitor.
+      - name: Check every file the demo fetches
+        env:
+          BLUEPRINT: ${{ steps.site.outputs.base }}blueprint.json?v=${{ steps.site.outputs.version }}
+        run: node .github/scripts/demo-blueprint.js check "$BLUEPRINT" 18

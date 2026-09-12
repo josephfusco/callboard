@@ -549,3 +549,281 @@ test.describe( 'Front end', () => {
 		);
 	} );
 } );
+
+// The filament is the deck's top edge, lit by the audio. It kept going dark whenever the page was anywhere
+// but the playing set, and nothing here looked at it, so it came back more than once. These tests watch it
+// the way a person does: is it there, is it lit, does it move, and does it stay that way through every way
+// of getting around.
+//
+// A playing element is faked rather than decoded. The rest of the suite already assumes headless Chromium
+// cannot decode the audio, and a meter test that depends on whether this machine happens to have the codec
+// would pass here and fail in Actions, or the other way round. The fake keeps a clock, so currentTime moves
+// and the track's measured levels drive the wire. Removing AudioContext sends every browser down that same
+// path, which is the one an iPhone takes anyway.
+const fakePlayback = ( page ) =>
+	page.addInitScript( () => {
+		window.AudioContext = undefined;
+		window.webkitAudioContext = undefined;
+		const proto = HTMLMediaElement.prototype;
+		const clocks = new WeakMap();
+		const now = () => performance.now() / 1000;
+		const clock = ( el ) => {
+			if ( ! clocks.has( el ) ) {
+				clocks.set( el, { playing: false, base: 0, at: now() } );
+			}
+			return clocks.get( el );
+		};
+		const read = ( el ) => {
+			const c = clock( el );
+			return c.playing ? c.base + now() - c.at : c.base;
+		};
+		Object.defineProperty( proto, 'paused', {
+			configurable: true,
+			get() {
+				return ! clock( this ).playing;
+			},
+		} );
+		Object.defineProperty( proto, 'currentTime', {
+			configurable: true,
+			get() {
+				return read( this );
+			},
+			set( v ) {
+				const c = clock( this );
+				c.base = +v || 0;
+				c.at = now();
+			},
+		} );
+		// The flag flips at once and the event follows as a task, the order the browser uses.
+		proto.play = function play() {
+			const c = clock( this );
+			if ( ! c.playing ) {
+				c.base = read( this );
+				c.at = now();
+				c.playing = true;
+				setTimeout( () => this.dispatchEvent( new Event( 'play' ) ) );
+			}
+			return Promise.resolve();
+		};
+		proto.pause = function pause() {
+			const c = clock( this );
+			if ( c.playing ) {
+				c.base = read( this );
+				c.playing = false;
+				setTimeout( () => this.dispatchEvent( new Event( 'pause' ) ) );
+			}
+		};
+	} );
+
+const wire = ( page ) => page.locator( '#deck-glow' );
+const glowOpacity = ( page ) =>
+	wire( page ).evaluate( ( g ) => +getComputedStyle( g ).opacity );
+// Half a second of frames: how bright it got, and how much it moved.
+const glowSpread = ( page ) =>
+	wire( page ).evaluate(
+		( g ) =>
+			new Promise( ( resolve ) => {
+				const seen = [];
+				const t0 = performance.now();
+				const step = () => {
+					seen.push( +getComputedStyle( g ).opacity );
+					if ( performance.now() - t0 < 500 ) {
+						requestAnimationFrame( step );
+					} else {
+						resolve( Math.max( ...seen ) - Math.min( ...seen ) );
+					}
+				};
+				requestAnimationFrame( step );
+			} )
+	);
+// There, a full-width line inside the window, and brighter than a wire with no current in it.
+const expectLit = async ( page ) => {
+	await expect( wire( page ) ).toBeVisible();
+	const box = await wire( page ).boundingBox();
+	const viewport = page.viewportSize();
+	expect( box.y ).toBeGreaterThanOrEqual( 0 );
+	expect( box.y ).toBeLessThan( viewport.height );
+	expect( box.width ).toBeGreaterThan( viewport.width * 0.9 );
+	await expect.poll( () => glowOpacity( page ) ).toBeGreaterThan( 0.4 );
+};
+const expectBurning = async ( page ) => {
+	await expectLit( page );
+	await expect.poll( () => glowSpread( page ) ).toBeGreaterThan( 0.02 );
+};
+
+test.describe( 'The filament', () => {
+	test.beforeEach( async ( { page } ) => {
+		await fakePlayback( page );
+	} );
+
+	// The suite runs with reduced motion, where the wire does not move but should still be lit while the
+	// audio plays. That is the setting a lot of phones have on, so it gets the navigation check too.
+	test( 'with reduced motion it stays lit on every view while a track plays', async ( {
+		page,
+	} ) => {
+		await page.goto( '/demo-set/' );
+		await page.locator( '.track' ).first().click();
+		await expectLit( page );
+		await page.locator( 'a.back' ).click();
+		await expect( page ).toHaveURL( /\/$/ );
+		await expect( page.locator( 'a.set' ).first() ).toBeVisible();
+		await expectLit( page );
+		await page.goBack();
+		await expect( page.locator( 'h1' ) ).toHaveText(
+			'Shakespeare’s Sonnets'
+		);
+		await expectLit( page );
+	} );
+
+	test.describe( 'with motion', () => {
+		test.use( {
+			contextOptions: {
+				reducedMotion: 'no-preference',
+				strictSelectors: true,
+			},
+		} );
+
+		test( 'it burns with the audio on home, another set, and back again', async ( {
+			page,
+		} ) => {
+			await page.goto( '/demo-set/' );
+			await page.locator( '.track' ).first().click();
+			await expectBurning( page );
+
+			// All sets: the fragment swap, inside a view transition.
+			await page.locator( 'a.back' ).click();
+			await expect( page ).toHaveURL( /\/$/ );
+			await expect( page.locator( 'a.set' ).first() ).toBeVisible();
+			await expectBurning( page );
+
+			// The back gesture, then forward again: history, not a tap.
+			await page.goBack();
+			await expect( page.locator( 'h1' ) ).toHaveText(
+				'Shakespeare’s Sonnets'
+			);
+			await expectBurning( page );
+			await page.goForward();
+			await expect( page.locator( 'a.set' ).first() ).toBeVisible();
+			await expectBurning( page );
+
+			// A set that is not the one playing.
+			await page.locator( 'a.set', { hasText: 'Empty Set' } ).click();
+			await expect( page.locator( '.note' ) ).toContainText(
+				'No audio in this set yet'
+			);
+			await expectBurning( page );
+
+			// And into the playing set from its card.
+			await page.goBack();
+			await page.locator( 'a.set', { hasText: 'Shakespeare' } ).click();
+			await expect( page.locator( '.track' ) ).toHaveCount( 10 );
+			await expectBurning( page );
+		} );
+
+		test( 'Now Playing opened and closed over home keeps it burning', async ( {
+			page,
+		} ) => {
+			await page.goto( '/demo-set/' );
+			await page.locator( '.track' ).first().click();
+			await page.locator( 'a.back' ).click();
+			await expect( page.locator( 'a.set' ).first() ).toBeVisible();
+			await page.locator( '#open-lyrics' ).click();
+			await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
+			await expectBurning( page );
+			await page.locator( '#deck-down' ).click();
+			await expect( page.locator( '#deck' ) ).toHaveClass( /is-compact/ );
+			await expectBurning( page );
+		} );
+
+		test( 'pause cools the wire instead of switching it off', async ( {
+			page,
+		} ) => {
+			await page.goto( '/demo-set/' );
+			await page.locator( '.track' ).first().click();
+			await page.locator( 'a.back' ).click();
+			await expect( page.locator( 'a.set' ).first() ).toBeVisible();
+			await expectBurning( page );
+			// Pause and watch the next few frames in the page itself, so no round trip sits between the
+			// press and the first reading.
+			const { before, after } = await wire( page ).evaluate(
+				( g ) =>
+					new Promise( ( resolve ) => {
+						const read = () => +getComputedStyle( g ).opacity;
+						const was = read();
+						document.getElementById( 'toggle' ).click();
+						const seen = [];
+						const t0 = performance.now();
+						const step = () => {
+							seen.push( read() );
+							if ( performance.now() - t0 < 400 ) {
+								requestAnimationFrame( step );
+							} else {
+								resolve( { before: was, after: seen } );
+							}
+						};
+						requestAnimationFrame( step );
+					} )
+			);
+			expect( before ).toBeGreaterThan( 0.4 );
+			expect( after[ 0 ] ).toBeGreaterThan( 0.3 ); // still warm the moment the current is cut
+			expect( after.at( -1 ) ).toBeLessThan( after[ 0 ] ); // and on its way down
+			// The tail is long by design, so wait for it to finish rather than guessing when it has.
+			await expect.poll( () => glowSpread( page ) ).toBeLessThan( 0.005 );
+			expect( await glowOpacity( page ) ).toBeLessThan( 0.3 );
+			await expect( wire( page ) ).toBeVisible(); // cooled, not gone
+		} );
+
+		// Every view swap restarts the meter. It used to restart cold, which dipped the wire on each
+		// navigation and held a quiet recording dim for seconds while it relearned what full meant. A
+		// steady level makes the dip measurable: warm, the wire should not notice the swap at all.
+		test( 'a view swap does not dip the wire', async ( { page } ) => {
+			await page.addInitScript( () => {
+				let data;
+				Object.defineProperty( window, 'CALLBOARD', {
+					configurable: true,
+					get: () => data,
+					set( v ) {
+						for ( const s of v?.sets || [] ) {
+							for ( const t of s.tracks || [] ) {
+								if ( t.levels ) {
+									t.levels = '6'.repeat( t.levels.length );
+								}
+							}
+						}
+						data = v;
+					},
+				} );
+			} );
+			await page.goto( '/demo-set/' );
+			await page.locator( '.track' ).first().click();
+			await expect.poll( () => glowOpacity( page ) ).toBeGreaterThan( 0.95 );
+			// Every frame from the tap until half a second after home has landed.
+			const lowest = await wire( page ).evaluate(
+				( g ) =>
+					new Promise( ( resolve ) => {
+						let low = 1,
+							landed = 0;
+						const t0 = performance.now();
+						const step = ( now ) => {
+							low = Math.min( low, +getComputedStyle( g ).opacity );
+							if ( ! landed && ! document.body.dataset.slug ) {
+								landed = now;
+							}
+							if (
+								( landed && now - landed > 500 ) ||
+								now - t0 > 8000
+							) {
+								resolve( landed ? low : -1 );
+							} else {
+								requestAnimationFrame( step );
+							}
+						};
+						requestAnimationFrame( step );
+						document.querySelector( 'a.back' ).click();
+					} )
+			);
+			await expect( page ).toHaveURL( /\/$/ );
+			expect( lowest ).toBeGreaterThan( 0.9 );
+		} );
+	} );
+} );

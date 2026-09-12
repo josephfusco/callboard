@@ -163,6 +163,7 @@ A gated request answers 403 with `templates/gate.php` rather than redirecting to
 | `callboard_push_message` | filter | Title, body, and URL of a notification. Return an empty array to cancel |
 | `callboard_call_published` | action | A call was published |
 | `callboard_imported` | action | A set folder was imported |
+| `callboard_import_page` | action | Add your own controls to the bottom of the admin import screen |
 | `callboard_import_dir`, `callboard_ytdlp_path`, `callboard_ffmpeg_path`, `callboard_max_subscribers` | filters | Import folder, tool paths, subscriber limit |
 
 ## WP-CLI

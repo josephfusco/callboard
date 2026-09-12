@@ -132,6 +132,14 @@ final class Push {
 		if ( ! $endpoint || ! preg_match( '#^https://#', $endpoint ) || ! $p256dh || ! $auth ) {
 			return new WP_Error( 'callboard_bad_subscription', __( 'That is not a push subscription.', 'callboard' ), array( 'status' => 400 ) );
 		}
+		// This route is open by design — a cast member subscribes without an account — so the
+		// endpoint arrives from anybody. Later, sending a notice makes the server POST to it. An
+		// https URL alone is not enough of a check: https://10.0.0.1/ and https://localhost/ are both
+		// https, and either turns this into a way to knock on doors inside the network the site runs
+		// in. Core already has the rule for that, written for exactly this shape of problem.
+		if ( ! wp_http_validate_url( $endpoint ) ) {
+			return new WP_Error( 'callboard_bad_subscription', __( 'That is not a push subscription.', 'callboard' ), array( 'status' => 400 ) );
+		}
 		if ( self::count() >= (int) apply_filters( 'callboard_max_subscribers', 2000 ) ) {
 			return new WP_Error( 'callboard_full', __( 'Too many subscribers.', 'callboard' ), array( 'status' => 429 ) );
 		}

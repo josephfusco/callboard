@@ -38,6 +38,7 @@ final class Admin {
 		add_meta_box( 'callboard-tracks', __( 'Tracks', 'callboard' ), array( self::class, 'box_tracks' ), Post_Types::SET, 'normal', 'high' );
 		add_meta_box( 'callboard-credits', __( 'Source & credits', 'callboard' ), array( self::class, 'box_credits' ), Post_Types::SET, 'normal' );
 		add_meta_box( 'callboard-lyrics', __( 'Lyrics', 'callboard' ), array( self::class, 'box_lyrics' ), Post_Types::SET, 'side' );
+		add_meta_box( 'callboard-cover', __( 'Cover colours', 'callboard' ), array( self::class, 'box_palette' ), Post_Types::SET, 'side' );
 	}
 
 	/**
@@ -129,6 +130,49 @@ final class Admin {
 	}
 
 	/**
+	 * Which colours the generated cover is drawn in.
+	 *
+	 * A set that has no artwork of its own gets one drawn for it, and left alone every set would be
+	 * the same cream square. The palettes are taken from the theatre — Playbill's yellow, a house
+	 * curtain's red and gold, the bone of a ghost light, two lighting gels — and a set picks one from
+	 * its own slug so a board reads as a row of different things. This is where somebody overrides
+	 * that. Uploading a featured image overrides all of it.
+	 *
+	 * @param WP_Post $post Set post.
+	 */
+	public static function box_palette( WP_Post $post ): void {
+		$names   = array(
+			'ghost'    => __( 'Ghost light — bone and ink', 'callboard' ),
+			'playbill' => __( 'Playbill — yellow and black', 'callboard' ),
+			'velvet'   => __( 'House curtain — red and gold', 'callboard' ),
+			'congo'    => __( 'Congo blue', 'callboard' ),
+			'amber'    => __( 'Bastard amber', 'callboard' ),
+			'blackout' => __( 'Blackout', 'callboard' ),
+		);
+		$current = (string) get_post_meta( $post->ID, '_callboard_palette', true );
+
+		echo '<select name="callboard_palette" style="width:100%">';
+		printf(
+			'<option value="" %s>%s</option>',
+			selected( $current, '', false ),
+			esc_html__( 'Chosen from the set’s name', 'callboard' )
+		);
+		foreach ( Art::palettes() as $key ) {
+			printf(
+				'<option value="%s" %s>%s</option>',
+				esc_attr( $key ),
+				selected( $current, $key, false ),
+				esc_html( $names[ $key ] ?? $key )
+			);
+		}
+		echo '</select>';
+		printf(
+			'<p class="description">%s</p>',
+			esc_html__( 'Used only for the cover Callboard draws. A featured image always wins.', 'callboard' )
+		);
+	}
+
+	/**
 	 * Save meta boxes.
 	 *
 	 * @param int $post_id Set ID.
@@ -167,6 +211,17 @@ final class Admin {
 			)
 		);
 		update_post_meta( $post_id, '_callboard_lyrics_approved', empty( $_POST['callboard_lyrics_approved'] ) ? 0 : 1 );
+
+		$palette = isset( $_POST['callboard_palette'] ) ? sanitize_key( wp_unslash( $_POST['callboard_palette'] ) ) : '';
+		$palette = in_array( $palette, Art::palettes(), true ) ? $palette : '';
+		if ( (string) get_post_meta( $post_id, '_callboard_palette', true ) !== $palette ) {
+			update_post_meta( $post_id, '_callboard_palette', $palette );
+			// A new palette is a new cover, so the drawing has to happen again and the colour taken
+			// from it is no longer the colour of anything.
+			delete_post_meta( $post_id, '_callboard_art_drawn' );
+			delete_post_meta( $post_id, '_callboard_tint' );
+			Importer::import_all();
+		}
 		Sets::flush();
 	}
 

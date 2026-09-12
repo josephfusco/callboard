@@ -34,18 +34,11 @@ const setTime = ( page, t ) =>
 // most of this file predates that and expects the full transport, seek, and waveform on screen the moment
 // a track loads, so it starts every test already expanded. The compact/expanded behaviour itself — the
 // default, the tap to expand, the swipe to collapse — gets its own describe block below.
-const expandDeck = ( page ) =>
-	page.addInitScript( () =>
-		localStorage.setItem(
-			'callboard:deck-view',
-			JSON.stringify( 'expanded' )
-		)
-	);
+const expandDeck = ( page ) => page.locator( '#open-lyrics' ).click();
 
 test.describe( 'Controls', () => {
 	test.beforeEach( async ( { page } ) => {
 		await spyTransport( page );
-		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 	} );
 
@@ -53,6 +46,7 @@ test.describe( 'Controls', () => {
 		page,
 	} ) => {
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
 		const before = await transport( page );
 		await page.locator( '#toggle' ).click(); // paused (no decode) so this asks again
 		expect( await transport( page ) ).toBe( before + 1 );
@@ -103,6 +97,7 @@ test.describe( 'Controls', () => {
 		page,
 	} ) => {
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page ); // the seek line and the A-B loop are Now Playing's, not the bar's
 		const seek = page.locator( '#seek' );
 		await seek.evaluate( ( el ) => {
 			el.value = 500;
@@ -121,7 +116,8 @@ test.describe( 'Controls', () => {
 		page,
 	} ) => {
 		await page.locator( '.track' ).first().click();
-		await page.locator( 'h1' ).click(); // focus off the controls
+		await page.locator( 'h1' ).click(); // focus off the controls, before Now Playing covers it
+		await expandDeck( page ); // the seek line and the A-B loop are Now Playing's, not the bar's
 		const before = await transport( page );
 		await page.keyboard.press( 'Space' );
 		expect( await transport( page ) ).toBe( before + 1 );
@@ -156,6 +152,7 @@ test.describe( 'Controls', () => {
 	} ) => {
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).nth( 2 ).click(); // carries a director's note
+		await expandDeck( page ); // the first tap on the bar opens Now Playing; the sheet is inside it
 		await page.locator( '#open-lyrics' ).click();
 		await expect( page.locator( '#lyrics' ) ).toBeVisible();
 		await expect( page.locator( '#open-lyrics' ) ).toHaveAttribute(
@@ -172,9 +169,16 @@ test.describe( 'Controls', () => {
 		await page.locator( '.track' ).nth( 1 ).click();
 		await page.locator( 'a.back' ).click();
 		await expect( page ).toHaveURL( /\/$/ );
-		await page.locator( '#open-lyrics' ).click(); // from home it returns to the set
+		// The bar's own tap opens Now Playing now, so "Playing from" is what carries you back to the
+		// set — the same job Tidal gives it, and the only way back from anywhere that is not the set.
+		await expandDeck( page );
+		await page.locator( '#deck-from' ).click();
 		await expect( page ).toHaveURL( /\/demo-set\/$/ );
-		await page.locator( '#open-lyrics' ).click(); // on the set it scrolls to and focuses the row
+		await expect( page.locator( '#deck' ) ).not.toHaveClass(
+			/is-expanded/
+		);
+		await page.locator( '#open-lyrics' ).click(); // on the set the bar opens Now Playing again
+		await expandDeck( page ); // and once open, the title finds the row
 		await expect( page.locator( '.track' ).nth( 1 ) ).toBeFocused();
 	} );
 
@@ -272,19 +276,22 @@ test.describe( 'Deck view: compact and expanded', () => {
 		await page.locator( '#open-lyrics' ).click(); // the rest of the bar
 		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
 		await expect( page.locator( '#next' ) ).toBeVisible();
-		expect(
-			await page.evaluate( () =>
-				JSON.parse( localStorage.getItem( 'callboard:deck-view' ) )
-			)
-		).toBe( 'expanded' );
+		// Now Playing covers the set, so the art and a way back out are the two things it owes you.
+		await expect( page.locator( '#deck-cover' ) ).toBeVisible();
+		await expect( page.locator( '#deck-down' ) ).toBeVisible();
+		// And it is not remembered: a reload comes back to the list, not to the full screen.
+		await page.reload();
+		await expect( page.locator( '#deck' ) ).not.toHaveClass(
+			/is-expanded/
+		);
 	} );
 
 	test( 'swiping down on the expanded deck collapses it back to compact', async ( {
 		page,
 	} ) => {
-		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
 		await expect( page.locator( '#deck' ) ).toHaveClass( /is-expanded/ );
 		await page.locator( '#deck' ).evaluate( ( deck ) => {
 			const fire = ( type, clientY ) =>
@@ -307,9 +314,9 @@ test.describe( 'Deck view: compact and expanded', () => {
 	test( 'repeat cycles off, set, one, and remembers the choice', async ( {
 		page,
 	} ) => {
-		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
 		const repeat = page.locator( '#repeat' );
 		await expect( repeat ).toHaveAttribute( 'data-mode', 'off' );
 		await expect( repeat ).toHaveAttribute( 'aria-pressed', 'false' );
@@ -324,6 +331,10 @@ test.describe( 'Deck view: compact and expanded', () => {
 			)
 		).toBe( 'one' );
 		await page.reload();
+		// Now Playing is not remembered across a reload, so the set has to be opened again to reach
+		// the controls that live there. What the reload is testing is the repeat mode, which is.
+		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
 		await expect( page.locator( '#repeat' ) ).toHaveAttribute(
 			'data-mode',
 			'one'
@@ -335,9 +346,9 @@ test.describe( 'Deck view: compact and expanded', () => {
 	test( 'repeat one replays the same track instead of advancing', async ( {
 		page,
 	} ) => {
-		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
 		await page.locator( '#repeat' ).click();
 		await page.locator( '#repeat' ).click(); // off -> set -> one
 		await page.evaluate( () =>
@@ -353,9 +364,9 @@ test.describe( 'Deck view: compact and expanded', () => {
 	test( 'the A-B loop chip has an affordance and reads its state', async ( {
 		page,
 	} ) => {
-		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
 		const loop = page.locator( '#loop' );
 		await expect( loop ).toBeVisible();
 		await expect( loop ).toHaveAttribute( 'data-state', '' );
@@ -370,9 +381,9 @@ test.describe( 'Deck view: compact and expanded', () => {
 	test( 'a chip reads active only once it has a state to be active about', async ( {
 		page,
 	} ) => {
-		await expandDeck( page );
 		await page.goto( '/demo-set/' );
 		await page.locator( '.track' ).first().click();
+		await expandDeck( page );
 		// .remote-chip:not([data-state=""]) is the "active" look, so a chip that has not connected to
 		// anything has to carry an empty data-state rather than no attribute at all.
 		await expect( page.locator( '#remote' ) ).toHaveAttribute(

@@ -16,23 +16,27 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <section class="deck" id="deck" aria-label="<?php esc_attr_e( 'Player', 'callboard' ); ?>" hidden>
 	<i class="deck-glow-halo" id="deck-glow-halo" aria-hidden="true"></i><i class="deck-glow" id="deck-glow" aria-hidden="true"></i><i class="deck-glow-hot" id="deck-glow-hot" aria-hidden="true"></i>
+	<?php /* Now Playing: the expanded deck is a full screen, not a taller bar. Same controls, same element — only the layout changes, so nothing has two copies of its state. */ ?>
+	<?php /* A grabber, not a chevron: the bar says the screen can be pulled down, where an arrow says do something about it. Same target size either way. */ ?>
+	<button type="button" class="deck-down" id="deck-down" aria-label="<?php esc_attr_e( 'Close the player', 'callboard' ); ?>"><i aria-hidden="true"></i></button>
+	<?php /* A generic set cover tells a cast nothing about the sonnet they are on. Where a track carries words — captions, or the director's notes — the words are the useful thing, so the way to them is a control, not a hidden tap on the title. */ ?>
+	<div class="deck-top"><button type="button" class="remote-chip is-away" id="remote" data-state="" aria-label="<?php esc_attr_e( 'Play on another device', 'callboard' ); ?>"><?php echo callboard_icon( 'cast' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button><button type="button" class="sheet-pill" id="sheet-pill" hidden aria-controls="lyrics" aria-expanded="false"></button></div>
+	<div class="deck-cover" aria-hidden="true"><img id="deck-cover" alt="" decoding="async" sizes="(max-width:700px) 74vw, 380px"></div>
 	<div class="deck-inner deck-display">
 		<div class="deck-text">
 			<?php /* Doubles as the compact bar's tap-to-expand target; app.js switches its job (and label) by deck state. */ ?>
 			<button type="button" class="deck-open" id="open-lyrics" aria-expanded="false" aria-controls="lyrics" aria-label="<?php esc_attr_e( 'Show current track', 'callboard' ); ?>" data-label-expand="<?php esc_attr_e( 'Expand player', 'callboard' ); ?>">
 				<span class="deck-title" id="now-title" aria-live="polite"><span class="mq"><span><?php esc_html_e( 'Choose a track', 'callboard' ); ?></span></span></span>
 			</button>
-			<span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><button type="button" class="remote-chip is-away" id="remote" data-state="" aria-label="<?php esc_attr_e( 'Play on another device', 'callboard' ); ?>"><?php echo callboard_icon( 'cast' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG shipped with the plugin. ?></button><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><span id="dur">0:00</span></span>
+			
 		</div>
-		<?php /* Expanded only: bytes and duration are already on every track, so a bitrate reads without waiting on richer attachment metadata. */ ?>
-		<?php /* translators: %1$s: file format (e.g. MP3), %2$s: bitrate in kbps. */ ?>
-		<span class="quality-pill" id="quality" hidden data-tier="" data-format="<?php echo esc_attr__( '%1$s · %2$s kbps', 'callboard' ); ?>"><b class="tier" id="quality-tier"></b><span id="quality-detail"></span></span>
 	</div>
 	<div class="seek-wrap">
 		<canvas class="wave wave-base" id="wave-base" aria-hidden="true"></canvas><canvas class="wave wave-hover" id="wave-hover" aria-hidden="true"></canvas><div class="wave-reveal" id="wave-reveal" aria-hidden="true"><canvas class="wave wave-played" id="wave-played"></canvas></div>
 		<span class="seek-line" aria-hidden="true"><i class="seek-fill" id="seek-fill"></i><i class="loop-band" id="loop-band"></i></span><span class="seek-marks" id="seek-marks" aria-hidden="true"></span><i class="seek-knob" id="seek-knob" aria-hidden="true"></i>
 		<input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="<?php esc_attr_e( 'Seek', 'callboard' ); ?>" aria-valuetext="0:00">
 	</div>
+	<div class="deck-inner deck-times"><span class="deck-time" data-offline="<?php esc_attr_e( 'Offline', 'callboard' ); ?>"><span id="cur">0:00</span><span class="sep" aria-hidden="true"> / </span><?php /* translators: %1$s: file format (e.g. MP3), %2$s: bitrate in kbps. */ ?><span class="quality-pill" id="quality" hidden data-format="<?php echo esc_attr__( '%1$s · %2$s kbps', 'callboard' ); ?>"><span id="quality-detail"></span></span><span id="dur">0:00</span></span></div>
 	<div class="deck-inner deck-transport">
 		<div class="deck-controls">
 			<div class="deck-controls-secondary">
@@ -48,6 +52,8 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 		<audio id="audio" preload="metadata"></audio>
 	</div>
+	<?php /* Expanded only: which set this came out of, the way a player tells you what you are inside. */ ?>
+	<p class="deck-from"><button type="button" id="deck-from"><span><?php esc_html_e( 'Playing from', 'callboard' ); ?></span><b id="deck-from-set"></b></button></p>
 </section>
 
 <button type="button" class="update" id="update" hidden><span><?php esc_html_e( 'Updated', 'callboard' ); ?></span><span class="update-go"><?php esc_html_e( 'Reload', 'callboard' ); ?></span></button>

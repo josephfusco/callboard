@@ -143,7 +143,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 /* deck (bottom player) */
 .deck,.topbar{background:var(--deck-bg);-webkit-backdrop-filter:saturate(150%) blur(10px);backdrop-filter:saturate(150%) blur(10px);contain:layout paint}
 @supports not (backdrop-filter:blur(1px)){.deck,.topbar{background:var(--deck)}}
-.deck{will-change:transform;position:fixed;left:0;right:0;bottom:-120px;z-index:20;border-top:1px solid var(--line);padding-bottom:calc(var(--safe-b) + 120px);background-image:linear-gradient(180deg,var(--deck-hi),var(--deck-bg) 56px);box-shadow:inset 0 1px 0 var(--gloss)} /* a pane of glass: light catches the top edge, the panel deepens toward the controls */ /* runs past the viewport edge so the browser's bottom bar sits on deck color, not page color */
+.deck{will-change:transform;position:fixed;left:0;right:0;bottom:-120px;z-index:20;border-top:3px solid color-mix(in srgb,var(--deck) 40%,#000);padding-bottom:calc(var(--safe-b) + 120px);background-image:linear-gradient(180deg,var(--deck-hi),var(--deck-bg) 56px);box-shadow:inset 0 1px 0 var(--gloss)} /* a pane of glass: light catches the top edge, the panel deepens toward the controls */
 /* the column's right/left inset, usable by anything absolutely positioned straight off .deck (full width) rather
    than nested in .deck-inner: the larger of the safe-area gutter and the gap that centres a 640px column */
 .deck{--edge-r:max(max(20px,env(safe-area-inset-right,0px)),calc((100% - 640px) / 2));--edge-l:max(max(20px,env(safe-area-inset-left,0px)),calc((100% - 640px) / 2))}
@@ -194,6 +194,124 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-glow-hot{height:2px;background:linear-gradient(90deg,transparent,#ffd2a8 30%,#fff1dc 50%,#ffd2a8 70%,transparent);box-shadow:0 0 10px 2px rgba(255,232,200,.6)} /* the white heart of the coil */
 .deck-glow-halo{top:-19px;height:18px;color:var(--accent);background:linear-gradient(180deg,transparent,currentColor);filter:blur(6px);transform:translateZ(0)}
 @media (prefers-reduced-transparency:reduce){.deck-glow-halo{display:none}.deck-glow{box-shadow:none}}
+/* ---- Now Playing. The expanded deck is the full screen, not a taller bar: same element, same
+   controls, only the layout changes, so no state exists in two places and the swipe that closed the
+   tall bar closes this. The wash is one hex value taken from the cover by Art::tint() and cached on
+   the set, rather than a blurred copy of the artwork — a colour costs no second download, survives
+   offline, and composes with the accent instead of fighting it. */
+.deck-down,.deck-top{display:none}
+/* Tidal puts the way into the words at the top right, out of the transport's way. Same here, and it
+   only exists when the track actually has words to show. */
+.deck.is-expanded .deck-top{display:flex;justify-content:flex-end;gap:var(--s1);align-items:center;width:100%;max-width:640px;margin-inline:auto;padding:0 max(20px,env(safe-area-inset-left,0px));min-height:34px}
+.sheet-pill{appearance:none;border:1px solid var(--line);background:color-mix(in srgb,var(--surface-2) 45%,transparent);color:var(--ink-2);font:inherit;font-size:.8125rem;padding:5px 14px;border-radius:999px;cursor:pointer;transition:color var(--t),border-color var(--t)}
+.sheet-pill:hover,.sheet-pill:focus-visible{color:var(--ink);border-color:var(--line-strong)}
+.sheet-pill[aria-expanded="true"]{color:var(--accent-text);border-color:var(--line-strong)}
+/* The bar leads with the art too, small. It sits over the row rather than inside it so the expanded
+   grid can keep the same element as its centrepiece — one image, two sizes, no second source to
+   keep in step. Taps fall through to the bar, whose whole width is the way in. */
+/* Same left edge and same width as the track list's number column, so the bar reads as the row that
+   is playing rather than a separate thing parked under it. --edge-l is the column's edge; the extra
+   20px is the padding .deck-inner adds inside it, which is where the list's content actually starts. */
+.deck-cover{position:absolute;left:max(20px,calc((100% - 640px) / 2 + 20px));top:calc((var(--bar-row) - 34px) / 2);width:34px;height:34px;pointer-events:none;z-index:2}
+.deck.is-compact:has(#deck-cover[src]) .deck-open{padding-left:46px}
+.deck-cover:not(:has(img[src])){display:none}
+/* The filament is the app's signature and Now Playing was throwing it away: paint containment clips
+   the halo, and at top:-1px the wire itself sits off the top edge of a full screen. There is no list
+   behind this screen to muddy, so the containment comes off here and the glow is allowed to be the
+   light in the room — a wide, slow bloom down from the top, still driven by the audio, still the
+   same three elements the bar uses. Nothing new to keep in step. */
+.deck.is-expanded{contain:layout style}
+.deck.is-expanded .deck-glow,.deck.is-expanded .deck-glow-hot{top:0}
+/* Sound as light, without making a phone pay for it. Three rules keep this on the compositor:
+   the gradient never changes, so there is nothing to repaint; there is no filter, so there is no
+   blur to recompute every frame; and the only property the script writes is opacity, which a
+   compositor can animate on its own thread.
+   
+   The transition is what turns it from a strobe into a flow. app.js writes an opacity per frame off
+   the level; a 500ms ease on the same property means each write is chased rather than jumped to, so
+   the light lags the audio slightly and swells instead of flashing. The colour is mixed down to 40%
+   so the amplitude reads as a room brightening, not a lamp being switched. */
+.deck.is-expanded .deck-glow-halo{top:0;height:220px;filter:none;background:linear-gradient(180deg,color-mix(in srgb,currentColor 40%,transparent),color-mix(in srgb,currentColor 12%,transparent) 45%,transparent);transition:opacity .5s ease-out;will-change:opacity}
+@media (prefers-reduced-motion:reduce){.deck.is-expanded .deck-glow-halo{transition:none;opacity:.25!important}}
+.deck.is-expanded{top:0;bottom:0;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto auto auto auto;padding-bottom:calc(var(--safe-b) + var(--s3));border-top:0;background-image:none;overflow:hidden}
+.deck.is-expanded::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 13%,transparent),transparent 190px),radial-gradient(130% 70% at 50% 0%,color-mix(in srgb,var(--tint,transparent) 20%,transparent),transparent 68%);pointer-events:none;z-index:0}
+@media (prefers-reduced-transparency:reduce){.deck.is-expanded::before{display:none}}
+/* Named, not `> *`: the three filament elements are position:absolute, and a blanket rule made them
+   relative — which turned them into grid items that ate the first three rows, art included. */
+.deck.is-expanded>.deck-down,.deck.is-expanded>.deck-top,.deck.is-expanded>.deck-cover,.deck.is-expanded>.deck-inner,.deck.is-expanded>.seek-wrap,.deck.is-expanded>.deck-from{position:relative;z-index:1}
+.deck-times{padding-top:6px}
+.deck.is-compact .deck-times{display:none}
+.deck.is-expanded .deck-down{display:grid;place-items:center;justify-self:center;appearance:none;border:0;background:transparent;width:72px;height:28px;margin-top:6px;cursor:grab;border-radius:8px}
+.deck.is-expanded .deck-down i{display:block;width:38px;height:5px;border-radius:999px;background:var(--ink-3);opacity:.5;transition:opacity var(--t),width var(--t) var(--ease)}
+.deck.is-expanded .deck-down:hover i,.deck.is-expanded .deck-down:focus-visible i{opacity:.85}
+.deck.is-expanded .deck-down:active{cursor:grabbing}
+.deck.is-expanded .deck-down:active i{opacity:1;width:44px}
+.deck.is-expanded .deck-cover{position:static;display:grid;place-items:center;width:auto;height:auto;min-height:0;overflow:hidden;padding:var(--s2) max(20px,env(safe-area-inset-left,0px)) var(--s3);pointer-events:auto}
+/* No explicit width or height: the intrinsic square is clamped on both axes, so the art is as large
+   as the row allows and never one pixel taller than it. A width alone would push the title under it. */
+.deck-cover img{display:block;width:100%;height:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--surface-2)}
+.deck.is-expanded .deck-cover img{inline-size:auto;block-size:auto;width:auto;height:auto;max-inline-size:min(90vw,min(460px,calc(100dvh - 400px)));max-block-size:none;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.deck-cover img:not([src]){visibility:hidden}
+/* The display line stops being a row and becomes a title block once there is a screen to fill. Left
+   aligned, because a title and an artist are a stack of two facts and centring them makes the eye
+   find the start of each line twice. */
+.deck.is-expanded .deck-display{display:grid;grid-template-columns:1fr;gap:var(--s2);padding-top:var(--s2);padding-bottom:0}
+.deck.is-expanded .deck-text{display:grid;grid-template-columns:1fr;gap:2px;width:100%;container-type:normal}
+.deck.is-expanded .deck-open{padding-right:0;align-items:flex-start;text-align:left;max-width:100%}
+.deck.is-expanded .deck-title{font-size:1.5rem;line-height:1.25;white-space:normal;overflow:visible}
+/* A full screen has room for the whole name, so it wraps instead of scrolling — and the marquee's
+   second copy, which exists to make the loop seamless, must not show up as a duplicate title. */
+.deck.is-expanded .deck-title.marquee .mq{animation:none;display:block}
+.deck.is-expanded .deck-title.marquee .mq span+span{display:none}
+.deck.is-expanded .deck-title.marquee::before,.deck.is-expanded .deck-title.marquee::after{display:none}
+.deck.is-expanded .deck-open::after{font-size:1rem;color:var(--ink-3);margin-top:2px}
+/* Under the scrubber, three columns: where you are, what the copy is, and how much is left. The
+   middle one is the only place a measurement belongs — beside the title it competed with the name. */
+.deck.is-expanded .deck-time{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:var(--s2);width:100%;max-width:none;overflow:visible;order:2;font-variant-numeric:tabular-nums}
+.deck.is-expanded .deck-time .sep{display:none}
+.deck.is-expanded #dur{justify-self:end}
+.deck.is-expanded .deck-top{gap:var(--s1);align-items:center}
+.deck.is-expanded .quality-pill{grid-column:2;justify-self:center;align-self:baseline;order:0;margin:0;padding:0;border:0;background:none;font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase}
+/* Five controls, evenly spaced. The bar groups them because it has no room; a full screen does. */
+/* width:100% matters: `margin:0 auto` on a grid item stops it stretching and hands it its
+   max-content width instead — which for this row is a bare range input, about 170px. */
+.deck.is-expanded .deck-inner,.deck.is-expanded .seek-wrap{width:100%;max-width:640px;margin-inline:auto}
+.deck.is-expanded .seek-wrap{padding:0 max(20px,env(safe-area-inset-left,0px))}
+.deck.is-expanded .deck-controls{justify-content:space-between;gap:0;padding:0 var(--s2)}
+.deck.is-expanded .deck-controls-secondary,.deck.is-expanded .deck-controls-primary{display:contents}
+.deck.is-expanded .deck-transport{padding-top:var(--s4);padding-bottom:var(--s3)}
+/* Where this came out of, quietly, at the foot of the screen. */
+.deck-from{display:none}
+.deck.is-expanded .deck-from{display:block;max-width:640px;width:100%;margin:0 auto;padding:0 max(20px,env(safe-area-inset-left,0px)) var(--s1);color:var(--ink-3);font-size:.8125rem;line-height:1.35}
+.deck-from button{appearance:none;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:6px}
+.deck-from span{display:block;opacity:.75}
+.deck-from b{font-weight:500;color:var(--ink-2)}
+.deck-from button:hover b,.deck-from button:focus-visible b{color:var(--ink)}
+.deck-from:not(:has(b:not(:empty))){visibility:hidden}
+/* Landscape, and anything else short and wide: the art moves beside the controls rather than being
+   dropped, which is what every player does when the screen turns. The pattern is unchanged — art,
+   then title, scrubber, times, transport — it is only folded into two columns. */
+@media (max-height:620px) and (min-width:700px){
+	.deck.is-expanded{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto auto auto 1fr;grid-template-areas:"grab grab" "art top" "art display" "art seek" "art times" "art transport" "art from";align-content:center;column-gap:var(--s4);padding-inline:max(20px,env(safe-area-inset-left,0px))}
+	.deck.is-expanded>.deck-down{grid-area:grab}
+	.deck.is-expanded>.deck-top{grid-area:top;padding-inline:0}
+	.deck.is-expanded>.deck-cover{grid-area:art;align-self:center;padding:0}
+	.deck.is-expanded>.deck-display{grid-area:display}
+	.deck.is-expanded>.seek-wrap{grid-area:seek}
+	.deck.is-expanded>.deck-times{grid-area:times}
+	.deck.is-expanded>.deck-transport{grid-area:transport;padding-top:var(--s3)}
+	.deck.is-expanded>.deck-from{grid-area:from;align-self:end}
+	.deck.is-expanded .deck-cover img{max-inline-size:min(38vw,min(72vh,320px))}
+	.deck.is-expanded .deck-inner,.deck.is-expanded .seek-wrap,.deck.is-expanded .deck-from{margin-inline:0;max-width:none;padding-inline:0}
+}
+/* Short and narrow at once — a small phone on its side — has room for the controls and nothing else. */
+@media (max-height:620px) and (max-width:699px){.deck.is-expanded .deck-cover{display:none}}
+
+/* The sheet is opened from Now Playing, so it has to sit above it — at the bar's z-index it was
+   behind a full screen and could not even be closed. Above the transport, not over it: the words
+   and the controls are both wanted at once. */
+body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - var(--safe-b));border-radius:0 0 14px 14px}
+
 /* marks on the seek line: ticks above it where singing resumes, pins for notes */
 .seek-marks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
 .seek-marks .tick{position:absolute;top:auto;bottom:3px;width:2px;height:6px;margin-left:-1px;border-radius:1px;background:var(--ink-3);opacity:.85}
@@ -218,15 +336,15 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .deck-title small{font-size:.8125rem;color:var(--ink-3);margin-left:8px}
 .deck-title.is-note>.mq>span{color:var(--accent-text)}
 .deck-title.is-count>.mq>span{color:var(--accent-text);font-variant-numeric:tabular-nums}
-.ctl.play.beat{animation:beat .22s var(--ease)}
-@keyframes beat{35%{transform:scale(1.09)}100%{transform:none}}
 .lyrics-lines li time{color:var(--ink-3);font-size:1rem;font-weight:500;margin-right:12px;font-variant-numeric:tabular-nums}
 .lyrics-lines li small{display:block;font-size:.8125rem;font-weight:500;color:var(--ink-3);margin-top:2px}
 .deck-text{padding:0;min-width:0;flex:1;display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:var(--s2)}
 .deck-open{appearance:none;background:transparent;border:0;padding:0;text-align:left;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:var(--s1);cursor:pointer;color:inherit;border-radius:8px}
 /* compact: the open-lyrics button is the whole tap-to-expand bar, so it keeps clear of the play button that
    floats over it (see .deck.is-compact #toggle below) rather than running text under a control */
-.deck.is-compact .deck-open{padding-right:calc(130px + var(--s2))}
+/* Width, not padding: padding leaves the box full width, so the middle of the tap target — which is
+   where a click lands — sits under the transport. The target has to actually end where they begin. */
+.deck.is-compact .deck-open{width:calc(100% - 130px - var(--dl-gutter) - var(--s2))}
 .deck-open:active .deck-title{opacity:.6}
 .deck-open::after{content:attr(data-line);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* the sheet's name, or the set's: never blank, so the deck's constant height is honest */
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
@@ -265,12 +383,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .remote-chip:active{background:var(--surface-2)}
 /* the quality pill: expanded only, aligned to the same column as the title, never the reason the row wraps */
 .quality-pill{flex:none;align-self:flex-start;margin-top:2px;display:inline-flex;align-items:baseline;gap:6px;color:var(--ink-3);font-size:.75rem;font-variant-numeric:tabular-nums;white-space:nowrap;padding:2px var(--s1);border:1px solid var(--line);border-radius:999px}
-/* the tier is the headline and the numbers are the evidence, so the word is the only part that
-   changes weight. Lossless earns the accent; a stream states itself and stays quiet. */
-.quality-pill .tier{font-weight:600;font-style:normal;letter-spacing:.02em;text-transform:uppercase;font-size:.6875rem}
-.quality-pill .tier:empty{display:none}
-.quality-pill[data-tier="max"],.quality-pill[data-tier="hifi"]{border-color:var(--line-strong)}
-.quality-pill[data-tier="max"] .tier,.quality-pill[data-tier="hifi"] .tier{color:var(--accent-text)}
+/* The rows keep a column on the right for the offline mark, so their durations stop short of the
+   column's edge. The bar has no such mark, and without the same inset its last control overshoots
+   every duration above it by exactly that width. The tap target below has to clear the controls by
+   the same amount, so both read the one value. */
+.deck{--dl-gutter:52px;--bar-row:73px} /* the compact row: two 13px paddings around a two-line title block */
+
 /* transport: secondary (repeat, the A-B loop affordance) left, primary (previous, play, next) right — both
    inside the one column, never the viewport (see .deck-inner). Two groups, not five loose controls. */
 .deck-controls{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);position:relative;z-index:2}
@@ -283,7 +401,13 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* .deck-controls is itself position:relative (for its own z-index); drop that in compact so #toggle's
    position:absolute escapes all the way out to .deck and reads off --edge-r, not off a box down in the
    (now collapsed) transport row */
-.deck.is-compact .deck-controls{position:absolute;top:var(--s1);right:var(--edge-r);gap:var(--s2)}
+/* Centred on the row rather than pinned to a top offset, which left the transport seven pixels
+   above the art and the title it sits beside. The right inset is the offline column the rows keep,
+   so the last control lands over the last duration. */
+/* Both the art and the transport are centred on the display row, not on the deck: the deck's box
+   runs 120px past the bottom of the screen so the browser chrome sits on deck colour, which makes
+   its own centre useless. One row height, two offsets derived from it, so they cannot drift. */
+.deck.is-compact .deck-controls{position:absolute;top:calc((var(--bar-row) - 44px) / 2);right:calc(var(--edge-r) + var(--dl-gutter));gap:var(--s2);padding-right:0}
 .deck.is-compact .ctl.skip{width:34px;height:34px}
 .deck.is-compact #toggle{width:44px;height:44px}
 .ctl{appearance:none;border:0;background:transparent;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
@@ -306,18 +430,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 }
 /* soft ring when playback begins */
 .ctl.play::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--accent);opacity:0;pointer-events:none;z-index:-1}
-.ctl.play.ring::after{animation:ring .6s var(--ease) forwards}
-@keyframes ring{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.55);opacity:0}}
 /* buffering: a thin arc turns around the button */
 .ctl.play::before{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;border-top-color:var(--accent);opacity:0;transition:opacity var(--t)}
 .deck.buffering .ctl.play::before{opacity:1;animation:turn .9s linear infinite}
 @keyframes turn{to{transform:rotate(360deg)}}
 /* skip buttons nudge in the direction they act */
 .ctl.skip svg{transition:transform var(--t) var(--ease-spring)}
-.ctl.skip.kick-l svg{animation:kick-l var(--t-slow) var(--ease-spring)}
-.ctl.skip.kick-r svg{animation:kick-r var(--t-slow) var(--ease-spring)}
-@keyframes kick-l{35%{transform:translateX(-4px)}100%{transform:none}}
-@keyframes kick-r{35%{transform:translateX(4px)}100%{transform:none}}
 .ctl.skip .skip-tri{transform-origin:center;transition:transform var(--t)}
 .ctl.skip:active .skip-tri{transform:scale(.85)}
 
@@ -499,4 +617,3 @@ body.is-loading{cursor:progress}
 body:not(.has-deck) .toast{bottom:calc(var(--safe-b) + 12px)}
 #offline:hover,#offline:focus-visible,#notify:hover,#notify:focus-visible{color:var(--ink)}
 #offline.is-busy{color:var(--ink-2)}
-@media (hover:hover){#offline[data-some="1"]:not([data-confirm]):not(.is-busy):hover::after{content:attr(data-hint);color:var(--ink-3)}}

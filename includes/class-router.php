@@ -60,6 +60,10 @@ final class Router {
 	 * Render every front-end request with the plugin template.
 	 */
 	public static function template(): string {
+		if ( ! Gate::allowed() ) {
+			return CALLBOARD_DIR . 'templates/gate.php';
+		}
+
 		return CALLBOARD_DIR . ( self::is_fragment() ? 'templates/fragment.php' : 'templates/index.php' );
 	}
 
@@ -75,7 +79,7 @@ final class Router {
 	 */
 	public static function title(): string {
 		$view = self::view();
-		return $view ? Sets::by_slug( $view )['name'] . ' · ' . callboard_site_name() : callboard_site_name();
+		return $view && Gate::allowed() ? Sets::by_slug( $view )['name'] . ' · ' . callboard_site_name() : callboard_site_name();
 	}
 
 	/**
@@ -83,6 +87,6 @@ final class Router {
 	 */
 	public static function page_title(): string {
 		$view = self::view();
-		return $view ? Sets::by_slug( $view )['name'] : callboard_site_name();
+		return $view && Gate::allowed() ? Sets::by_slug( $view )['name'] : callboard_site_name();
 	}
 }

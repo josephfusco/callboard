@@ -114,6 +114,10 @@ The service worker precaches the shell and the home fragment. Saving a set strea
 
 `Privacy` adds `noindex` via `wp_robots` and `X-Robots-Tag`, disallows everything in `robots.txt`, sets `Referrer-Policy: no-referrer`, requires authentication for REST except the push routes, hides the users endpoint, disables XML-RPC and feeds, and redirects author archives and search to home.
 
+`Gate` is the one decision about who may see the front end, and it is off by default: a link in a group chat is the whole setup, and that is the point. Turn on **Require a WordPress sign-in** and the answer becomes `is_user_logged_in()` and nothing else, so whatever sign-in the site already has guards the app too — Apple, Google, a membership plugin, passkeys through Two Factor and its WebAuthn provider. Core still ships no passkeys of its own. `callboard_can_view` overrides both; return `null` and the filter never has to know what the setting says.
+
+A gated request answers 403 with `templates/gate.php` rather than redirecting to `wp-login.php`, which would drop the cast out of an installed app and into WordPress branding mid-session. Nothing about the sets escapes it: the script and its data are not enqueued, link previews are suppressed, and the document title falls back to the site name. Audio files keep their own upload addresses either way, so the gate guards the app, not the media.
+
 </details>
 
 <details>
@@ -129,8 +133,8 @@ The service worker precaches the shell and the home fragment. Saving a set strea
 | Path | Purpose |
 | --- | --- |
 | `callboard.php` | Plugin header, constants, autoload |
-| `includes/` | One class per concern: `Plugin`, `Router`, `Frontend`, `Sets`, `Calls`, `Post_Types`, `Admin`, `Settings`, `Importer`, `Exporter`, `Id3`, `Fetcher`, `Requests`, `Push`, `Pwa`, `Privacy`, `Art`, `Cli`. `helpers.php` has icons and formatting |
-| `templates/` | `index.php` (shell), `fragment.php`, `home.php`, `board.php`, `set.php`, `deck.php` (player), `footer.php` |
+| `includes/` | One class per concern: `Plugin`, `Router`, `Frontend`, `Sets`, `Calls`, `Post_Types`, `Admin`, `Settings`, `Importer`, `Exporter`, `Id3`, `Fetcher`, `Requests`, `Push`, `Pwa`, `Privacy`, `Gate`, `Art`, `Cli`. `helpers.php` has icons and formatting |
+| `templates/` | `index.php` (shell), `fragment.php`, `home.php`, `board.php`, `set.php`, `deck.php` (player), `gate.php`, `footer.php` |
 | `assets/` | `app.js`, `app.css` |
 | `pwa/sw.js` | Service worker source |
 | `tests/e2e/` | Playwright suites |
@@ -148,6 +152,7 @@ The service worker precaches the shell and the home fragment. Saving a set strea
 
 | Hook | Kind | What it does |
 | --- | --- | --- |
+| `callboard_can_view` | filter | Whether this visitor may see the front end. Return `null` for the default, `true` or `false` to decide |
 | `callboard_head` | action | Output in the `<head>` of every front-end page |
 | `callboard_template_path` | filter | Replace any template with your own file |
 | `callboard_app_data` | filter | Data the script receives on load |

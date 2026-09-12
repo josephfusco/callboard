@@ -175,6 +175,7 @@ The rest of `window.callboard`: `version` (the plugin), `hooks` (`wp.hooks`), `e
 | `callboard/count-in` | Track data `bpm`, app data `enabled`, a track badge (`♩ 96`, class `bpm`), and a `beforePlay` hold that taps four beats | No badge, and tracks start at once |
 | `callboard/quality` | Track data `quality`, app data `format`, and a Now Playing item (class `quality-pill`) | Now Playing shows no quality |
 | `callboard/badging` | An app badge contribution of zero, so opening the app clears what a notification set | The page leaves the badge alone |
+| `callboard/practice` | App data `url` and, for signed-in users, `nonce`; a REST route, `POST callboard/v1/practice/counts`; and listeners on the `track`, `loop`, `play`, `pause` and `ended` events. Registered only when the **Count practice** setting is on | Nothing is counted or sent |
 
 They live in `includes/extensions/` and in their own sections at the bottom of `assets/app.js`, where they can reach `window.callboard` and nothing else. To replace one:
 

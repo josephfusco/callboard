@@ -207,7 +207,6 @@ final class Art {
 		}
 
 		$small = imagescale( $im, 32, 32 );
-		imagedestroy( $im );
 		if ( ! $small ) {
 			return null;
 		}
@@ -233,7 +232,6 @@ final class Art {
 				$weight += $w;
 			}
 		}
-		imagedestroy( $small );
 		if ( $weight <= 0 ) {
 			return null;
 		}

@@ -78,6 +78,7 @@ body.swapped .masthead>*,body.swapped .sets li,body.swapped .tracks li{animation
 .masthead .label{margin-top:8px}
 .actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px}
 .masthead{container-type:inline-size}
+#offline .size{margin-left:.35em} /* the button is a flex container and drops the leading space in " · 3.1 MB" as inter-item whitespace */
 @container (max-width:345px){#offline .size{display:none}} /* Pause, Save offline, share: on a 375px phone the size is what gives way */
 .btn-quiet.is-done{color:var(--ink-2)}
 .btn-quiet.is-busy{color:var(--ink-2);border-color:var(--line)}
@@ -357,7 +358,7 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
    where a click lands — sits under the transport. The target has to actually end where they begin. */
 .deck.is-compact .deck-open{width:calc(100% - 130px - var(--dl-gutter) - var(--s2))}
 .deck-open:active .deck-title{opacity:.6}
-.deck-open::after{content:attr(data-line);display:block;min-height:1.2em;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* the sheet's name, or the set's: never blank, so the deck's constant height is honest */
+.deck-open::after{content:attr(data-line);display:block;min-height:1.2em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-3);font-size:.8125rem;line-height:1.2} /* one line, always: the art and the transport are centred on a row height that assumes it */ /* the sheet's name, or the set's: never blank, so the deck's constant height is honest */
 .deck-open[data-sheet][aria-expanded="true"]::after{color:var(--ink)}
 .deck-time{display:inline-flex;align-items:baseline;gap:8px;min-width:0;max-width:100%;overflow:hidden} /* clipped, never under the controls */
 .deck-time :focus-visible{outline-offset:-2px} /* rings stay inside the clip */
@@ -398,7 +399,10 @@ body.now-playing .lyrics{z-index:21;inset:0 0 auto 0;height:calc(100% - 190px - 
    column's edge. The bar has no such mark, and without the same inset its last control overshoots
    every duration above it by exactly that width. The tap target below has to clear the controls by
    the same amount, so both read the one value. */
-.deck{--dl-gutter:52px;--bar-row:73px} /* the compact row: two 13px paddings around a two-line title block */
+.deck{--dl-gutter:52px;--bar-row:73px}
+/* On a phone the gutter costs more than it buys: it is worth 44px to line the last control up with
+   the last duration on a laptop, and not worth clipping the track's name to do it on a handset. */
+@media (max-width:520px){.deck{--dl-gutter:0px}} /* the compact row: two 13px paddings around a two-line title block */
 
 /* transport: secondary (repeat, the A-B loop affordance) left, primary (previous, play, next) right — both
    inside the one column, never the viewport (see .deck-inner). Two groups, not five loose controls. */

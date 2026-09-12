@@ -804,6 +804,8 @@
 				audio.play().catch( () => {} );
 			}
 		}
+		// The tab strip is the lock screen for a laptop, so it learns the track at the same moment.
+		paintTab();
 		if ( 'mediaSession' in navigator ) {
 			navigator.mediaSession.metadata = new MediaMetadata( {
 				title: t.title,
@@ -865,6 +867,7 @@
 		deck.classList.remove( 'playing' );
 		deck.hidden = true;
 		document.body.classList.remove( 'has-deck' );
+		paintTab();
 		if ( ! lyricsSheet.hidden ) {
 			hideLyrics();
 		}
@@ -1213,6 +1216,7 @@
 		syncRows();
 		retrigger( toggle, 'ring' );
 		positionState();
+		paintTab();
 	} );
 	audio.addEventListener( 'pause', () => {
 		morph( 'play' );
@@ -1221,6 +1225,7 @@
 		remember();
 		positionState();
 		paint( true );
+		paintTab();
 	} );
 	audio.addEventListener( 'waiting', () =>
 		deck.classList.add( 'buffering' )
@@ -2095,6 +2100,90 @@
 		} );
 	}
 
+	// ---- The tab title. A cast member has the board open behind a rehearsal PDF and a group chat, and
+	// the tab strip is the only part of the app they can see. So it carries the track, not the view.
+	//
+	// Two writers want this string — the router on navigation, the player on every track — so neither
+	// sets document.title directly. viewTitle() records what the page alone would say; paintTab()
+	// composes the visible line and is the only place that assigns.
+	let viewLine = document.title;
+	let tabTimer = 0;
+	let tabStep = 0;
+	const TAB_WINDOW = 28; // roughly what a tab shows before it truncates, with a handful of tabs open
+	const TAB_GAP = '   ·   ';
+	const TAB_HOLD = 3; // ticks the start is held before it scrolls, like the deck's own marquee
+
+	function viewTitle( set ) {
+		viewLine = set ? `${ set.name } · ${ G.site }` : G.site;
+		paintTab();
+	}
+
+	function nowLine() {
+		const t = queue?.tracks[ i ];
+		if ( ! t ) {
+			return '';
+		}
+		// The playing glyph, not a pause one: a tab that is merely loaded should read like any other tab.
+		return `${ audio.paused ? '' : '♪ ' }${ t.title } · ${ queue.name }`;
+	}
+
+	function paintTab() {
+		const line = nowLine();
+		if ( ! line ) {
+			stopTabMarquee();
+			document.title = viewLine;
+			return;
+		}
+		// Scrolling is for the tab strip alone. While the tab is visible the deck is already marqueeing
+		// the same string properly, and a title moving in the corner of the eye is just noise.
+		const scroll =
+			document.hidden &&
+			! audio.paused &&
+			line.length > TAB_WINDOW &&
+			! matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
+		if ( ! scroll ) {
+			stopTabMarquee();
+			document.title = line;
+			return;
+		}
+		startTabMarquee( line );
+	}
+
+	function startTabMarquee( line ) {
+		const first = line + TAB_GAP;
+		if ( tabTimer ) {
+			return; // already running; the tick reads the current track itself
+		}
+		tabStep = 0;
+		document.title = first.slice( 0, TAB_WINDOW );
+		// One second, deliberately: a hidden tab's timers are clamped to that anyway, so asking for
+		// anything faster would only make the speed depend on which browser is throttling.
+		tabTimer = setInterval( () => {
+			const now = nowLine();
+			if ( ! now || audio.paused || ! document.hidden ) {
+				paintTab();
+				return;
+			}
+			const text = now + TAB_GAP;
+			tabStep += 1;
+			const at = Math.max( 0, tabStep - TAB_HOLD ) * 2;
+			if ( at >= text.length ) {
+				tabStep = 0;
+			}
+			const from = at % text.length;
+			document.title = ( text + text ).slice( from, from + TAB_WINDOW );
+		}, 1000 );
+	}
+
+	function stopTabMarquee() {
+		if ( tabTimer ) {
+			clearInterval( tabTimer );
+			tabTimer = 0;
+		}
+	}
+
+	document.addEventListener( 'visibilitychange', paintTab );
+
 	// Home rows: where each set was left, and which one is in the deck. Text inside the meta line, so nothing moves.
 	function paintHomeResume() {
 		document.querySelectorAll( '.set-resume' ).forEach( ( el ) => {
@@ -2743,6 +2832,7 @@
 		if ( push ) {
 			history.pushState( {}, '', url );
 		}
+
 		const apply = () => {
 			const t = document.createElement( 'template' );
 			t.innerHTML = html;
@@ -2752,7 +2842,7 @@
 				return;
 			}
 			$( 'main' ).replaceWith( main );
-			document.title = set ? `${ set.name } · ${ G.site }` : G.site;
+			viewTitle( set );
 			document.body.dataset.slug = slug;
 			document.body.classList.toggle( 'view-home', ! slug );
 			document.body.classList.toggle( 'view-set', !! slug );

@@ -1,13 +1,13 @@
 /**
- * Every control on the deck and the set page, driven the way a hand would. Headless Chromium cannot decode
- * the audio, so these assert on what the controls change (track, position, chips, sheet, lock) and count
- * the play() calls they make rather than waiting for sound.
+ * Every control on the deck and the set page, driven the way a hand would. Not every headless Chromium
+ * build plays the fixture MP3s, so these assert on what the controls change (track, position, chips,
+ * sheet, lock) and count the play() calls they make rather than waiting for sound.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
-// Headless Chromium cannot decode the audio, so play() rejects and the element's paused flag is not a
-// reliable witness. Count the transport calls instead: a control that asks the element to play or pause
-// has done its job.
+// Where headless Chromium can't play the audio, play() rejects and the element's paused flag can't be
+// trusted. Count the transport calls instead: a control that asks the element to play or pause has done
+// its job.
 const spyTransport = ( page ) =>
 	page.addInitScript( () => {
 		window.__transport = 0;

@@ -67,13 +67,13 @@ Design rules: animate only transform and opacity, never use font weight for stat
 | --- | --- |
 | `callboard_call` post | Title and body. `_callboard_when` (site time zone, empty for a notice with no time), `_callboard_where`, `_callboard_numbers` (attachment ids). Leaves the board six hours after its time |
 | `callboard_set` post | Name, slug, order, credits, source link, share image |
-| Audio attachment | A track. `menu_order` is its position |
+| Audio attachment | A track. `menu_order` is its position. Quality shown to listeners — bit depth and sample rate for lossless, bitrate and sample rate for lossy — reads WordPress's own attachment metadata, not a callboard field; lossy formats show no bit depth, since MP3 does not have one |
 | `_callboard_duration` | Seconds |
-| `_callboard_levels` | Loudness envelope, digits 0–9, ten per second. Drives the waveform and the filament. iPhones cannot analyse audio live |
+| `_callboard_levels` | Loudness envelope, digits 0–9, ten per second. Drives the waveform and the filament, which auto-ranges to its own recent peak — rising at once, forgotten over ~6s — so a quiet reading lights it as fully as a loud mix. iPhones cannot analyse audio live |
 | `_callboard_lyrics`, `_callboard_lyrics_approved` | Timed lines from captions, shown after approval |
 | `_callboard_notes` | Director's notes with a time and date |
 | `_callboard_bpm` | Tempo, for the count-in |
-| `_callboard_video_id`, `_callboard_source_url`, `_callboard_uploader` | Source |
+| `_callboard_video_id`, `_callboard_source_url`, `_callboard_uploader` | Source. The uploader is also sent per track as `artist` — right for one playlist by one uploader, wrong for a set where every track differs |
 
 `Sets` builds the data the front end renders, cached in a transient for a day and cleared on save.
 
@@ -138,11 +138,12 @@ A gated request answers 403 with `templates/gate.php` rather than redirecting to
 | `assets/` | `app.js`, `app.css` |
 | `pwa/sw.js` | Service worker source |
 | `tests/e2e/` | Playwright suites |
-| `tests/fixtures/` | Demo sets and `chiptunes.js`, which generates them |
+| `tests/fixtures/` | `demo-set` and `empty-set`, and `librivox.js`, which builds the demo audio from LibriVox recordings. `local-set.js` builds a set from your own audio into a gitignored folder, for local listening only |
 | `blueprint.json` | Playground demo. The Pages workflow publishes it with the plugin zip and demo audio, stamped by commit |
 | `site/` | Landing page (GitHub Pages) |
 | `languages/callboard.pot` | Translation template; `npm run pot` regenerates it |
 | `scripts/sync-versions.sh` | Writes the release version into the plugin files |
+| `scripts/screenshots.js` | Retakes the landing-page screenshots from a running wp-env site, at the exact sizes the page expects |
 | `.github/` | Workflows, Dependabot, PR template, CONTRIBUTING |
 | `AGENTS.md` | Notes for coding agents |
 
@@ -268,7 +269,7 @@ Browser and WordPress features considered for this plugin, with a verdict, so no
 
 Playwright tests in `tests/e2e/` run against wp-env, from a pre-commit hook that `npm install` sets up and again in GitHub Actions on every pull request. One test saves a set, takes the browser offline, and opens and plays it. Headless Chromium cannot decode mp3, so player tests assert on state, not audio.
 
-Fixtures are ten public-domain melodies rendered by `tests/fixtures/chiptunes.js` (needs ffmpeg and ffprobe). Covers are drawn by the plugin's `Art` class.
+Fixtures are LibriVox recordings of Shakespeare's Sonnets (book 229), built by `tests/fixtures/librivox.js` (needs ffmpeg, ffprobe, and a network connection): it pulls the LibriVox API, downloads the sections from archive.org, uses silence detection to skip past the reader's introduction, cuts a 40-second clip, encodes it, and writes `manifest.json`, `levels.json`, `notes.json`, and `tempo.json`. LibriVox recordings are public domain in the USA — no licence, no attribution required, commercial use is fine — which matters because this audio is committed here, served from the Pages site, and loaded into the Playground demo. Readers are credited anyway, in the manifest's uploader fields, which the app already renders in a set's footer. Two fixture sets remain: `demo-set` (the sonnets, ten tracks) and `empty-set`. Covers are drawn by the plugin's `Art` class.
 
 ## Source and maintainer
 

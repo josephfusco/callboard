@@ -56,9 +56,9 @@ test.describe( 'Admin', () => {
 		// Find the demo set's ID through the list table (REST is closed to anonymous but we're logged in here).
 		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
 		const row = page
-			.locator( '.wp-list-table tbody tr', { hasText: 'Demo Set' } )
+			.locator( '.wp-list-table tbody tr', { hasText: 'Shakespeare’s Sonnets' } )
 			.first();
-		await expect( row ).toContainText( 'Demo Set' );
+		await expect( row ).toContainText( 'Shakespeare’s Sonnets' );
 		await expect( row.locator( 'td.tracks' ) ).toHaveText( '10' );
 		await row.locator( 'a.row-title' ).click();
 		const tracks = page.locator( '#callboard-tracks li' );
@@ -79,7 +79,7 @@ test.describe( 'Admin', () => {
 			.locator( '#callboard-tracks li' )
 			.first()
 			.locator( 'input[type=text]' )
-			.fill( 'Ode to Joy' );
+			.fill( 'Sonnets 1–10' );
 		await page.click( '#publish' );
 		void requestUtils;
 	} );
@@ -90,12 +90,16 @@ test.describe( 'Admin', () => {
 	} ) => {
 		await admin.visitAdminPage( 'edit.php', 'post_type=callboard_set' );
 		await page
-			.locator( '.wp-list-table tbody tr', { hasText: 'Demo Set' } )
+			.locator( '.wp-list-table tbody tr', { hasText: 'Shakespeare’s Sonnets' } )
 			.first()
 			.locator( 'a.row-title' )
 			.click();
 		const first = page.locator( '#callboard-tracks li' ).first();
-		await first.locator( 'summary' ).click();
+		// The panel renders open when the track already carries a tempo or a note, so opening it
+		// blindly would close it. Ask before clicking.
+		if ( ! ( await first.locator( 'details' ).evaluate( ( el ) => el.open ) ) ) {
+			await first.locator( 'summary' ).click();
+		}
 		await first.locator( 'input[type=number]' ).fill( '100' );
 		await first.locator( 'textarea' ).fill( '0:03 Softer here' );
 		await page.click( '#publish' );
@@ -191,10 +195,10 @@ test.describe( 'Admin', () => {
 		);
 		await page.fill( '#callboard-where', 'Pit' );
 		const demo = page.locator( '.callboard-numbers details', {
-			hasText: 'Demo Set',
+			hasText: 'Shakespeare’s Sonnets',
 		} );
 		await demo.locator( 'summary' ).click();
-		await demo.locator( 'input[type=checkbox]' ).nth( 2 ).check(); // Für Elise
+		await demo.locator( 'input[type=checkbox]' ).nth( 2 ).check(); // Sonnets 21–30
 		await page.click( '#publish' );
 		await page.waitForURL( /post\.php\?post=\d+&action=edit&message=/ );
 		await expect( page.locator( '#callboard-where' ) ).toHaveValue( 'Pit' );
@@ -205,12 +209,12 @@ test.describe( 'Admin', () => {
 		await expect( call.locator( '.call-rel' ) ).toContainText( /in|days/ );
 		await expect( call.locator( '.call-where' ) ).toHaveText( 'Pit' );
 		await expect( call.locator( '.call-numbers a' ) ).toHaveText(
-			'Für Elise'
+			'Sonnets 21–30'
 		);
 		await call.locator( '.call-numbers a' ).click();
 		await expect( page ).toHaveURL( /\/demo-set\/$/ );
 		await expect( page.locator( '#now-title' ) ).toContainText(
-			'Für Elise'
+			'Sonnets 21–30'
 		);
 
 		// leave the board as it was

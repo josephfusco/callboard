@@ -156,6 +156,7 @@ final class Sets {
 			$notes    = get_post_meta( $track->ID, '_callboard_notes', true );
 			$levels   = (string) get_post_meta( $track->ID, '_callboard_levels', true );
 			$bpm      = (int) get_post_meta( $track->ID, '_callboard_bpm', true );
+			$by       = (string) get_post_meta( $track->ID, '_callboard_uploader', true );
 			$tracks[] = array(
 				'id'       => $track->ID,
 				'index'    => ++$index,
@@ -166,6 +167,8 @@ final class Sets {
 				'levels'   => '' !== $levels ? $levels : null,
 				'bpm'      => $bpm > 0 ? $bpm : null,
 				'notes'    => is_array( $notes ) ? array_values( $notes ) : array(),
+				'artist'   => '' !== $by ? $by : null,
+				'quality'  => callboard_quality( $meta ),
 			);
 			$uploader = get_post_meta( $track->ID, '_callboard_uploader', true );
 			if ( $uploader ) {
@@ -176,6 +179,17 @@ final class Sets {
 			if ( is_array( $cues ) && $cues ) {
 				$lyrics[ $track->ID ] = $cues;
 			}
+		}
+
+		// A set from one playlist has one uploader, and it belongs in the footer said once. A set
+		// gathered from everywhere has a different artist per track, and it belongs on the row. Doing
+		// both gives you eighteen names in the footer, or the same name on ten rows.
+		if ( count( $uploaders ) < 2 ) {
+			foreach ( $tracks as $k => $callboard_unused ) {
+				$tracks[ $k ]['artist'] = null;
+			}
+		} else {
+			$uploaders = array();
 		}
 
 		$set = array(

@@ -24,3 +24,11 @@ tests/fixtures/callboard/*/cover-*.png
 
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
+
+# Sets are allowlisted, not blocklisted. Anything else under here is something you built or fetched
+# locally, and the import directory is mapped onto this folder, so a `wp callboard fetch` lands in the
+# working tree. Default to ignoring it: music you are entitled to listen to is rarely music the
+# repository is entitled to redistribute.
+tests/fixtures/callboard/*/
+!tests/fixtures/callboard/demo-set/
+!tests/fixtures/callboard/empty-set/
